@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one or more
+  ~ contributor license agreements.  See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright ownership.
+  ~ The ASF licenses this file to You under the Apache License, Version 2.0
+  ~ (the "License"); you may not use this file except in compliance with
+  ~ the License.  You may obtain a copy of the License at
+  ~
+  ~    http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.zto.bigdata.flink</groupId>
+  <artifactId>flink-demo</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>${project.artifactId}</name>
+
+  <properties>
+    <fire.version>2.0.0-SNAPSHOT</fire.version>
+    <flink.version>1.12.2</flink.version>
+    <scala.binary.version>2.12</scala.binary.version>
+    <scala.minor.version>12</scala.minor.version>
+    <kafka.version>0.11.0.2</kafka.version>
+    <maven.scope>provided</maven.scope>
+    <hadoop.version>2.6.0-cdh5.12.1</hadoop.version>
+    <hive.version>1.1.0-cdh5.12.1</hive.version>
+    <hbase.version>1.2.0-cdh5.12.1</hbase.version>
+    <flink.reference>${flink.version}_${scala.binary.version}</flink.reference>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.zto.fire</groupId>
+      <artifactId>fire-common_${scala.binary.version}</artifactId>
+      <version>${fire.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.zto.fire</groupId>
+      <artifactId>fire-core_${scala.binary.version}</artifactId>
+      <version>${fire.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.zto.fire</groupId>
+      <artifactId>fire-jdbc_${scala.binary.version}</artifactId>
+      <version>${fire.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.zto.fire</groupId>
+      <artifactId>fire-hbase_${scala.binary.version}</artifactId>
+      <version>${fire.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.zto.fire</groupId>
+      <artifactId>fire-flink_${flink.reference}</artifactId>
+      <version>${fire.version}</version>
+    </dependency>
+    <!-- flink计算引擎相关依赖 -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-java</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-scala_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-streaming-scala_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-runtime-web_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-queryable-state-runtime_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-queryable-state-client-java</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-statebackend-rocksdb_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-kafka_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.kafka</groupId>
+      <artifactId>kafka_${scala.binary.version}</artifactId>
+      <version>${kafka.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-api-java</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-api-scala-bridge_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table-common</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-hive_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-jdbc_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-elasticsearch-base_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-hadoop-compatibility_${scala.binary.version}</artifactId>
+      <version>${flink.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-shaded-hadoop-2-uber</artifactId>
+      <version>2.6.5-8.0</version>
+      <scope>${maven.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>servlet-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- hive相关依赖 -->
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-exec</artifactId>
+      <version>${hive.apache.version}</version>
+      <scope>${maven.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>calcite-core</artifactId>
+          <groupId>org.apache.calcite</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <!-- hbase相关依赖 -->
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-common</artifactId>
+      <version>${hbase.version}</version>
+      <scope>${maven.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-server</artifactId>
+      <version>${hbase.version}</version>
+      <scope>${maven.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase-client</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-client_${scala.binary.version}</artifactId>
+      <version>${hbase.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+
+    <!-- hudi相关依赖 -->
+    <dependency>
+      <groupId>org.apache.hudi</groupId>
+      <artifactId>hudi-flink-bundle_${scala.binary.version}</artifactId>
+      <version>${hudi.version}</version>
+      <scope>${maven.scope}</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.rocketmq</groupId>
+      <artifactId>rocketmq-flink_${flink.major.version}_${scala.binary.version}</artifactId>
+      <version>${rocketmq.external.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- ensure that we use JDK 1.6 -->
+      <plugin>
+        <inherited>true</inherited>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <version>2.15.2</version>
+        <executions>
+          <!-- Run scala compiler in the process-resources phase, so that dependencies
+              on scala classes can be resolved later in the (Java) compile phase -->
+          <execution>
+            <id>scala-compile-first</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+
+          <!-- Run scala compiler in the process-test-resources phase, so that
+              dependencies on scala classes can be resolved later in the (Java) test-compile
+              phase -->
+          <execution>
+            <id>scala-test-compile</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <!-- Add src/main/scala to source path of Eclipse -->
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>src/main/scala</source>
+              </sources>
+            </configuration>
+          </execution>
+
+          <!-- Add src/test/scala to test source path of Eclipse -->
+          <execution>
+            <id>add-test-source</id>
+            <phase>generate-test-sources</phase>
+            <goals>
+              <goal>add-test-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>src/test/scala</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- to generate Eclipse artifacts for projects mixing Scala and Java -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <version>2.10</version>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <downloadJavadocs>true</downloadJavadocs>
+          <projectnatures>
+            <projectnature>org.scala-ide.sdt.core.scalanature</projectnature>
+            <projectnature>org.eclipse.jdt.core.javanature</projectnature>
+          </projectnatures>
+          <buildcommands>
+            <buildcommand>org.scala-ide.sdt.core.scalabuilder</buildcommand>
+          </buildcommands>
+          <classpathContainers>
+            <classpathContainer>org.scala-ide.sdt.launching.SCALA_CONTAINER</classpathContainer>
+            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
+          </classpathContainers>
+          <excludes>
+            <!-- in Eclipse, use scala-library, scala-compiler from the SCALA_CONTAINER
+                rather than POM <dependency> -->
+            <exclude>org.scala-lang:scala-library</exclude>
+            <exclude>org.scala-lang:scala-compiler</exclude>
+          </excludes>
+          <sourceIncludes>
+            <sourceInclude>**/*.scala</sourceInclude>
+            <sourceInclude>**/*.java</sourceInclude>
+          </sourceIncludes>
+        </configuration>
+      </plugin>
+
+      <!-- When run tests in the test phase, include .java and .scala source
+          files -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.19.1</version>
+        <configuration>
+          <includes>
+            <include>**/*.java</include>
+            <include>**/*.scala</include>
+          </includes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.2</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>META-INF/*.SF</exclude>
+                <exclude>META-INF/*.DSA</exclude>
+                <exclude>META-INF/*.RSA</exclude>
+              </excludes>
+            </filter>
+          </filters>
+          <finalName>zto-${project.artifactId}-${project.version}</finalName>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
