@@ -44,8 +44,10 @@ object PropUtils {
   this.load(this.configurationFiles: _*)
   // 避免已被加载的配置文件被重复加载
   private[this] lazy val alreadyLoadMap = new mutable.HashMap[String, String]()
-  // 用于存放所有的配置信息
-  private[fire] lazy val settingsMap = new mutable.HashMap[String, String]()
+  // 用于存放自适应引擎前缀的配置信息
+  private[fire] lazy val adaptiveSettingsMap = new mutable.HashMap[String, String]()
+  // 用于存放原始的配置信息
+  private[fire] lazy val originalSettingsMap = new mutable.HashMap[String, String]()
   // 用于存放固定前缀，而后缀不同的配置信息
   private[this] lazy val cachedConfMap = new mutable.HashMap[String, collection.immutable.Map[String, String]]()
   private lazy val logger = LoggerFactory.getLogger(this.getClass)
@@ -117,7 +119,10 @@ object PropUtils {
           props.load(resource)
           // 将所有的配置信息存放到settings中，并统一添加key的引擎前缀，如：
           // 如果是spark引擎，则key前缀统一添加spark. 如果是flink引擎，则统一添加flink.
-          props.foreach(prop => this.settingsMap.put(this.adaptiveKey(prop._1), prop._2))
+          props.foreach(prop => {
+            this.adaptiveSettingsMap.put(this.adaptiveKey(prop._1), prop._2)
+            this.originalSettingsMap.put(prop._1, prop._2)
+          })
           props.clear()
           this.alreadyLoadMap.put(fullName, fullName)
         }
@@ -165,7 +170,7 @@ object PropUtils {
   /**
    * 获取原生的配置信息
    */
-  private[fire] def getOriginalProperty(key: String): String = this.settingsMap.getOrElse(key, "")
+  private[fire] def getOriginalProperty(key: String): String = this.adaptiveSettingsMap.getOrElse(key, "")
 
   /**
    * 将给定的配置中的值与计量单位拆分开
@@ -296,7 +301,7 @@ object PropUtils {
         case _ if paramType eq classOf[Boolean] => value.toBoolean
         case _ => value
       }
-    } (this.logger, catchLog = s"为找到配置信息：${key}，请检查！")
+    }(this.logger, catchLog = s"为找到配置信息：${key}，请检查！")
     property.asInstanceOf[T]
   }
 
@@ -338,18 +343,19 @@ object PropUtils {
   def setProperty(key: String, value: String): Unit = this.synchronized {
     if (StringUtils.isNotBlank(key) && StringUtils.isNotBlank(value)) {
       this.setOriginalProperty(this.adaptiveKey(key), value)
+      this.originalSettingsMap.put(key, value)
     }
   }
 
   /**
    * 添加原生的配置信息
    */
-  private[fire] def setOriginalProperty(key: String, value: String): Unit = this.synchronized(this.settingsMap.put(key, value))
+  private[fire] def setOriginalProperty(key: String, value: String): Unit = this.synchronized(this.adaptiveSettingsMap.put(key, value))
 
   /**
    * 隐蔽密码信息后返回
    */
-  def cover: Map[String, String] = this.settingsMap.filter(t => !t._1.contains("pass"))
+  def cover: Map[String, String] = this.adaptiveSettingsMap.filter(t => !t._1.contains("pass"))
 
   /**
    * 打印配置文件中的kv
@@ -357,7 +363,7 @@ object PropUtils {
   def show(): Unit = {
     if (!FireFrameworkConf.fireConfShow) return
     LogUtils.logStyle(this.logger, "Fire configuration.")(logger => {
-      this.settingsMap.foreach(key => {
+      this.adaptiveSettingsMap.foreach(key => {
         // 如果包含配置黑名单，则不打印
         if (key != null && !FireFrameworkConf.fireConfBlackList.exists(conf => key.toString.contains(conf))) {
           logger.info(s">>${FirePS1Conf.PINK} ${key._1} --> ${key._2} ${FirePS1Conf.DEFAULT}")
@@ -367,14 +373,39 @@ object PropUtils {
   }
 
   /**
-   * 将配置信息转为Map，并设置到SparkConf中
+   * 获所有的配置信息（包含经过自适应处理的配置）
    *
    * @return
    * confMap
    */
   def settings: Map[String, String] = {
     val map = Map[String, String]()
-    map.putAll(this.settingsMap)
+    map ++= this.originalSettingsMap
+    map ++= this.adaptiveSettingsMap
+    map
+  }
+
+  /**
+   * 获取经过适配前缀的配置信息
+   *
+   * @return
+   * confMap
+   */
+  def adaptiveSettings: Map[String, String] = {
+    val map = Map[String, String]()
+    map ++= this.adaptiveSettingsMap
+    map
+  }
+
+  /**
+   * 获取原始的配置信息
+   *
+   * @return
+   * confMap
+   */
+  def originalSettings: Map[String, String] = {
+    val map = Map[String, String]()
+    map ++= this.originalSettingsMap
     map
   }
 
@@ -384,7 +415,7 @@ object PropUtils {
   def sliceKeys(keyStart: String): immutable.Map[String, String] = {
     if (!this.cachedConfMap.contains(keyStart)) {
       val confMap = new mutable.HashMap[String, String]()
-      this.settingsMap.foreach(key => {
+      this.adaptiveSettingsMap.foreach(key => {
         val adaptiveKeyStar = this.adaptiveKey(keyStart)
         if (key._1.contains(adaptiveKeyStar)) {
           val keySuffix = key._1.substring(adaptiveKeyStar.length)
