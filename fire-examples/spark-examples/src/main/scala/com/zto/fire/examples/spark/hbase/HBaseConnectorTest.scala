@@ -220,9 +220,4 @@ object HBaseConnectorTest extends BaseSparkCore {
     this.testHbaseScanRDD
     this.testHbaseScanDF
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-    this.stop
-  }
 }

@@ -51,8 +51,4 @@ object JdbcSinkTest extends BaseStructuredStreaming {
         | on t.name=s.name
         |""".stripMargin).print()
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

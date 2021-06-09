@@ -28,28 +28,17 @@ import org.apache.flink.table.api.SqlDialect
 import org.apache.flink.table.catalog.ObjectPath
 
 /**
- * Flink流式计算任务模板
+ * 基于Fire进行Flink Streaming开发
  *
  * @author ChengLong
- * @since 1.0.0
- * @create 2021-01-18 17:24
+ * @since 2.0.0
+ * @create 2021-06-07 13:14:19
  */
 object Test extends BaseFlinkStreaming {
 
   override def process: Unit = {
-    this.tableEnv.useCatalog(FireHiveConf.hiveCatalogName)
-    this.tableEnv.getConfig.setSqlDialect(SqlDialect.HIVE)
-    this.fire.sql(
-      """
-        |insert into hive.tmp.fire select * from tmp.account
-        |""".stripMargin)
-    this.fire.sql(
-      """
-        |select * from tmp.fire
-        |""".stripMargin).print()
-  }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
+    val dstream = this.fire.createKafkaDirectStream()
+    dstream.print()
+    this.fire.start
   }
 }

@@ -47,8 +47,4 @@ object MapTest extends BaseStructuredStreaming {
     // mapPartition操作
     sqlDF.mapPartitions(it => SparkUtils.sparkRowToBean(it, classOf[Student]))(Encoders.bean(classOf[Student])).print()
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

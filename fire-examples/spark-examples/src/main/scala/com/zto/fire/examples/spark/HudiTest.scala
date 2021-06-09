@@ -193,9 +193,4 @@ object HudiTest extends BaseSparkCore {
     this.insertHive
     // this.readHDFS
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-    this.stop
-  }
 }

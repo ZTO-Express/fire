@@ -146,6 +146,14 @@ trait BaseSparkStreaming extends BaseSpark {
   }
 
   /**
+   * 初始化SparkSession与StreamingContext，默认批次时间为30s
+   * 批次时间可通过子类复写main方法实现或通过在配置文件中指定：spark.streaming.batch.duration=30
+   */
+  override def main(args: Array[String]): Unit = {
+    this.init(30, false)
+  }
+
+  /**
    * Streaming的处理过程强烈建议放到process中，保持风格统一
    * 注：此方法会被自动调用，在以下两种情况下，必须将逻辑写在process中
    * 1. 开启checkpoint

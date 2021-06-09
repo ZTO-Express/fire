@@ -131,8 +131,4 @@ object HBaseTest extends BaseFlinkStreaming {
 
     this.fire.start
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

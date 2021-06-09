@@ -78,8 +78,4 @@ object FlinkHudiTest extends BaseFlinkStreaming {
     this.tableEnv.executeSql(sql)
 
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

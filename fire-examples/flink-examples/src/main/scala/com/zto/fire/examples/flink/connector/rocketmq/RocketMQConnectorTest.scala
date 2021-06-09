@@ -53,10 +53,4 @@ object RocketMQConnectorTest extends BaseFlinkStreaming {
         |select * from source
         |""".stripMargin).print()
   }
-
-
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

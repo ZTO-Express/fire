@@ -77,9 +77,4 @@ object ScheduleTest extends BaseSparkStreaming {
     // 更新并缓存维表动作，具体要根据锁的标记判断是否执行
     this.cacheTable
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
-
 }

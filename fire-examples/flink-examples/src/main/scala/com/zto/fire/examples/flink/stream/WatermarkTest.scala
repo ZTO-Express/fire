@@ -99,8 +99,4 @@ object WatermarkTest extends BaseFlinkStreaming {
       })
     }
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

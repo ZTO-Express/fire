@@ -89,7 +89,7 @@ object FireAccTest extends BaseSparkStreaming {
   }
 
 
-  def main(args: Array[String]): Unit = {
+  override def main(args: Array[String]): Unit = {
     this.init(1, false, args)
   }
 }

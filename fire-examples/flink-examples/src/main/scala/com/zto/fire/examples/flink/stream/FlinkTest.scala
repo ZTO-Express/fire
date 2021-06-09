@@ -55,8 +55,4 @@ object FlinkTest extends BaseFlinkStreaming {
     // this.fire.start
     this.fire.start("Fire Test")
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

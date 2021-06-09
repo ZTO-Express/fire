@@ -43,8 +43,4 @@ object RocketTest extends BaseSparkStreaming {
     dStream.rocketCommitOffsets
     this.fire.start()
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init(10, false)
-  }
 }
