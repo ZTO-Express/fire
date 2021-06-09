@@ -52,8 +52,4 @@ object DataSourceTest extends BaseSparkCore {
     // read.format.mode.load(path)
     this.fire.readEnhance(keyNum = 3)
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

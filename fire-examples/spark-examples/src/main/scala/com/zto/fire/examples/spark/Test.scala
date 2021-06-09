@@ -27,18 +27,16 @@ import com.zto.fire.spark.{BaseSparkCore, BaseSparkStreaming}
 
 /**
  * 基于Fire进行Spark Streaming开发
+ *
+ * @author ChengLong
+ * @since 2.0.0
+ * @create 2021-06-07 13:14:19
  */
-object Test extends BaseSparkCore {
+object Test extends BaseSparkStreaming {
 
   override def process: Unit = {
-    val ds = this.fire.createDataFrame(Student.newStudentList(), classOf[Student])
-    ds.createOrReplaceTempView("test")
-    this.fire.sql("select * from test").print()
-    this.fire.sql("select * from dim.baseorganize_addzero limit 10").show()
-    this.fire.stop
-  }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
+    val dstream = this.fire.createKafkaDirectStream()
+    dstream.print()
+    this.fire.start
   }
 }

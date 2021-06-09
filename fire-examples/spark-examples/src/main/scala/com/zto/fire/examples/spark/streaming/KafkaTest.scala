@@ -92,7 +92,7 @@ object KafkaTest extends BaseSparkStreaming {
   }
 
 
-  def main(args: Array[String]): Unit = {
+  override def main(args: Array[String]): Unit = {
     this.init(10, false)
     this.stop
   }

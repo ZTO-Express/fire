@@ -130,8 +130,4 @@ object HBaseHadoopTest extends BaseSparkCore {
     this.testHBaseHadoopScanDF
     this.testHBaseHadoopScanDS
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

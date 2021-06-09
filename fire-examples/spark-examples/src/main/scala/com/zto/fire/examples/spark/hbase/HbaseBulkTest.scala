@@ -221,10 +221,4 @@ object HBaseBulkTest extends BaseSparkCore {
     this.testHbaseBulkScanDF
     this.testHbaseBulkScanDS
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-    this.stop
-  }
-
 }

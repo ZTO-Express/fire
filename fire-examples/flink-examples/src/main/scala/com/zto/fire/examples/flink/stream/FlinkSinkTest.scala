@@ -36,10 +36,6 @@ object FlinkSinkTest extends BaseFlinkStreaming {
 
     this.fire.start
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }
 
 class MySink extends RichSinkFunction[String] {

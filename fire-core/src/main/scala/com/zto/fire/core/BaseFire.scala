@@ -157,6 +157,14 @@ trait BaseFire {
   }
 
   /**
+   * 初始化引擎上下文，如SparkSession、StreamExecutionEnvironment等
+   * 可根据实际情况，将配置参数放到同名的配置文件中进行差异化的初始化
+   */
+  def main(args: Array[String]): Unit = {
+    this.init()
+  }
+
+  /**
    * 以子线程方式执行函数调用
    *
    * @param fun

@@ -106,9 +106,4 @@ object FireMapFunctionTest extends BaseFlinkBatch {
       }
     }).print()
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-    this.stop
-  }
 }

@@ -137,11 +137,6 @@ object Test extends BaseSparkStreaming {
     // 提交streaming任务执行
     this.fire.start
   }
-
-  def main(args: Array[String]): Unit = {
-    // 从配置文件中获取必要的配置信息，并初始化SparkSession、StreamingContext等对象
-    this.init(10, false)
-  }
 }
 ```
 
@@ -160,11 +155,6 @@ object Test extends BaseFlinkStreaming {
     dstream.print
     // 提交flink streaming任务，job名称不指定默认当前类名
     this.fire.start
-  }
-
-  def main(args: Array[String]): Unit = {
-    // 根据配置信息自动创建fire变量、StreamExecutionEnvironment、StreamTableEnvironment等
-    this.init()
   }
 }
 ```

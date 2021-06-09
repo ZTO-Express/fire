@@ -42,11 +42,6 @@ object UDFTest extends BaseFlinkStreaming {
 
     this.flink.execute()
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
-
 }
 
 
