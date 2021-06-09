@@ -53,4 +53,12 @@ class BaseSparkCore extends BaseSpark {
   override def process: Unit = {
     // 子类复写该方法实现业务处理逻辑
   }
+
+  /**
+   * 初始化SparkSession对象
+   */
+  override def main(args: Array[String]): Unit = {
+    super.main(args)
+    this.stop
+  }
 }

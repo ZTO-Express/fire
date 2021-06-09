@@ -25,9 +25,4 @@ object TestHive extends BaseSparkCore {
     this.fire.sql("use dim")
     this.fire.sql("show tables").show(100, false)
   }
-
-
-  def main(args: Array[String]): Unit = {
-     this.init(args = args)
-  }
 }

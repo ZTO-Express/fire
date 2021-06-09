@@ -60,8 +60,4 @@ object FlinkBatchTest extends BaseFlinkBatch {
     val count = this.fire.execute("counter").getAccumulatorResult[Int]("myCounter")
     println("累加器结果：" + count)
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

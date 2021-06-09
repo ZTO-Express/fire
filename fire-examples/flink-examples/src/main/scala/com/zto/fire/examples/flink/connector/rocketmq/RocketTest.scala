@@ -38,10 +38,4 @@ object RocketTest extends BaseFlinkStreaming {
     this.fire.createRocketMqPullStream(keyNum = 2).print()
     this.fire.start
   }
-
-
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

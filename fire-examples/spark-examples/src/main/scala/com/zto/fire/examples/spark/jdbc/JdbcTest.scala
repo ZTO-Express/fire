@@ -210,7 +210,7 @@ object JdbcTest extends BaseSparkCore {
     this.testExecutor
   }
 
-  def main(args: Array[String]): Unit = {
+  override def main(args: Array[String]): Unit = {
     this.init(args = args)
 
     Thread.currentThread().join()

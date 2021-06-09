@@ -67,8 +67,4 @@ object FlinkPartitioner extends BaseFlinkStreaming {
       }
     }
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

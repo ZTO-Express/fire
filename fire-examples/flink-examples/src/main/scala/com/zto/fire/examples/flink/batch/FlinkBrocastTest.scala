@@ -45,9 +45,4 @@ object FlinkBrocastTest extends BaseFlinkBatch {
       // 每次使用必须通过withBroadcastSet进行广播
     }).withBroadcastSet(brocastDS, "brocastDS").print()
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-    this.stop
-  }
 }

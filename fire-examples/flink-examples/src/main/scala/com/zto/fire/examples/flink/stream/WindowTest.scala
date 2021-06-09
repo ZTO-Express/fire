@@ -75,8 +75,4 @@ object WindowTest extends BaseFlinkStreaming {
     // 创建一个session会话窗口，当5秒内没有消息进入，则单独划分一个窗口
     dstream.keyBy(_._1).sessionTimeWindow(Time.seconds(5)).sum(1).printToErr()
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

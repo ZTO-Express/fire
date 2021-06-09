@@ -75,8 +75,4 @@ object FlinkAccTest extends BaseFlinkStreaming {
 
     this.stop
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

@@ -28,7 +28,7 @@ import com.zto.fire.spark.BaseSparkStreaming
   */
 object ThreadTest extends BaseSparkStreaming {
 
-  def main(args: Array[String]): Unit = {
+  override def main(args: Array[String]): Unit = {
     // 第二个参数为true表示开启checkPoint机制
     this.init(10L, false)
   }

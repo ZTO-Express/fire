@@ -38,8 +38,4 @@ object StructuredStreamingTest extends BaseStructuredStreaming {
     // 使用api的方式进行查询操作
     kafkaDataset.select("after.PDA_CODE", "after.bill_code").print(numRows = 1, truncate = false)
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

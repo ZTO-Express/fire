@@ -27,14 +27,9 @@ import com.zto.fire.spark.BaseSparkCore
   */
 object HiveClusterReader extends BaseSparkCore {
 
-  def main(args: Array[String]): Unit = {
-    // 必须调用init()方法完成sparkSession的初始化
-    this.init()
-
+  override def process: Unit = {
     // spark为sparkSession的实例，已经在init()中完成初始化，可以直接通过this.fire或this.spark方式调用
     this.fire.sql("use tmp")
     this.fire.sql("show tables").show(100, false)
-
-    this.fire.stop()
   }
 }

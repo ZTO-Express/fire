@@ -124,9 +124,4 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |insert into print select * from kafka
         |""".stripMargin)
   }
-
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

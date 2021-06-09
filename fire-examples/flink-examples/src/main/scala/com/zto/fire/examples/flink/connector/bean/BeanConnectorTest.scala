@@ -71,9 +71,4 @@ object BeanConnectorTest extends BaseFlinkStreaming {
     dstream.print()
     this.fire.start
   }
-
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }

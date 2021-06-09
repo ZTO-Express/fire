@@ -160,9 +160,4 @@ object FlinkStateTest extends BaseFlinkStreaming {
 
     this.fire.start("Flink State Test")
   }
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-    this.stop
-  }
 }

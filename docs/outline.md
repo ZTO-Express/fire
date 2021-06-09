@@ -42,11 +42,6 @@ object Test extends BaseFlinkStreaming {
     // 提交flink streaming任务，job名称不指定默认当前类名
     this.fire.start
   }
-
-  def main(args: Array[String]): Unit = {
-    // 根据配置信息自动创建fire变量、StreamExecutionEnvironment、StreamTableEnvironment等
-    this.init()
-  }
 }
 ```
 
@@ -80,10 +75,10 @@ import com.zto.fire._
 
 ### 三、初始化
 
-实时任务有一个特点就是一个任务一个类，由于缺少统一的规范，用户进行实时任务开发时，会将很多业务代码写到main方法中，导致main方法过胖。由此带来的问题是代码难以阅读、难以维护。另外，在进行代码开发时，难以避免重复的写初始化spark或flink引擎相关的上下文信息。为了解决以上问题，fire框架将引擎上下文初始化简化成了一行代码，并建议在main方法中只做初始化动作，业务逻辑则放到process方法中。
+实时任务有一个特点就是一个任务一个类，由于缺少统一的规范，用户进行实时任务开发时，会将很多业务代码写到main方法中，导致main方法过胖。由此带来的问题是代码难以阅读、难以维护。另外，在进行代码开发时，难以避免重复的写初始化spark或flink引擎相关的上下文信息。为了解决以上问题，fire框架默认根据任务配置信息进行引擎上下文初始化。如果有个性化需求，可复写main方法进行初始化，业务逻辑则放到process方法中。
 
 ```scala
-def main(args: Array[String]): Unit = {
+override def main(args: Array[String]): Unit = {
     // 根据任务同名的配置文件进行引擎上下文的初始化
     this.init()
 }

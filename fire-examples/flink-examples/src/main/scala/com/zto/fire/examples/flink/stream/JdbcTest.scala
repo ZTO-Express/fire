@@ -116,9 +116,4 @@ object JdbcTest extends BaseFlinkStreaming {
 
     this.fire.start("JdbcTest")
   }
-
-
-  def main(args: Array[String]): Unit = {
-    this.init()
-  }
 }
