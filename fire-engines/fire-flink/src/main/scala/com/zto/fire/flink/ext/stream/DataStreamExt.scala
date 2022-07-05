@@ -49,7 +49,7 @@ import scala.reflect.ClassTag
  * @since 0.4.1
  */
 class DataStreamExt[T](stream: DataStream[T]) {
-  lazy val tableEnv = FlinkSingletonFactory.getStreamTableEnv
+  lazy val tableEnv = FlinkSingletonFactory.getTableEnv.asInstanceOf[StreamTableEnvironment]
 
   /**
    * 将流注册为临时表

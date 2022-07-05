@@ -18,7 +18,7 @@
 package com.zto.fire.examples.spark.schedule
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Scheduled
+import com.zto.fire.common.anno.{Config, Scheduled}
 import com.zto.fire.common.util.DateFormatUtils
 import com.zto.fire.spark.BaseSparkStreaming
 import com.zto.fire.spark.util.SparkUtils
@@ -28,7 +28,14 @@ import com.zto.fire.spark.util.SparkUtils
  *
  * @author ChengLong 2019年11月5日 17:27:20
  * @since 0.3.5
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Config(
+  """
+    |spark.fire.task.schedule.enable         =       true
+    |# 定时任务黑名单，配置方法名，多个以逗号分隔，配置的方法将不再被定时任务定时拉起
+    |spark.fire.scheduler.blacklist          =       jvmMonitor,setConf2,registerAcc
+    |""")
 object ScheduleTest extends BaseSparkStreaming {
 
   /**

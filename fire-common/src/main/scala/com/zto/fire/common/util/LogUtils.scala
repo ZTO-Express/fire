@@ -19,8 +19,8 @@ package com.zto.fire.common.util
 
 import com.zto.fire.common.conf.FirePS1Conf
 import org.apache.commons.lang3.StringUtils
+import org.slf4j.Logger
 import org.slf4j.event.Level
-import org.slf4j.{Logger, LoggerFactory}
 
 /**
  * 日志工具类
@@ -29,9 +29,7 @@ import org.slf4j.{Logger, LoggerFactory}
  * @since 1.0.0
  * @create 2020-07-01 10:23
  */
-object LogUtils {
-
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+object LogUtils extends Logging {
 
   /**
    * 以固定的开始与结束风格打日志

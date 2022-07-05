@@ -19,6 +19,8 @@ package com.zto.fire.examples.spark.hbase
 
 import java.nio.charset.StandardCharsets
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
+import com.zto.fire.core.anno.{HBase, HBase2}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.hbase.HBaseConnector
 import com.zto.fire.spark.BaseSparkCore
@@ -32,7 +34,11 @@ import scala.collection.mutable.ListBuffer
   * 注：适用于少量数据的实时读写，更轻量
   *
   * @author ChengLong 2019-5-9 09:37:25
+  * @contact Fire框架技术交流群（钉钉）：35373471
   */
+@HBase("test")
+@HBase2(cluster = "test", scanPartitions = 3, storageLevel = "DISK_ONLY")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object HBaseConnectorTest extends BaseSparkCore {
   private val tableName1 = "fire_test_1"
   private val tableName2 = "fire_test_2"
@@ -193,6 +199,34 @@ object HBaseConnectorTest extends BaseSparkCore {
   }
 
   /**
+   * 多版本get与scan
+   */
+  def testMutiVersion: Unit = {
+    this.testHBasePutDF
+    this.testHBasePutDF
+    this.testHBasePutDF
+    this.testHBasePutDF
+    print("======testHbaseGetList=======")
+    this.testHbaseGetList
+    print("======testHbaseGetRDD=======")
+    this.testHbaseGetRDD
+    print("======testHbaseGetDF=======")
+    this.testHbaseGetDF
+    print("======testHBaseGetDS=======")
+    this.testHBaseGetDS
+
+    println("==========scan============")
+    print("======testHbaseScanList=======")
+    this.testHbaseScanList
+    print("======testHbaseScanRDD=======")
+    this.testHbaseScanRDD
+    print("======testHbaseScanDF=======")
+    this.testHbaseScanDF
+    print("======testHbaseScanDS=======")
+    this.testHbaseScanDS
+  }
+
+  /**
     * Spark处理过程
     * 注：此方法会被自动调用
     */
@@ -204,11 +238,12 @@ object HBaseConnectorTest extends BaseSparkCore {
     HBaseConnector.truncateTable(this.tableName1)
     HBaseConnector.truncateTable(this.tableName2, keyNum = 2)
 
-    // this.testHbasePutRDD
-    // this.testHbasePutList
-    this.testHBasePutDF
+    this.testHbasePutRDD
+    this.testHbasePutList
+    // HBaseConnector.truncateTable(this.tableName1)
+    this.testHbaseGetDF
     this.testHBasePutDS
-
+    // this.testMutiVersion
     println("=========get========")
     this.testHbaseGetList
     this.testHbaseGetRDD
@@ -219,5 +254,9 @@ object HBaseConnectorTest extends BaseSparkCore {
     this.testHbaseScanList
     this.testHbaseScanRDD
     this.testHbaseScanDF
+    this.testHbaseScanDF
+    val getList = ListBuffer(HBaseConnector.buildGet("1"))
+    val student = HBaseConnector.get(this.tableName1, classOf[Student], getList, 1)
+    println(student.toString())
   }
 }

@@ -18,7 +18,9 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.{DateFormatUtils, JSONUtils, PropUtils}
+import com.zto.fire.core.anno.Kafka
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.flink.BaseFlinkStreaming
 import com.zto.fire.flink.util.FlinkUtils
@@ -32,6 +34,28 @@ import org.apache.flink.streaming.api.scala.DataStream
  * @since 1.1.0
  * @create 2020-05-22 11:10
  */
+// 1. 以代码的方式进行配置，支持不单独定义配置文件，如果同时定义了配置文件，则配置文件优先级更高
+@Config(
+  """
+    |#########################################################################################
+    |#  JDBC数据源配置信息详见：common.properties，公共数据源配置可放到common.properties中，便于维护  #
+    |#########################################################################################
+    |
+    |# flink所支持的参数
+    |state.checkpoints.num-retained      =       3
+    |state.backend.incremental           =       true
+    |state.backend.rocksdb.files.open    =       5000
+    |
+    |hello.world                         =       2020
+    |hello.world.flag                    =       false
+    |hello.world.flag2                   =       false
+    |""")
+// 2. 指定从test.properties加载配置文件
+// @Config(Array("test.properties"))
+// 3. 指定从以下两个配置文件中加载配置信息
+// @Config(Array("test.properties", "test2.properties"))
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object JdbcTest extends BaseFlinkStreaming {
   lazy val tableName = "spark_test"
   lazy val tableName2 = "spark_test2"
@@ -57,7 +81,7 @@ object JdbcTest extends BaseFlinkStreaming {
       Seq(row.getField(0), row.getField(1), row.getField(2), row.getField(3), row.getField(4))
     })
     // 或者
-    this.flink.jdbcBatchUpdateTable2(table, sql(this.tableName2), keyNum = 2)(row => {
+    this.fire.jdbcBatchUpdateTable2(table, sql(this.tableName2), keyNum = 2)(row => {
       Seq(row.getField(0), row.getField(1), row.getField(2), row.getField(3), row.getField(4))
     }).setParallelism(1)
   }
@@ -80,19 +104,25 @@ object JdbcTest extends BaseFlinkStreaming {
     }.setParallelism(1)
 
     // 或者
-    this.flink.jdbcBatchUpdateStream2(stream, sql(this.tableName2), keyNum = 7) {
+    this.fire.jdbcBatchUpdateStream2(stream, sql(this.tableName2), keyNum = 7) {
       value => Seq(value.getName, value.getAge, DateFormatUtils.formatCurrentDateTime(), value.getLength, value.getSex)
     }.setParallelism(2)
   }
 
   def testJdbc: Unit = {
     // 执行查询操作
-    val studentList = this.flink.jdbcQuery(s"select * from $tableName", clazz = classOf[Student])
+    val studentList = this.fire.jdbcQueryList(s"select * from $tableName", clazz = classOf[Student])
     val dataStream = this.env.fromCollection(studentList)
+    dataStream.toTable.createOrReplaceTempView("test")
+    this.fire.sql(
+      """
+        |select * from test
+        |""".stripMargin)
+
     dataStream.print()
 
     // 执行增删改操作
-    this.flink.jdbcUpdate(s"delete from $tableName")
+    this.fire.jdbcUpdate(s"delete from $tableName")
   }
 
   /**
@@ -100,6 +130,8 @@ object JdbcTest extends BaseFlinkStreaming {
    */
   def logConf: Unit = {
     println(s"isJobManager=${FlinkUtils.isJobManager} isTaskManager=${FlinkUtils.isTaskManager} hello.world=" + PropUtils.getString("hello.world", "not_found"))
+    println(s"isJobManager=${FlinkUtils.isJobManager} isTaskManager=${FlinkUtils.isTaskManager} flink.hello=" + PropUtils.getString("flink.hello", "not_found"))
+    println(s"isJobManager=${FlinkUtils.isJobManager} isTaskManager=${FlinkUtils.isTaskManager} flink.world=" + PropUtils.getString("flink.world", "not_found"))
     println(s"isJobManager=${FlinkUtils.isJobManager} isTaskManager=${FlinkUtils.isTaskManager} hello.world.flag=" + PropUtils.getBoolean("hello.world.flag", false))
     println(s"isJobManager=${FlinkUtils.isJobManager} isTaskManager=${FlinkUtils.isTaskManager} hello.world.flag2=" + PropUtils.getBoolean("hello.world.flag", false, keyNum = 2))
   }
@@ -112,7 +144,7 @@ object JdbcTest extends BaseFlinkStreaming {
     })
     this.testTableJdbcSink(stream)
     this.testStreamJdbcSink(stream)
-    this.testJdbc
+    // this.testJdbc
 
     this.fire.start("JdbcTest")
   }

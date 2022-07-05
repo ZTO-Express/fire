@@ -18,13 +18,13 @@
 package com.zto.fire.spark.ext.core
 
 import com.zto.fire._
+import com.zto.fire.common.util.Logging
 import com.zto.fire.hbase.bean.HBaseBaseBean
 import com.zto.fire.spark.conf.FireSparkConf
 import com.zto.fire.spark.connector.{HBaseBulkConnector, HBaseSparkBridge}
 import com.zto.fire.spark.util.SparkUtils
 import org.apache.spark.sql._
 import org.apache.spark.sql.streaming.Trigger
-import org.slf4j.LoggerFactory
 
 import scala.collection.mutable.ListBuffer
 import scala.reflect._
@@ -36,8 +36,7 @@ import scala.reflect._
  * dataset对象
  * @author ChengLong 2019-5-18 11:02:56
  */
-class DatasetExt[T: ClassTag](dataset: Dataset[T]) {
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+class DatasetExt[T: ClassTag](dataset: Dataset[T]) extends Logging {
 
   /**
    * 用于检查当前Dataset是否为空

@@ -17,9 +17,7 @@
 
 package com.zto.fire.spark.ext.core
 
-import java.util.Properties
-
-import com.zto.fire.common.util.ValueUtils
+import com.zto.fire.common.util.{Logging, ValueUtils}
 import com.zto.fire.hbase.bean.HBaseBaseBean
 import com.zto.fire.jdbc.JdbcConnector
 import com.zto.fire.jdbc.conf.FireJdbcConf
@@ -31,8 +29,8 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.storage.StorageLevel
-import org.slf4j.LoggerFactory
 
+import java.util.Properties
 import scala.collection.mutable.ListBuffer
 import scala.reflect._
 
@@ -42,9 +40,7 @@ import scala.reflect._
  * @param dataFrame
  * dataFrame实例
  */
-class DataFrameExt(dataFrame: DataFrame) {
-  // 获取单例的HBaseContext对象
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+class DataFrameExt(dataFrame: DataFrame) extends Logging {
 
   /**
    * 注册为临时表的同时缓存表

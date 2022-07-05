@@ -22,7 +22,7 @@ import com.zto.fire.common.anno.Rest
 import com.zto.fire.common.bean.rest.ResultMsg
 import com.zto.fire.common.conf.{FireFrameworkConf, FireKafkaConf}
 import com.zto.fire.common.enu.{ErrorCode, JobType, RequestMethod}
-import com.zto.fire.common.util.{JSONUtils, KafkaUtils, PropUtils}
+import com.zto.fire.common.util.{JSONUtils, KafkaUtils, PropUtils, ReflectionUtils}
 import com.zto.fire.core.rest.RestCase
 import com.zto.fire.spark.bean.RestartParams
 import com.zto.fire.spark.util.{SparkSingletonFactory, SparkUtils}
@@ -150,7 +150,9 @@ trait BaseSparkStreaming extends BaseSpark {
    * 批次时间可通过子类复写main方法实现或通过在配置文件中指定：spark.streaming.batch.duration=30
    */
   override def main(args: Array[String]): Unit = {
-    this.init(30, false)
+    val batchDuration = this.conf.getLong("spark.streaming.batch.duration", 10)
+    val ck = this.conf.getBoolean("spark.streaming.receiver.writeAheadLog.enable", false)
+    this.init(batchDuration, ck, args)
   }
 
   /**
@@ -187,9 +189,9 @@ trait BaseSparkStreaming extends BaseSpark {
    */
   @Rest("/system/streaming/hotRestart")
   def hotRestart(request: Request, response: Response): AnyRef = {
-    val msg = new ResultMsg
     val json = request.body
     try {
+      this.logger.info(s"Ip address ${request.ip()} request /system/streaming/hotRestart")
       this.externalConf = JSONUtils.parseObject[RestartParams](json)
       new Thread(new Runnable {
         override def run(): Unit = {
@@ -199,11 +201,11 @@ trait BaseSparkStreaming extends BaseSpark {
       }).start()
 
       this.logger.info(s"[hotRestart] 执行热重启成功：duration=${this.externalConf.getBatchDuration} json=$json", "rest")
-      msg.buildSuccess(s"执行热重启成功：duration=${this.externalConf.getBatchDuration}", ErrorCode.SUCCESS.toString)
+      ResultMsg.buildSuccess(s"执行热重启成功：duration=${this.externalConf.getBatchDuration}", ErrorCode.SUCCESS.toString)
     } catch {
       case e: Exception => {
-        this.logger.error(s"[hotRestart] 执行热重启成功失败：json=$json", "rest")
-        msg.buildError("执行热重启成功失败", ErrorCode.ERROR)
+        this.logger.error(s"[hotRestart] 执行热重启失败：json=$json", e)
+        ResultMsg.buildError("执行热重启失败", ErrorCode.ERROR)
       }
     }
   }

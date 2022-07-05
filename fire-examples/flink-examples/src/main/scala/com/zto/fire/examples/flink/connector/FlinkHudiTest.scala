@@ -19,7 +19,9 @@ package com.zto.fire.examples.flink.connector
 
 import com.zto.fire.common.conf.FireKafkaConf
 import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.anno.Checkpoint
 
+@Checkpoint(60)
 object FlinkHudiTest extends BaseFlinkStreaming {
 
   /**

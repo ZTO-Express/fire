@@ -18,9 +18,19 @@
 package com.zto.fire.examples.flink.connector.kafka
 
 import com.zto.fire._
-import com.zto.fire.common.conf.FireKafkaConf
+import com.zto.fire.common.anno.Config
 import com.zto.fire.flink.BaseFlinkStreaming
 
+import java.time.Duration
+
+/**
+ *
+ * @contact Fire框架技术交流群（钉钉）：35373471
+ */
+@Config(
+  """
+    |flink.sql.conf.table.exec.state.ttl   =       1 ms
+    |""")
 object KafkaConsumer extends BaseFlinkStreaming {
 
   override def process: Unit = {
@@ -30,7 +40,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
 
   def streamJoin: Unit = {
     val table = this.flink.sql(
-      s"""
+      """
         |CREATE TABLE kafka (
         |  id int,
         |  name string,
@@ -43,7 +53,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |) WITH (
         |  'connector' = 'kafka',
         |  'topic' = 'fire',
-        |  'properties.bootstrap.servers' = '${FireKafkaConf.kafkaBrokers()}',
+        |  'properties.bootstrap.servers' = 'kafka-server:9092',
         |  'properties.group.id' = 'fire',
         |  'scan.startup.mode' = 'latest-offset',
         |  'value.format' = 'json'
@@ -51,7 +61,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |""".stripMargin)
 
     this.flink.sql(
-      s"""
+      """
         |CREATE TABLE kafka2 (
         |  id int,
         |  name string,
@@ -64,7 +74,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |) WITH (
         |  'connector' = 'kafka',
         |  'topic' = 'fire2',
-        |  'properties.bootstrap.servers' = '${FireKafkaConf.kafkaBrokers()}',
+        |  'properties.bootstrap.servers' = 'kafka-server:9092',
         |  'properties.group.id' = 'fire2',
         |  'scan.startup.mode' = 'latest-offset',
         |  'value.format' = 'json'
@@ -94,7 +104,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
 
   def insertPrint: Unit = {
     this.flink.sql(
-      s"""
+      """
         |CREATE TABLE kafka (
         |  id int,
         |  name string,
@@ -107,7 +117,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |) WITH (
         |  'connector' = 'kafka',
         |  'topic' = 'fire',
-        |  'properties.bootstrap.servers' = '${FireKafkaConf.kafkaBrokers()}',
+        |  'properties.bootstrap.servers' = 'kafka-server:9092',
         |  'properties.group.id' = 'fire',
         |  'scan.startup.mode' = 'latest-offset',
         |  'value.format' = 'json'

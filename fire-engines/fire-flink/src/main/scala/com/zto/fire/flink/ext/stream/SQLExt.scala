@@ -17,10 +17,10 @@
 
 package com.zto.fire.flink.ext.stream
 
-import com.zto.fire.common.util.PropUtils
+import com.zto.fire.common.util.{Logging, PropUtils}
 import com.zto.fire.flink.conf.FireFlinkConf
 import com.zto.fire.{noEmpty, requireNonEmpty}
-import org.slf4j.LoggerFactory
+import com.zto.fire._
 
 /**
  * Flink SQL扩展类
@@ -28,13 +28,12 @@ import org.slf4j.LoggerFactory
  * @author ChengLong 2021-4-23 10:36:49
  * @since 2.0.0
  */
-class SQLExt(sql: String) {
+class SQLExt(sql: String) extends Logging {
   // 用于匹配Flink SQL中的with表达式
   private[this] lazy val withPattern = """(with|WITH)\s*\(([\s\S]*)(\)|;)$""".r
   // 用于匹配Flink SQL中的create语句
   private[this] lazy val createTablePattern = """^\s*(create|CREATE)\s+(table|TABLE)""".r
-
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+  private[this] lazy val withMapCache = new JConcurrentHashMap[Int, Map[String, String]]()
 
   /**
    * 将给定的不包含with表达式的Flink SQL添加with表达式
@@ -47,28 +46,30 @@ class SQLExt(sql: String) {
   def with$(keyNum: Int = 1): String = {
     requireNonEmpty(sql, "sql语句不能为空！")
 
-    if (keyNum < 1) return sql
-    val withMatcher = withPattern.findFirstIn(sql)
-
-    // 如果SQL中已有with表达式，并且未开启with替换功能，则直接返回传入的sql
-    if (withMatcher.isDefined && !FireFlinkConf.sqlWithReplaceModeEnable) {
-      logger.warn(s"sql中已经包含with表达式，请移除后再使用动态with替换功能，或将[${FireFlinkConf.FLINK_SQL_WITH_REPLACE_MODE_ENABLE}]置为true进行强制覆盖，当前with表达式：\n${withMatcher.get}")
-      if (FireFlinkConf.sqlLogEnable) logger.info(s"完整SQL语句：$sql")
-      return sql
-    }
+    // 未开启with表达式替换或keyNum不合法，则直接返回
+    if (!FireFlinkConf.sqlWithReplaceModeEnable || keyNum < 1) return sql
 
     // 仅匹配create table语句，进行with表达式处理
     val createTableMatcher = this.createTablePattern.findFirstIn(sql)
+    // 非create table语句，直接返回
     if (createTableMatcher.isEmpty) return sql
 
-    // 从配置文件中获取指定keyNum的with参数
-    val withMap = PropUtils.sliceKeysByNum(FireFlinkConf.FLINK_SQL_WITH_PREFIX, keyNum)
-    if (withMap.isEmpty) throw new IllegalArgumentException(s"配置文件中未找到以${FireFlinkConf.FLINK_SQL_WITH_PREFIX}开头以${keyNum}结尾的配置信息！")
+    // 匹配sql中的with表达式，如果sql中已经定义了with表达式，则不做替换
+    val withMatcher = withPattern.findFirstIn(sql)
+    if (withMatcher.isDefined) return sql
 
-    // 如果开启with表达式强制替换功能，则将sql中with表达式移除
-    val fixSql = if (withMatcher.isDefined && FireFlinkConf.sqlWithReplaceModeEnable) withPattern.replaceAllIn(sql, "") else sql
+    // 从配置文件中获取指定keyNum的with参数，keyNum确定唯一的sql语句
+    val withMap = withMapCache.getOrElse(keyNum, PropUtils.sliceKeysByNum(FireFlinkConf.FLINK_SQL_WITH_PREFIX, keyNum))
+    // 当sql语句中没有指定with表达式并且没有配置with参数，则进行提示
+    if (withMap.isEmpty && withMatcher.isEmpty) {
+      this.logger.error(s"未搜索到keyNum=${keyNum}对应的sql配置列表，请以${FireFlinkConf.FLINK_SQL_WITH_PREFIX}开头，以${keyNum}结尾进行配置")
+      return sql
+    }
+
+    // 替换create table语句中的with表达式，并返回最终的sql
+    val fixSql = if (withMatcher.isDefined) withPattern.replaceAllIn(sql, "") else sql
     val finalSQL = buildWith(fixSql, withMap)
-    if (FireFlinkConf.sqlLogEnable) logger.info(s"完整SQL语句：$finalSQL")
+    if (FireFlinkConf.sqlLogEnable) logger.debug(s"完整SQL语句：$finalSQL")
     finalSQL
   }
 

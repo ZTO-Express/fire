@@ -17,25 +17,23 @@
 
 package com.zto.fire.common.util
 
-import java.util
-import java.util.Properties
-
 import com.zto.fire.common.conf.FireKafkaConf
 import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 import org.apache.kafka.clients.consumer.{ConsumerConfig, KafkaConsumer, OffsetAndTimestamp}
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.serialization.StringDeserializer
-import org.slf4j.LoggerFactory
+
+import java.util
+import java.util.Properties
 
 /**
  * Kafka工具类
  *
  * @author ChengLong 2020-4-17 09:50:50
  */
-object KafkaUtils {
+object KafkaUtils extends Logging {
   private lazy val kafkaMonitor = "fire_kafka_consumer"
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
 
   /**
    * 根据kafka集群名称获取broker地址

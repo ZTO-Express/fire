@@ -20,6 +20,7 @@ package com.zto.fire.common.util;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -247,16 +248,33 @@ public class StringsUtils {
     }
 
     /**
-     * 用于判断给定的字符串是否为数值类型
+     * 用于判断给定的字符串是否为数值类型，负数、小数均认为是数值类型
      * @param str
      * 字符串
      * @return
      * true：数值类型 false：非数值类型
      */
     public static boolean isNumeric(String str) {
-        Pattern pattern = Pattern.compile("(^[1-9]\\d*\\.?\\d*$)|(^0\\.\\d*[1-9]$)");
+        Pattern pattern = Pattern.compile("(^\\-?[1-9]\\d*\\.?\\d*$)|(^\\-?0\\.\\d*[1-9]$)");
         Matcher matcher = pattern.matcher(str);
         return matcher.matches();
     }
 
+    /**
+     * 基于时间戳的随机算法从字符串列表中获取随机的字符串
+     *
+     * @param strs
+     * 被随机分隔的一组字符串
+     * @param delimiter
+     * 分隔符
+     * @return
+     * 随机的字符串
+     */
+    public static String randomSplit(String strs, String delimiter) {
+        if (StringUtils.isBlank(strs)) throw new IllegalArgumentException("Hive Thrift Server url不能为空!");
+        if (StringUtils.isBlank(delimiter)) delimiter = ",";
+        String[] metastores = strs.split(delimiter);
+        if (metastores.length == 0) throw new IllegalArgumentException("未能根据指定的分隔符[" + delimiter + "]分隔字符串：" + strs);
+        return StringUtils.trim(metastores[(int) (System.currentTimeMillis() % metastores.length)]);
+    }
 }

@@ -20,13 +20,21 @@ package com.zto.fire.examples.spark.streaming
 import com.zto.fire._
 import com.zto.fire.common.anno.Scheduled
 import com.zto.fire.common.util.DateFormatUtils
+import com.zto.fire.core.anno.{Kafka, Kafka2, Kafka3}
 import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.anno.Streaming
 
 /**
  * kafka json解析
  *
  * @author ChengLong 2019-6-26 16:52:58
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Streaming(interval = 10)
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
+@Kafka2(brokers = "bigdata_test", topics = "fire2", groupId = "fire")
+@Kafka3(brokers = "bigdata_test", topics = "fire3", groupId = "fire")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object KafkaTest extends BaseSparkStreaming {
 
   // 每天凌晨4点01将锁标志设置为false，这样下一个批次就可以先更新维表再执行sql
@@ -43,7 +51,8 @@ object KafkaTest extends BaseSparkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream()
-    dstream.foreachRDD(rdd => {
+    // 使用至少一次的算子语义，支持在rdd处理失败时自动重试，并且在处理成功后会主动提交offset
+    dstream.foreachRDDAtLeastOnce(rdd => {
       // 更新并缓存维表动作，具体要根据锁的标记判断是否执行
       this.cacheTable
 
@@ -69,8 +78,6 @@ object KafkaTest extends BaseSparkStreaming {
       println("count=" + rdd.count())
     })
     dstream3.print(1)
-    val dstream5 = this.fire.createKafkaDirectStream(keyNum = 5)
-    dstream5.print(1)
 
     this.fire.start
   }
@@ -89,11 +96,5 @@ object KafkaTest extends BaseSparkStreaming {
   @Scheduled(cron = "0 0 9 * * ?")
   def loadTable3: Unit = {
     println(s"${DateFormatUtils.formatCurrentDateTime()}=================== 每天9点执行loadTable3 ===================")
-  }
-
-
-  override def main(args: Array[String]): Unit = {
-    this.init(10, false)
-    this.stop
   }
 }

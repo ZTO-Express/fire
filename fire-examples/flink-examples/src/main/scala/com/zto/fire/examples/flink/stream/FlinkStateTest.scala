@@ -19,8 +19,7 @@ package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
 import com.zto.fire.flink.BaseFlinkStreaming
-import com.zto.fire.flink.ext.function.FireMapFunction
-import org.apache.flink.api.common.functions.RichAggregateFunction
+import org.apache.flink.api.common.functions.{RichAggregateFunction, RichMapFunction}
 import org.apache.flink.api.common.state.StateTtlConfig
 import org.apache.flink.api.common.time.Time
 import org.apache.flink.api.scala._
@@ -42,7 +41,7 @@ object FlinkStateTest extends BaseFlinkStreaming {
    * 一、基于FireMapFunction演示ValueState、ListState、MapState的使用
    */
   private def testSimpleState: Unit = {
-    this.dstream.map(new FireMapFunction[(Int, Int), Int]() {
+    this.dstream.map(new RichMapFunction[(Int, Int), Int]() {
       // 定义状态的ttl时间，如果不在open方法中定义
       lazy val ttlConfig = StateTtlConfig.newBuilder(Time.days(1)).build()
       // 如果状态放到成员变量中声明，则需加lazy关键字
@@ -76,7 +75,7 @@ object FlinkStateTest extends BaseFlinkStreaming {
    * 二、基于FireMapFunction演示AggregatingState、getReducingState的使用
    */
   private def testFunctionState: Unit = {
-    this.dstream.map(new FireMapFunction[(Int, Int), Int]() {
+    this.dstream.map(new RichMapFunction[(Int, Int), Int]() {
       // 1. ReducingState状态演示，将Int类型数据保存到状态中
       //    该ReduceFunction中定义的逻辑是将当前状态中的值与传入的新值进行累加，然后重新update到状态中
       //    方法的第二个参数是reduce的具体逻辑，本示例演示的是累加
@@ -84,17 +83,17 @@ object FlinkStateTest extends BaseFlinkStreaming {
 
       // 2. AggregatingState状态使用，将Int类型数据保存到状态中
       //    需要创建AggregateFunction，泛型意义依次为：输入数据类型、累加器类型，聚合结果类型
-      lazy val aggrState = this.getAggregatingState[Int]("aggr_state", this.newRichAggregateFunction)
+      lazy val aggrState = this.getAggregatingState[(Int, Int), Int, Int]("aggr_state", this.newRichAggregateFunction)
 
       override def map(value: (Int, Int)): Int = {
         // 1. reduceState状态使用
         this.reduceState.add(value._2)
-        this.logger.warn(s"reduceState当前结果：key=${value._1} state=${this.reduceState.get()}")
+        logger.warn(s"reduceState当前结果：key=${value._1} state=${this.reduceState.get()}")
 
         // 2. AggregatingState状态使用
         this.aggrState.add(value)
         this.aggrState.get()
-        this.logger.warn(s"aggrState当前结果：key=${value._1} state=${this.aggrState.get()}")
+        logger.warn(s"aggrState当前结果：key=${value._1} state=${this.aggrState.get()}")
 
         value._2
       }

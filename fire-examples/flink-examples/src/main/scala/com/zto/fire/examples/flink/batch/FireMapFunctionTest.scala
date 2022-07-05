@@ -17,16 +17,12 @@
 
 package com.zto.fire.examples.flink.batch
 
-import java.lang
-import java.util.UUID
-
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.flink.BaseFlinkBatch
-import com.zto.fire.flink.ext.function.FireMapFunction
+import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.common.state.StateTtlConfig
 import org.apache.flink.api.common.time.Time
-import org.apache.flink.configuration.Configuration
-import org.apache.flink.util.Collector
 import org.apache.flink.api.scala._
 
 /**
@@ -35,25 +31,28 @@ import org.apache.flink.api.scala._
  * 内部对状态的api进行了封装，使用起来更简洁
  *
  * @author ChengLong 2020-4-9 15:59:19
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Config(
+  """
+    |flink.fire.config_center.enable=false
+    |""")
 object FireMapFunctionTest extends BaseFlinkBatch {
   lazy val dataset = this.fire.createCollectionDataSet(1 to 10)
   lazy val dataset2 = this.fire.createCollectionDataSet(1 to 3)
 
   override def process: Unit = {
     this.testMap
-    this.testMapPartition
-    this.testFlatMap
   }
 
   /**
    * 使用FireMapFunction进行Map算子操作
    */
   private def testMap: Unit = {
-    dataset.map(new FireMapFunction[Int, String]() {
+    dataset.map(new RichMapFunction[Int, String]() {
       lazy val ttlConfig = StateTtlConfig.newBuilder(Time.days(1)).build()
       // 获取广播变量
-      lazy val brocastValue = this.getBroadcastVariable[Int]("values")
+      lazy val brocastValue = this.getRuntimeContext.getBroadcastVariable[Int]("values")
 
       override def map(value: Int): String = {
         // 累加器使用详见：FlinkAccTest.scala
@@ -74,36 +73,5 @@ object FireMapFunctionTest extends BaseFlinkBatch {
         value.toString
       }
     }).withBroadcastSet(dataset2, "values").print()
-  }
-
-  /**
-   * 使用FireMapFunction进行Map算子操作
-   */
-  private def testMapPartition: Unit = {
-    dataset.mapPartition(new FireMapFunction[Int, String]() {
-      override def open(parameters: Configuration): Unit = {
-        // 执行初始化操作，如创建数据库连接池，调用次数与并行度一致
-      }
-
-      override def mapPartition(values: lang.Iterable[Int], out: Collector[String]): Unit = {
-        values.iterator().foreach(i => out.collect(i.toString))
-      }
-
-      override def close(): Unit = {
-        // 执行清理操作，如释放数据库连接，关闭文件句柄，调用次数与并行度一致
-      }
-
-    }).print()
-  }
-
-  /**
-   * 使用FireMapFunction进行FlatMap算子操作
-   */
-  private def testFlatMap: Unit = {
-    dataset.flatMap(new FireMapFunction[Int, String] {
-      override def flatMap(value: Int, out: Collector[String]): Unit = {
-        out.collect(value + " - " + UUID.randomUUID().toString)
-      }
-    }).print()
   }
 }

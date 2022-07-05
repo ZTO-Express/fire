@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  *
  * @author ChengLong 2020-11-13 09:39:28
  */
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.SOURCE)
 @Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})
 public @interface Internal {
 }

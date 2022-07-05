@@ -20,7 +20,7 @@ package com.zto.fire.common.util
 import com.zto.fire.common.conf.FirePS1Conf
 import com.zto.fire.common.util.UnitFormatUtils.{TimeUnitEnum, readable}
 import org.apache.commons.lang3.StringUtils
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.Logger
 
 import scala.util.Try
 
@@ -31,8 +31,7 @@ import scala.util.Try
  * @since 1.0.0
  * @create 2020-12-16 15:45
  */
-trait FireFunctions extends Serializable {
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+trait FireFunctions extends Serializable with Logging  {
   private[this] lazy val tryLog = ""
   private[this] lazy val catchLog = "执行try的过程中发生异常"
   private[this] lazy val finallyCatchLog = "执行finally过程中发生异常"
@@ -84,9 +83,9 @@ trait FireFunctions extends Serializable {
    * @param catchLog
    * 日志内容
    */
-  def tryWithLog(block: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, isThrow: Boolean = true): Unit = {
+  def tryWithLog(block: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, isThrow: Boolean = false): Unit = {
     try {
-      timecost(tryLog, logger)(block)
+      elapsed(tryLog, logger)(block)
     } catch {
       case t: Throwable => {
         ExceptionBus.offAndLogError(logger, catchLog, t)
@@ -107,7 +106,7 @@ trait FireFunctions extends Serializable {
    */
   def tryWithReturn[T](block: => T)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog): T = {
     try {
-      timecost[T](tryLog, logger)(block)
+      elapsed[T](tryLog, logger)(block)
     } catch {
       case t: Throwable => {
         ExceptionBus.offAndLogError(logger, catchLog, t)
@@ -130,9 +129,9 @@ trait FireFunctions extends Serializable {
    * @param finallyCatchLog
    * 当执行finally代码块过程中发生异常时打印的日志内容
    */
-  def tryWithFinally[T](block: => T)(finallyBlock: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, finallyCatchLog: String = finallyCatchLog): T = {
+  def tryFinallyWithReturn[T](block: => T)(finallyBlock: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, finallyCatchLog: String = finallyCatchLog): T = {
     try {
-      timecost[T](tryLog, logger)(block)
+      elapsed[T](tryLog, logger)(block)
     } catch {
       case t: Throwable =>
         ExceptionBus.offAndLogError(logger, catchLog, t)
@@ -141,10 +140,37 @@ trait FireFunctions extends Serializable {
       try {
         finallyBlock
       } catch {
-        case t: Throwable => {
+        case t: Throwable =>
           ExceptionBus.offAndLogError(logger, catchLog, t)
           throw t
-        }
+      }
+    }
+  }
+
+  /**
+   * 执行用户指定的try/catch/finally逻辑
+   *
+   * @param block
+   * try 代码块
+   * @param finallyBlock
+   * finally 代码块
+   * @param logger
+   * 日志记录器
+   * @param catchLog
+   * 当执行try过程中发生异常时打印的日志内容
+   * @param finallyCatchLog
+   * 当执行finally代码块过程中发生异常时打印的日志内容
+   */
+  def tryFinally(block: => Unit)(finallyBlock: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, finallyCatchLog: String = finallyCatchLog): Unit = {
+    try {
+      elapsed[Unit](tryLog, logger)(block)
+    } catch {
+      case t: Throwable => ExceptionBus.offAndLogError(logger, catchLog, t)
+    } finally {
+      try {
+        finallyBlock
+      } catch {
+        case t: Throwable => ExceptionBus.offAndLogError(logger, catchLog, t)
       }
     }
   }
@@ -162,7 +188,7 @@ trait FireFunctions extends Serializable {
    * @return
    * 耗时
    */
-  def timecost(beginTime: Long): String = readable(currentTime - beginTime, TimeUnitEnum.MS)
+  def elapsed(beginTime: Long): String = readable(currentTime - beginTime, TimeUnitEnum.MS)
 
   /**
    * 用于统计指定代码块执行的耗时时间
@@ -171,13 +197,15 @@ trait FireFunctions extends Serializable {
    * 用于描述当前代码块的用户
    * @param logger
    * 日志记录器
+   * @param threshold
+   * 执行代码块耗时超过给定的阈值时才记录日志
    * @param block
    * try的具体逻辑
    */
-  def timecost[T](msg: String, logger: Logger = this.logger)(block: => T): T = {
+  def elapsed[T](msg: String, logger: Logger = this.logger, threshold: Long = 0)(block: => T): T = {
     val startTime = this.currentTime
     val retVal = block
-    if (StringUtils.isNotBlank(msg)) logger.info(s"${msg}, 耗时：${timecost(startTime)}")
+    if (StringUtils.isNotBlank(msg) && (System.currentTimeMillis() - startTime) >= threshold) logger.info(s"${msg}, Elapsed：${elapsed(startTime)}")
     retVal
   }
 }

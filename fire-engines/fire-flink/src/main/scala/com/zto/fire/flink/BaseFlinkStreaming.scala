@@ -24,12 +24,14 @@ import com.zto.fire.common.util.{OSUtils, PropUtils}
 import com.zto.fire.flink.conf.FireFlinkConf
 import com.zto.fire.flink.util.{FlinkSingletonFactory, FlinkUtils}
 import org.apache.commons.lang3.StringUtils
+import org.apache.flink.api.common.RuntimeExecutionMode
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.{ConfigConstants, Configuration}
 import org.apache.flink.streaming.api.scala.{OutputTag, StreamExecutionEnvironment}
-import org.apache.flink.table.api.EnvironmentSettings
+import org.apache.flink.table.api.{EnvironmentSettings, TableEnvironment}
 import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
+import org.apache.flink.table.functions.ScalarFunction
 
 /**
  * flink streaming通用父接口
@@ -38,7 +40,8 @@ import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
  */
 trait BaseFlinkStreaming extends BaseFlink {
   protected var env, senv, flink, fire: StreamExecutionEnvironment = _
-  protected var tableEnv: StreamTableEnvironment = _
+  protected var tableEnv: TableEnvironment = _
+  protected lazy val steamTableEnv: StreamTableEnvironment = this.tableEnv.asInstanceOf[StreamTableEnvironment]
   override val jobType: JobType = JobType.FLINK_STREAMING
   // 用于存放延期的数据
   protected lazy val outputTag = new OutputTag[Any]("later_data")
@@ -90,11 +93,18 @@ trait BaseFlinkStreaming extends BaseFlink {
     } else {
       this.env = StreamExecutionEnvironment.getExecutionEnvironment
     }
+    val runtimeExecutionMode = RuntimeExecutionMode.valueOf(FireFlinkConf.flinkRuntimeMode)
+    this.env.setRuntimeMode(runtimeExecutionMode)
     this.env.getConfig.setGlobalJobParameters(ParameterTool.fromMap(finalConf.toMap))
+    if (!FireFlinkConf.operatorChainingEnable) this.env.disableOperatorChaining()
     this.configParse(this.env)
     this.senv = this.env
-    val settings = EnvironmentSettings.newInstance.useBlinkPlanner.inStreamingMode.build
-    this.tableEnv = StreamTableEnvironment.create(this.env, settings)
+    val builder = EnvironmentSettings.newInstance
+    this.tableEnv = if (runtimeExecutionMode == RuntimeExecutionMode.BATCH) {
+      TableEnvironment.create(builder.inBatchMode().build())
+    } else {
+      StreamTableEnvironment.create(this.env, builder.inStreamingMode().build())
+    }
     val tableConfig = this.tableEnv.getConfig.getConfiguration
     FireFlinkConf.flinkSqlConfig.filter(kv => noEmpty(kv, kv._1, kv._2)).foreach(kv => tableConfig.setString(kv._1, kv._2))
     if (StringUtils.isNotBlank(FireHiveConf.getMetastoreUrl)) {
@@ -102,14 +112,13 @@ trait BaseFlinkStreaming extends BaseFlink {
     }
     this.flink = this.env
     this.fire = this.flink
-    FlinkSingletonFactory.setStreamEnv(this.env).setStreamTableEnv(this.tableEnv)
+    FlinkSingletonFactory.setStreamEnv(this.env).setTableEnv(this.tableEnv)
     FlinkUtils.loadUdfJar
     // 自动注册配置文件中指定的udf函数
     if (FireFlinkConf.flinkUdfEnable) {
       FireFlinkConf.flinkUdfList.filter(udf => noEmpty(udf, udf._1, udf._2)).foreach(udf => {
-        val createFunction = s"CREATE FUNCTION ${udf._1} AS '${udf._2}'"
-        this.tableEnv.executeSql(createFunction)
-        logger.info(s"execute sql: $createFunction")
+        this.logger.info(s"register udf function [ ${udf._1} ] with class [ ${udf._2} ].")
+        this.tableEnv.createTemporarySystemFunction(udf._1, Class.forName(udf._2).asInstanceOf[Class[ScalarFunction]])
       })
     }
   }

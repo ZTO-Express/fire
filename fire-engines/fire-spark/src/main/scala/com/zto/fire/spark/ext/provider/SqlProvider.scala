@@ -22,8 +22,10 @@ import com.zto.fire.common.conf.FireHiveConf
 import com.zto.fire.spark.conf.FireSparkConf
 import com.zto.fire.spark.udf.UDFs
 import com.zto.fire.spark.util.SparkSingletonFactory
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.dstream.DStream
 
 /**
@@ -34,6 +36,8 @@ import org.apache.spark.streaming.dstream.DStream
  * @create 2020-12-23 17:35
  */
 trait SqlProvider extends SparkProvider {
+  protected lazy val sqlContext = this.spark.sqlContext
+  protected lazy val catalog = this.spark.catalog
 
   /**
    * 清理 RDD、DataFrame、Dataset、DStream、TableName 缓存
@@ -49,7 +53,7 @@ trait SqlProvider extends SparkProvider {
           if (elem.isInstanceOf[String]) {
             val tableName = elem.asInstanceOf[String]
             if (this.tableExists(tableName) && this.isCached(tableName)) {
-              SparkSingletonFactory.getSparkSession.sqlContext.uncacheTables(tableName)
+              this.sqlContext.uncacheTables(tableName)
             }
           } else if (elem.isInstanceOf[Dataset[_]]) {
             elem.asInstanceOf[Dataset[_]].uncache
@@ -77,11 +81,16 @@ trait SqlProvider extends SparkProvider {
   }
 
   /**
+   * 清空所有缓存
+   */
+  def clearCache: Unit = this.catalog.clearCache()
+
+  /**
    * 批量注册udf函数，包含系统内置的与用户自定义的
    */
   def registerUDF(): SparkSession = {
-    UDFs.registerSysUDF(SparkSingletonFactory.getSparkSession)
-    SparkSingletonFactory.getSparkSession
+    UDFs.registerSysUDF(this.spark)
+    this.spark
   }
 
   /**
@@ -93,7 +102,7 @@ trait SqlProvider extends SparkProvider {
    * true：存在 false：不存在
    */
   def tableExists(tableName: String): Boolean = {
-    SparkSingletonFactory.getSparkSession.catalog.tableExists(tableName)
+    this.catalog.tableExists(tableName)
   }
 
   /**
@@ -105,7 +114,7 @@ trait SqlProvider extends SparkProvider {
    * true：存在 false：不存在
    */
   def tableExists(dbName: String, tableName: String): Boolean = {
-    SparkSingletonFactory.getSparkSession.catalog.tableExists(dbName, tableName)
+    this.catalog.tableExists(dbName, tableName)
   }
 
   /**
@@ -123,7 +132,7 @@ trait SqlProvider extends SparkProvider {
    * 生成的DataFrame
    */
   def sqlForPersistent(sqlStr: String, tmpTableName: String, partitionName: String, saveMode: SaveMode = SaveMode.valueOf(FireSparkConf.saveMode), cache: Boolean = true): DataFrame = {
-    SparkSingletonFactory.getSparkSession.sqlContext.sqlForPersistent(sqlStr, tmpTableName, partitionName, saveMode, cache)
+    this.sqlContext.sqlForPersistent(sqlStr, tmpTableName, partitionName, saveMode, cache)
   }
 
   /**
@@ -137,7 +146,7 @@ trait SqlProvider extends SparkProvider {
    * 生成的DataFrame
    */
   def sqlForCache(sqlStr: String, tmpTableName: String): DataFrame = {
-    SparkSingletonFactory.getSparkSession.sqlContext.sqlForCache(sqlStr, tmpTableName)
+    this.sqlContext.sqlForCache(sqlStr, tmpTableName)
   }
 
   /**
@@ -151,7 +160,7 @@ trait SqlProvider extends SparkProvider {
    * 生成的DataFrame
    */
   def sqlNoCache(sqlStr: String, tmpTableName: String): DataFrame = {
-    SparkSingletonFactory.getSparkSession.sqlContext.sqlNoCache(sqlStr, tmpTableName)
+    this.sqlContext.sqlNoCache(sqlStr, tmpTableName)
   }
 
   /**
@@ -160,8 +169,33 @@ trait SqlProvider extends SparkProvider {
    * @param tables
    * 多个表名
    */
-  def cacheTables(tables: String*): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.cacheTables(tables: _*)
+  def cacheTables(tables: String*)(implicit storageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK_SER): Unit = {
+    tables.filter(noEmpty(_)).foreach(tableName => this.cacheTable(tableName, storageLevel))
+  }
+
+  /**
+   * 缓存指定的表
+   *
+   * @param table
+   * 表名
+   * @param storageLevel
+   * 缓存级别
+   */
+  def cacheTable(table: String, storageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK_SER): Unit = {
+    this.catalog.cacheTable(table, storageLevel)
+  }
+
+  /**
+   * 批量重新缓存多张表，已经缓存的会被uncache后再cache
+   *
+   * @param tables
+   * 待缓存的多个表名
+   */
+  def recacheTables(tables: String*): Unit = {
+    tables.filter(noEmpty(_)).foreach(table => {
+      if (this.isCached(table)) this.uncache(table)
+      this.cacheTables(table)
+    })
   }
 
   /**
@@ -172,7 +206,7 @@ trait SqlProvider extends SparkProvider {
    * @return
    */
   def isCached(tableName: String): Boolean = {
-    SparkSingletonFactory.getSparkSession.sqlContext.isCached(tableName)
+    this.catalog.isCached(tableName)
   }
 
   /**
@@ -191,9 +225,7 @@ trait SqlProvider extends SparkProvider {
    * 表名
    */
   def refreshTables(tables: String*): Unit = {
-    if (tables != null) {
-      tables.filter(noEmpty(_)).foreach(table => SparkSingletonFactory.getSparkSession.catalog.refreshTable(table))
-    }
+    tables.filter(noEmpty(_)).foreach(table => this.catalog.refreshTable(table))
   }
 
   /**
@@ -204,12 +236,10 @@ trait SqlProvider extends SparkProvider {
    * @param tables
    * 待cache或refresh的表名集合
    */
-  def cacheOrRefreshTables(tables: String*): Unit = {
-    if (tables != null) {
-      tables.filter(noEmpty(_)).foreach(table => {
-        if (this.isNotCached(table)) this.cacheTables(table) else this.refreshTables(table)
-      })
-    }
+  def cacheOrRefreshTables(tables: String*)(implicit storageLevel: StorageLevel = StorageLevel.MEMORY_AND_DISK_SER): Unit = {
+    tables.filter(noEmpty(_)).foreach(table => {
+      if (this.isNotCached(table)) this.cacheTable(table, storageLevel) else this.refreshTables(table)
+    })
   }
 
   /**
@@ -219,7 +249,7 @@ trait SqlProvider extends SparkProvider {
    * 多个表名
    */
   def dropHiveTable(tableNames: String*): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.dropHiveTable(tableNames: _*)
+    this.sqlContext.dropHiveTable(tableNames: _*)
   }
 
   /**
@@ -231,7 +261,7 @@ trait SqlProvider extends SparkProvider {
    * 分区
    */
   def addPartitions(tableName: String, partitions: String*): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.addPartitions(tableName, partitions: _*)
+    this.sqlContext.addPartitions(tableName, partitions: _*)
   }
 
   /**
@@ -245,7 +275,7 @@ trait SqlProvider extends SparkProvider {
    * 分区字段名称，默认ds
    */
   def addPartition(tableName: String, partition: String, partitionName: String = FireHiveConf.partitionName): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.addPartition(tableName, partition, partitionName)
+    this.sqlContext.addPartition(tableName, partition, partitionName)
   }
 
   /**
@@ -257,7 +287,7 @@ trait SqlProvider extends SparkProvider {
    * 分区
    */
   def dropPartition(tableName: String, partition: String, partitionName: String = FireHiveConf.partitionName): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.dropPartition(tableName, partition, partitionName)
+    this.sqlContext.dropPartition(tableName, partition, partitionName)
   }
 
   /**
@@ -269,7 +299,7 @@ trait SqlProvider extends SparkProvider {
    * 分区
    */
   def dropPartitions(tableName: String, partitions: String*): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.dropPartitions(tableName, partitions: _*)
+    this.sqlContext.dropPartitions(tableName, partitions: _*)
   }
 
   /**
@@ -281,7 +311,7 @@ trait SqlProvider extends SparkProvider {
    * 目标表
    */
   def createTableAsSelect(srcTableName: String, destTableName: String): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.createTableAsSelect(srcTableName, destTableName)
+    this.sqlContext.createTableAsSelect(srcTableName, destTableName)
   }
 
   /**
@@ -293,7 +323,7 @@ trait SqlProvider extends SparkProvider {
    * 目标表名
    */
   def createTableLike(tableName: String, destTableName: String): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.createTableLike(tableName, destTableName)
+    this.sqlContext.createTableLike(tableName, destTableName)
   }
 
   /**
@@ -307,7 +337,7 @@ trait SqlProvider extends SparkProvider {
    * 多个列，逗号分隔
    */
   def createTableAsSelectFields(srcTableName: String, destTableName: String, cols: String): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.createTableAsSelectFields(srcTableName, destTableName, cols)
+    this.sqlContext.createTableAsSelectFields(srcTableName, destTableName, cols)
   }
 
   /**
@@ -323,7 +353,7 @@ trait SqlProvider extends SparkProvider {
    * 多个列，逗号分隔
    */
   def insertIntoPartition(srcTableName: String, destTableName: String, ds: String, cols: String, partitionName: String = FireHiveConf.partitionName): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.insertIntoPartition(srcTableName, destTableName, ds, cols, partitionName)
+    this.sqlContext.insertIntoPartition(srcTableName, destTableName, ds, cols, partitionName)
   }
 
   /**
@@ -337,7 +367,7 @@ trait SqlProvider extends SparkProvider {
    * 查询语句
    */
   def insertIntoPartitionAsSelect(destTableName: String, ds: String, querySQL: String, partitionName: String = FireHiveConf.partitionName, overwrite: Boolean = false): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.insertIntoPartitionAsSelect(destTableName, ds, querySQL, partitionName, overwrite)
+    this.sqlContext.insertIntoPartitionAsSelect(destTableName, ds, querySQL, partitionName, overwrite)
   }
 
   /**
@@ -349,7 +379,7 @@ trait SqlProvider extends SparkProvider {
    * 查询sql语句
    */
   def insertIntoDymPartitionAsSelect(destTableName: String, querySQL: String, partitionName: String = FireHiveConf.partitionName): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.insertIntoDymPartitionAsSelect(destTableName, querySQL, partitionName)
+    this.sqlContext.insertIntoDymPartitionAsSelect(destTableName, querySQL, partitionName)
   }
 
   /**
@@ -361,7 +391,7 @@ trait SqlProvider extends SparkProvider {
    * 新的表名
    */
   def rename(oldTableName: String, newTableName: String): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.rename(oldTableName, newTableName)
+    this.sqlContext.rename(oldTableName, newTableName)
   }
 
   /**
@@ -375,6 +405,6 @@ trait SqlProvider extends SparkProvider {
    * 新库名称
    */
   def moveDB(tableName: String, oldDB: String, newDB: String): Unit = {
-    SparkSingletonFactory.getSparkSession.sqlContext.moveDB(tableName, oldDB, newDB)
+    this.sqlContext.moveDB(tableName, oldDB, newDB)
   }
 }

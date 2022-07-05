@@ -32,7 +32,7 @@ import org.slf4j.{Logger, LoggerFactory}
  * @since 2.0.0
  * @create 2020-11-27 10:32
  */
-private[fire] trait Connector extends Serializable {
+trait Connector extends Serializable {
   protected lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   this.hook()
 
@@ -70,12 +70,12 @@ private[fire] trait Connector extends Serializable {
  * @param keyNum
  * 对应的connector实例标识，不同的keyNum对应不同的集群连接实例
  */
-private[fire] abstract class FireConnector(keyNum: Int = 1) extends Connector
+abstract class FireConnector(keyNum: Int = 1) extends Connector
 
 /**
  * 用于根据指定的keyNum创建不同的connector实例
  */
-private[fire] abstract class ConnectorFactory[T <: Connector] extends Serializable {
+abstract class ConnectorFactory[T <: Connector] extends Serializable {
   @transient
   private[fire] lazy val instanceMap = new ConcurrentHashMap[Int, T]()
   @transient

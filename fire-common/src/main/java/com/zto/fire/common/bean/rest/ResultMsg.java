@@ -19,6 +19,9 @@ package com.zto.fire.common.bean.rest;
 
 import com.zto.fire.common.enu.ErrorCode;
 import com.zto.fire.common.util.JSONUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Objects;
 
 /**
  * 返回消息
@@ -105,21 +108,15 @@ public class ResultMsg {
     /**
      * 构建成功消息
      */
-    public String buildSuccess(Object content, String msg) {
-        this.content = content;
-        this.code = ErrorCode.SUCCESS;
-        this.msg = msg;
-        return this.toString();
+    public static String buildSuccess(Object content, String msg) {
+        return new ResultMsg(Objects.toString(content, ""), ErrorCode.SUCCESS, msg).toString();
     }
 
     /**
      * 构建失败消息
      */
-    public String buildError(String msg, ErrorCode errorCode) {
-        this.content = "";
-        this.code = errorCode;
-        this.msg = msg;
-        return this.toString();
+    public static String buildError(String msg, ErrorCode errorCode) {
+        return new ResultMsg("", errorCode, msg).toString();
     }
 
     @Override

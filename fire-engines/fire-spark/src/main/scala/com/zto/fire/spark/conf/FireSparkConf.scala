@@ -33,6 +33,7 @@ private[fire] object FireSparkConf {
   lazy val SPARK_SAVE_MODE = "spark.saveMode"
   lazy val SPARK_PARALLELISM = "spark.parallelism"
   lazy val SPARK_CHK_POINT_DIR = "spark.chkpoint.dir"
+  lazy val SPARK_SQL_EXTENSIONS_ENABLE = "spark.fire.sql.extensions.enable"
 
   // spark datasource v2 api中的options配置key前缀
   lazy val SPARK_DATASOURCE_OPTIONS_PREFIX = "spark.datasource.options."
@@ -50,6 +51,8 @@ private[fire] object FireSparkConf {
   lazy val SPARK_STREAMING_BATCH_DURATION = "spark.streaming.batch.duration"
   // spark streaming的remember时间，-1表示不生效(ms)
   lazy val SPARK_STREAMING_REMEMBER = "spark.streaming.remember"
+  // 当stage失败多少个时退出整个SparkSession
+  lazy val SPARK_FIRE_STAGE_MAXFAILURES = "spark.fire.stage.maxFailures"
 
   // spark streaming的remember时间，-1表示不生效(ms)
   def streamingRemember: Long = PropUtils.getLong(this.SPARK_STREAMING_REMEMBER, -1)
@@ -60,6 +63,8 @@ private[fire] object FireSparkConf {
   lazy val parallelism = PropUtils.getInt(this.SPARK_PARALLELISM, 200)
   lazy val chkPointDirPrefix = PropUtils.getString(this.SPARK_CHK_POINT_DIR, this.sparkChkPointDir)
   lazy val confBathDuration = PropUtils.getInt(this.SPARK_STREAMING_BATCH_DURATION, -1)
+  // 是否启用spark sql解析器扩展
+  lazy val sqlExtensionsEnable = PropUtils.getBoolean(this.SPARK_SQL_EXTENSIONS_ENABLE, true)
 
   /**
    * spark datasource api中的format参数
@@ -85,4 +90,9 @@ private[fire] object FireSparkConf {
    * spark datasource api中的load方法参数
    */
   def datasourceLoadParam(keyNum: Int = 1): String = PropUtils.getString(this.SPARK_DATASOURCE_LOAD_PARAM, "", keyNum)
+
+  /**
+   * 当stage失败次数大于该值时SparkSession退出
+   */
+  def stageMaxFailures: Int = PropUtils.getInt(this.SPARK_FIRE_STAGE_MAXFAILURES, -1)
 }

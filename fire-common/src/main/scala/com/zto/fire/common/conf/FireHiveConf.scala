@@ -17,7 +17,8 @@
 
 package com.zto.fire.common.conf
 
-import com.zto.fire.common.util.PropUtils
+import com.zto.fire.common.util.{PropUtils, StringsUtils}
+import spark.utils.StringUtils
 
 /**
  * hive相关配置
@@ -63,7 +64,8 @@ private[fire] object FireHiveConf {
    * 根据hive集群名称获取metastore地址
    */
   def getMetastoreUrl: String = {
-    this.hiveMetastoreMap.getOrElse(hiveCluster, hiveCluster)
+    val confUrl = this.hiveMetastoreMap.getOrElse(hiveCluster, hiveCluster)
+    if (StringUtils.isNotBlank(confUrl) && FireFrameworkConf.hiveMetastoreUrlRandomEnable) StringsUtils.randomSplit(confUrl, ",") else confUrl
   }
 
   /**

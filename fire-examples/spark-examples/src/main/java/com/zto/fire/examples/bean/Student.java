@@ -20,12 +20,13 @@ package com.zto.fire.examples.bean;
 import com.zto.fire.common.anno.FieldName;
 import com.zto.fire.common.util.DateFormatUtils;
 import com.zto.fire.common.util.JSONUtils;
+import com.zto.fire.hbase.anno.HConfig;
 import com.zto.fire.hbase.bean.HBaseBaseBean;
+import com.zto.fire.spark.bean.GenerateBean;
+import com.zto.fire.spark.connector.DataGenReceiver;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 对应HBase表的JavaBean
@@ -33,17 +34,18 @@ import java.util.Objects;
  * @author ChengLong 2019-6-20 16:06:16
  */
 // @HConfig(multiVersion = true)
-public class Student extends HBaseBaseBean<Student> {
-    private Long id;
-    private String name;
-    private Integer age;
+// @HConfig(nullable = true, multiVersion = true, versions = 3)
+public class Student extends HBaseBaseBean<Student> implements GenerateBean<Student> {
+    protected Long id;
+    protected String name;
+    protected Integer age;
     // 多列族情况下需使用family单独指定
-    private String createTime;
+    protected String createTime;
     // 若JavaBean的字段名称与HBase中的字段名称不一致，需使用value单独指定
     // 此时hbase中的列名为length1，而不是length
-    @FieldName(family = "data", value = "length1")
-    private BigDecimal length;
-    private Boolean sex;
+    //@FieldName(family = "data", value = "length1")
+    protected BigDecimal length;
+    protected Boolean sex;
 
     /**
      * rowkey的构建
@@ -144,6 +146,11 @@ public class Student extends HBaseBaseBean<Student> {
         return JSONUtils.toJSONString(this);
     }
 
+    @Override
+    public List<Student> generate() {
+        return newStudentList();
+    }
+
     public static List<Student> newStudentList() {
         String dateTime = DateFormatUtils.formatCurrentDateTime();
         return Arrays.asList(
@@ -155,8 +162,7 @@ public class Student extends HBaseBaseBean<Student> {
                 new Student(6L, "hive", 17, BigDecimal.valueOf(17.1), true, dateTime),
                 new Student(7L, "presto", 18, BigDecimal.valueOf(18.1), true, dateTime),
                 new Student(8L, "flink", 19, BigDecimal.valueOf(19.1), true, dateTime),
-                new Student(9L, "streaming", 10, BigDecimal.valueOf(10.1), true, dateTime),
-                new Student(10L, "sql", 12, BigDecimal.valueOf(12.1), true, dateTime)
+                new Student(9L, "streaming", 10, BigDecimal.valueOf(10.1), true, dateTime)
         );
     }
 

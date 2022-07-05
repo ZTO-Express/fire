@@ -142,6 +142,8 @@ public class Student extends HBaseBaseBean<Student> {
         this.age = age;
     }
 
+    public void setClassName(String name) {}
+
     @Override
     public String toString() {
         return JSONUtils.toJSONString(this);

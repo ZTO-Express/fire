@@ -21,21 +21,62 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>flink-examples_${flink.reference}</artifactId>
     <packaging>jar</packaging>
-    <name>flink-examples</name>
+    <name>Fire : Examples : Flink </name>
 
     <parent>
         <groupId>com.zto.fire</groupId>
-        <artifactId>fire-examples_2.12</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <artifactId>fire-examples</artifactId>
+        <version>2.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <dependencies>
         <dependency>
             <groupId>com.zto.fire</groupId>
-            <artifactId>fire-flink_${flink.reference}</artifactId>
-            <version>${project.version}</version>
+            <artifactId>fire-common_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-core_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-flink_${flink.reference}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-enhance-flink_${flink.reference}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-enhance-arthas_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-hbase_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-jdbc_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-flink-rocketmq_${flink.reference}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-metrics_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>
@@ -74,12 +115,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-queryable-state-runtime_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
             <artifactId>flink-queryable-state-client-java</artifactId>
             <version>${flink.version}</version>
             <scope>${maven.scope}</scope>
@@ -104,6 +139,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+            <scope>${maven.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java-bridge_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <scope>${maven.scope}</scope>
@@ -117,18 +158,6 @@
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-scala-bridge_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <scope>${maven.scope}</scope>
         </dependency>
@@ -180,6 +209,11 @@
             <artifactId>rocketmq-acl</artifactId>
             <version>${rocketmq.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-orc-nohive_${scala.binary.version}</artifactId>
+            <version>${flink.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
@@ -198,7 +232,7 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
-            <version>${hive.apache.version}</version>
+            <version>${hive.flink.version}</version>
             <scope>${maven.scope}</scope>
             <exclusions>
                 <exclusion>
@@ -235,7 +269,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-client_${scala.binary.version}</artifactId>
+            <artifactId>hbase-client</artifactId>
             <version>${hbase.version}</version>
             <scope>${maven.scope}</scope>
             <exclusions>
@@ -247,18 +281,12 @@
         </dependency>
 
         <!-- hudi相关依赖 -->
-        <dependency>
+        <!--<dependency>
             <groupId>org.apache.hudi</groupId>
             <artifactId>hudi-flink-bundle_${scala.binary.version}</artifactId>
             <version>${hudi.version}</version>
             <scope>${maven.scope}</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.rocketmq</groupId>
-            <artifactId>rocketmq-flink_${flink.major.version}_${scala.binary.version}</artifactId>
-            <version>${rocketmq.external.version}</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.oracle</groupId>

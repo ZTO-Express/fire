@@ -18,8 +18,8 @@
 package com.zto.fire.examples.spark
 
 import java.util.Date
-
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.DateFormatUtils
 import com.zto.fire.examples.bean.Hudi
 import com.zto.fire.spark.BaseSparkCore
@@ -37,7 +37,16 @@ import org.apache.spark.sql.SaveMode._
  * @author ChengLong
  * @since 1.0.0
  * @create 2021-02-07 13:50
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Config(
+  """
+    |spark.serializer=org.apache.spark.serializer.KryoSerializer
+    |spark.local.cores=2
+    |spark.default.parallelism=2
+    |spark.hive.cluster=test
+    |spark.sql.hive.convertMetastoreParquet=false
+    |""")
 object HudiTest extends BaseSparkCore {
   val tableName = "t_hudi"
   val basePath = "J:\\hudi"

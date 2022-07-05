@@ -17,13 +17,13 @@
 
 package com.zto.fire.common.util
 
-import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
-
 import com.google.common.collect.EvictingQueue
 import com.zto.fire.common.anno.Internal
 import com.zto.fire.common.conf.FireFrameworkConf
 import com.zto.fire.predef._
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.Logger
+
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 
 
 /**
@@ -33,8 +33,7 @@ import org.slf4j.{Logger, LoggerFactory}
  * @since 1.1.2
  * @create 2020-11-16 09:33
  */
-object ExceptionBus {
-  private[this] lazy val logger = LoggerFactory.getLogger(this.getClass)
+object ExceptionBus extends Logging {
   // 用于保存收集而来的异常对象
   @transient
   private[this] lazy val queue = EvictingQueue.create[(String, Throwable)](FireFrameworkConf.exceptionBusSize)

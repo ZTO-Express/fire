@@ -21,12 +21,12 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>spark-examples_${spark.reference}</artifactId>
     <packaging>jar</packaging>
-    <name>spark-examples</name>
+    <name>Fire : Examples : Spark </name>
 
     <parent>
         <groupId>com.zto.fire</groupId>
-        <artifactId>fire-examples_2.12</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <artifactId>fire-examples</artifactId>
+        <version>2.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -34,24 +34,64 @@
         <dependency>
             <groupId>com.zto.fire</groupId>
             <artifactId>fire-common_${scala.binary.version}</artifactId>
-            <version>${project.version}</version>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-core_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
         </dependency>
         <dependency>
             <groupId>com.zto.fire</groupId>
             <artifactId>fire-spark_${spark.reference}</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-enhance-spark_${spark.reference}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-spark-rocketmq_${spark.reference}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-spark-hbase_${spark.reference}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-hbase_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-jdbc_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-enhance-arthas_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-metrics_${scala.binary.version}</artifactId>
+            <version>${fire.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.10.0</version>
+            <version>${jackson.version}</version>
             <scope>${maven.scope}</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>2.10.0</version>
+            <version>${jackson.version}</version>
             <scope>${maven.scope}</scope>
         </dependency>
 
@@ -77,12 +117,6 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-streaming_${scala.binary.version}</artifactId>
-            <version>${spark.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-hive_${scala.binary.version}</artifactId>
             <version>${spark.version}</version>
             <scope>${maven.scope}</scope>
         </dependency>
@@ -148,33 +182,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-client_${scala.binary.version}</artifactId>
+            <artifactId>hbase-client</artifactId>
             <version>${hbase.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-spark${spark.major.version}_${scala.binary.version}</artifactId>
-            <version>${hbase.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.hbase</groupId>
-                    <artifactId>hbase-client</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- kudu相关依赖 -->
-        <dependency>
-            <groupId>org.apache.kudu</groupId>
-            <artifactId>kudu-spark${spark.major.version}_${scala.binary.version}</artifactId>
-            <version>${kudu.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.kudu</groupId>
-            <artifactId>kudu-client</artifactId>
-            <version>${kudu.version}</version>
-            <scope>${maven.scope}</scope>
         </dependency>
 
         <!-- rocketmq相关依赖 -->
@@ -183,19 +192,8 @@
             <artifactId>rocketmq-client</artifactId>
             <version>${rocketmq.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.rocketmq</groupId>
-            <artifactId>rocketmq-spark${spark.major.version}_${scala.binary.version}</artifactId>
-            <version>${rocketmq.external.version}</version>
-        </dependency>
 
         <!-- Hudi相关依赖 -->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-avro_${scala.binary.version}</artifactId>
-            <version>${spark.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.hudi</groupId>
             <artifactId>hudi-spark-bundle_${scala.binary.version}</artifactId>
@@ -214,126 +212,4 @@
             <version>${guava.version}</version>
         </dependency>
     </dependencies>
-
-    <profiles>
-        <!-- 以hadoop2.7、hive1.2低版本编译 -->
-        <profile>
-            <id>hadoop-2.7</id>
-            <properties>
-                <hive.group>org.spark-project.hive</hive.group>
-                <hive.version>1.2.1.spark2</hive.version>
-            </properties>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.spark</groupId>
-                    <artifactId>spark-hive_${scala.binary.version}</artifactId>
-                    <version>${spark.version}</version>
-                    <scope>${maven.scope}</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-common</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-exec</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-metastore</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-serde</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-shims</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>org.apache.spark</groupId>
-                    <artifactId>spark-hive-thriftserver_${scala.binary.version}</artifactId>
-                    <version>${spark.version}</version>
-                    <scope>${maven.scope}</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-cli</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-jdbc</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.hive</groupId>
-                            <artifactId>hive-beeline</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-                <dependency>
-                    <groupId>${hive.group}</groupId>
-                    <artifactId>hive-cli</artifactId>
-                    <version>${hive.version}</version>
-                    <scope>${maven.scope}</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${hive.group}</groupId>
-                    <artifactId>hive-jdbc</artifactId>
-                    <version>${hive.version}</version>
-                    <scope>${maven.scope}</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${hive.group}</groupId>
-                    <artifactId>hive-beeline</artifactId>
-                    <version>${hive.version}</version>
-                    <scope>${maven.scope}</scope>
-                </dependency>
-
-                <dependency>
-                    <groupId>${hive.group}</groupId>
-                    <artifactId>hive-common</artifactId>
-                    <version>${hive.version}</version>
-                    <scope>${maven.scope}</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${hive.group}</groupId>
-                    <artifactId>hive-metastore</artifactId>
-                    <version>${hive.version}</version>
-                    <scope>${maven.scope}</scope>
-                </dependency>
-                <dependency>
-                    <groupId>${hive.group}</groupId>
-                    <artifactId>hive-exec</artifactId>
-                    <version>${hive.version}</version>
-                    <scope>${maven.scope}</scope>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>org.apache.commons</groupId>
-                            <artifactId>commons-lang3</artifactId>
-                        </exclusion>
-                        <exclusion>
-                            <groupId>org.apache.spark</groupId>
-                            <artifactId>spark-core_2.10</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
-        </profile>
-        <profile>
-            <id>hadoop-3.2</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.spark</groupId>
-                    <artifactId>spark-hive_${scala.binary.version}</artifactId>
-                    <version>${spark.version}</version>
-                    <scope>${maven.scope}</scope>
-                </dependency>
-            </dependencies>
-        </profile>
-    </profiles>
 </project>

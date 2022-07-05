@@ -37,6 +37,7 @@ private[fire] object FireFlinkConf {
   lazy val FLINK_CLOSURE_CLEANER_LEVEL = "flink.closure.cleaner.level"
   lazy val FLINK_DEFAULT_INPUT_DEPENDENCY_CONSTRAINT = "flink.default.input.dependency.constraint"
   lazy val FLINK_EXECUTION_MODE = "flink.execution.mode"
+  lazy val FLINK_RUNTIME_MODE = "flink.runtime.mode"
   lazy val FLINK_LATENCY_TRACKING_INTERVAL = "flink.latency.tracking.interval"
   lazy val FLINK_MAX_PARALLELISM = "flink.max.parallelism"
   lazy val FLINK_DEFAULT_PARALLELISM = "flink.default.parallelism"
@@ -50,6 +51,10 @@ private[fire] object FireFlinkConf {
   lazy val FLINK_CLIENT_SIMPLE_CLASS_NAME = "flink.client.simple.class.name"
   lazy val FLINK_SQL_CONF_UDF_JARS = "flink.sql.conf.pipeline.jars"
   lazy val FLINK_SQL_LOG_ENABLE = "flink.sql.log.enable"
+  lazy val FLINK_SQL_DEFAULT_CATALOG_NAME = "flink.sql.default.catalog.name"
+  lazy val FLINK_STATE_TTL_DAYS = "flink.state.ttl.days"
+  lazy val DISTRIBUTE_SYNC_ENABLE = "fire.distribute.sync.enable"
+  lazy val OPERATOR_CHAINING_ENABLE = "flink.env.operatorChaining.enable"
 
   // checkpoint相关配置项
   lazy val FLINK_STREAM_CHECKPOINT_INTERVAL = "flink.stream.checkpoint.interval"
@@ -60,16 +65,20 @@ private[fire] object FireFlinkConf {
   lazy val FLINK_STREAM_CHECKPOINT_PREFER_RECOVERY = "flink.stream.checkpoint.prefer.recovery"
   lazy val FLINK_STREAM_CHECKPOINT_TOLERABLE_FAILURE_NUMBER = "flink.stream.checkpoint.tolerable.failure.number"
   lazy val FLINK_STREAM_CHECKPOINT_EXTERNALIZED = "flink.stream.checkpoint.externalized"
+  lazy val FLINK_STREAM_CHECKPOINT_UNALIGNED = "flink.stream.checkpoint.unaligned.enable"
   lazy val FLINK_SQL_WITH_REPLACE_MODE_ENABLE = "flink.sql_with.replaceMode.enable"
+  lazy val FLINK_STATE_CLEAN_HDFS_URL = "flink.state.clean.hdfs.url"
 
   // flink sql相关配置
   lazy val FLINK_SQL_CONF_PREFIX = "flink.sql.conf."
   // udf自动注册
-  lazy val FLINK_SQL_UDF = "flink.sql.udf."
+  lazy val FLINK_SQL_UDF_CONF_PREFIX = "flink.sql.udf.conf."
   lazy val FLINK_SQL_UDF_ENABLE = "flink.sql.udf.fireUdf.enable"
   lazy val FLINK_SQL_WITH_PREFIX = "flink.sql.with."
+  lazy val FLINK_SQL_AUTO_ADD_STATEMENT_SET = "flink.sql.auto.add.statementSet"
 
-  lazy val sqlWithReplaceModeEnable = PropUtils.getBoolean(this.FLINK_SQL_WITH_REPLACE_MODE_ENABLE, false)
+  lazy val defaultCatalogName = PropUtils.getString(this.FLINK_SQL_DEFAULT_CATALOG_NAME, "default_catalog")
+  lazy val sqlWithReplaceModeEnable = PropUtils.getBoolean(this.FLINK_SQL_WITH_REPLACE_MODE_ENABLE, true)
   lazy val autoGenerateUidEnable = PropUtils.getBoolean(this.FLINK_AUTO_GENERATE_UID_ENABLE, true)
   lazy val autoTypeRegistrationEnable = PropUtils.getBoolean(this.FLINK_AUTO_TYPE_REGISTRATION_ENABLE, true)
   lazy val forceAvroEnable = PropUtils.getBoolean(this.FLINK_FORCE_AVRO_ENABLE, false)
@@ -81,7 +90,7 @@ private[fire] object FireFlinkConf {
   lazy val defaultInputDependencyConstraint = PropUtils.getString(this.FLINK_DEFAULT_INPUT_DEPENDENCY_CONSTRAINT)
   lazy val executionMode = PropUtils.getString(this.FLINK_EXECUTION_MODE)
   lazy val latencyTrackingInterval = PropUtils.getLong(this.FLINK_LATENCY_TRACKING_INTERVAL, -1)
-  lazy val maxParallelism = PropUtils.getInt(this.FLINK_MAX_PARALLELISM, 8)
+  lazy val maxParallelism = PropUtils.getInt(this.FLINK_MAX_PARALLELISM, 1024)
   lazy val defaultParallelism = PropUtils.getInt(this.FLINK_DEFAULT_PARALLELISM, -1)
   lazy val taskCancellationInterval = PropUtils.getLong(this.FLINK_TASK_CANCELLATION_INTERVAL, -1)
   lazy val taskCancellationTimeoutMillis = PropUtils.getLong(this.FLINK_TASK_CANCELLATION_TIMEOUT_MILLIS, -1)
@@ -90,21 +99,34 @@ private[fire] object FireFlinkConf {
   lazy val streamNumberExecutionRetries = PropUtils.getInt(this.FLINK_STREAM_NUMBER_EXECUTION_RETRIES, -1)
   lazy val streamTimeCharacteristic = PropUtils.getString(this.FLINK_STREAM_TIME_CHARACTERISTIC, "")
   lazy val sqlLogEnable = PropUtils.getBoolean(this.FLINK_SQL_LOG_ENABLE, false)
+  lazy val unalignedCheckpointEnable = PropUtils.getBoolean(this.FLINK_STREAM_CHECKPOINT_UNALIGNED, true)
+  lazy val distributeSyncEnabled = PropUtils.getBoolean(this.DISTRIBUTE_SYNC_ENABLE, true)
 
   // checkpoint相关配置项
   lazy val streamCheckpointInterval = PropUtils.getLong(this.FLINK_STREAM_CHECKPOINT_INTERVAL, -1)
   lazy val streamCheckpointMode = PropUtils.getString(this.FLINK_STREAM_CHECKPOINT_MODE, "EXACTLY_ONCE")
   lazy val streamCheckpointTimeout = PropUtils.getLong(this.FLINK_STREAM_CHECKPOINT_TIMEOUT, 600000L)
   lazy val streamCheckpointMaxConcurrent = PropUtils.getInt(this.FLINK_STREAM_CHECKPOINT_MAX_CONCURRENT, 1)
-  lazy val streamCheckpointMinPauseBetween = PropUtils.getInt(this.FLINK_STREAM_CHECKPOINT_MIN_PAUSE_BETWEEN, 0)
+  lazy val streamCheckpointMinPauseBetween = PropUtils.getInt(this.FLINK_STREAM_CHECKPOINT_MIN_PAUSE_BETWEEN, -1)
   lazy val streamCheckpointPreferRecovery = PropUtils.getBoolean(this.FLINK_STREAM_CHECKPOINT_PREFER_RECOVERY, false)
-  lazy val streamCheckpointTolerableTailureNumber = PropUtils.getInt(this.FLINK_STREAM_CHECKPOINT_TOLERABLE_FAILURE_NUMBER, 0)
+  lazy val streamCheckpointTolerableFailureNumber = PropUtils.getInt(this.FLINK_STREAM_CHECKPOINT_TOLERABLE_FAILURE_NUMBER, 0)
   lazy val streamCheckpointExternalized = PropUtils.getString(this.FLINK_STREAM_CHECKPOINT_EXTERNALIZED, "RETAIN_ON_CANCELLATION")
 
   // flink sql相关配置
   lazy val flinkSqlConfig = PropUtils.sliceKeys(this.FLINK_SQL_CONF_PREFIX)
   // 用于自动注册udf jar包中的函数
-  lazy val flinkUdfList = PropUtils.sliceKeys(this.FLINK_SQL_UDF)
+  lazy val flinkUdfList = PropUtils.sliceKeys(this.FLINK_SQL_UDF_CONF_PREFIX)
   // 是否启用fire udf注册功能
   lazy val flinkUdfEnable = PropUtils.getBoolean(this.FLINK_SQL_UDF_ENABLE, true)
+  // 运行模式
+  lazy val flinkRuntimeMode = PropUtils.getString(this.FLINK_RUNTIME_MODE, PropUtils.getString("execution.runtime-mode", "STREAMING"))
+  // 默认的Keyed State的TTL时间
+  lazy val flinkStateTTL = PropUtils.getInt(this.FLINK_STATE_TTL_DAYS, 31)
+  // 是否开启算子链合并
+  lazy val operatorChainingEnable = PropUtils.getBoolean(this.OPERATOR_CHAINING_ENABLE, true)
+  // 是否自动将insert语句加入到StatementSet中
+  lazy val autoAddStatementSet = PropUtils.getBoolean(this.FLINK_SQL_AUTO_ADD_STATEMENT_SET, true)
+
+  // flink状态清理的hdfs路径前缀
+  lazy val stateHdfsUrl = PropUtils.getString(this.FLINK_STATE_CLEAN_HDFS_URL)
 }

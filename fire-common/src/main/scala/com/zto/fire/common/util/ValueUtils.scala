@@ -62,6 +62,30 @@ private[fire] trait ValueCheck {
   def noEmpty(param: Any *): Boolean = !this.isEmpty(param: _*)
 
   /**
+   * 参数非空约束，仅检查是否存在null引用
+   *
+   * @param params  参数列表信息
+   * @param message 异常信息
+   */
+  def requireNonNull(params: Any*)(implicit message: String = "参数不能为空，请检查."): Unit = {
+    require(params != null && params.nonEmpty, message)
+
+    var index = 0
+    params.foreach(param => {
+      index += 1
+      param match {
+        case null => require(param != null, msg(index, message))
+        case _ =>
+      }
+    })
+
+    /**
+     * 构建异常信息
+     */
+    def msg(index: Int, msg: String): String = s"第[ ${index} ]参数为null，异常信息：$message"
+  }
+
+  /**
    * 参数非空约束（严格模式，进一步验证集合是否有元素）
    *
    * @param params  参数列表信息

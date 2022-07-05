@@ -35,8 +35,6 @@ private[fire] class FireConf {
   val kafkaConf = FireKafkaConf
   // rocketMQ相关配置
   val rocketMQConf = FireRocketMQConf
-  // impala相关配置
-  val kuduConf = FireKuduConf
   // 颜色预定义
   val ps1Conf = FirePS1Conf
   // hive相关配置

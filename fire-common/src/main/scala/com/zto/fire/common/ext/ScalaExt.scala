@@ -17,6 +17,8 @@
 
 package com.zto.fire.common.ext
 
+import com.zto.fire.common.conf.FireFrameworkConf
+
 import java.util.regex.Pattern
 
 /**
@@ -29,6 +31,7 @@ import java.util.regex.Pattern
 trait ScalaExt {
   // 用于缓存转为驼峰标识的字符串与转换前的字符串的映射关系
   private[this] lazy val humpMap = collection.mutable.Map[String, String]()
+  private[this] var printCount = 0L
 
   /**
    * String API扩展
@@ -60,5 +63,30 @@ trait ScalaExt {
     def unHump: String = humpMap.getOrElse(str, str.replaceAll("[A-Z]", "_$0").toLowerCase)
   }
 
+  /**
+   * print行数限制
+   */
+  private[this] def printLimit(x: Any)(fun: Any => Unit): Unit = {
+    this.printCount += 1
+    if (FireFrameworkConf.printLimit <= 0 || this.printCount <= FireFrameworkConf.printLimit) {
+      fun(x)
+    } else if (this.printCount <= FireFrameworkConf.printLimit * 1.1){
+      Console.println(s"使用print打印行数超过fire.print.limit配置的${FireFrameworkConf.printLimit}条，生产环境请不要打印过多数据！")
+    }
+  }
+
+  /** Prints an object to `out` using its `toString` method.
+   *
+   * @param x the object to print; may be null.
+   * @group console-output
+   */
+  def print(x: Any): Unit = this.printLimit(x)(x => Console.print(x))
+
+  /** Prints out an object to the default output, followed by a newline character.
+   *
+   * @param x the object to print.
+   * @group console-output
+   */
+  def println(x: Any): Unit = this.printLimit(x)(x => Console.println(x))
 }
 

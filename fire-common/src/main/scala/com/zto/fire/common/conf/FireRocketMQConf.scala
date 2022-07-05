@@ -31,7 +31,7 @@ private[fire] object FireRocketMQConf {
   lazy val rocketOffsetLargest = "latest"
   lazy val rocketOffsetSmallest = "earliest"
   lazy val rocketConsumerTag = "*"
-  lazy val rocketClusterMapConfStart = "rocket.cluster.map."
+  lazy val rocketClusterMapConfStart = "fire.rocket.cluster.map."
   // 初始化kafka集群名称与地址映射
   private[fire] lazy val rocketClusterMap = PropUtils.sliceKeys(rocketClusterMapConfStart)
   lazy val rocketConfStart = "rocket.conf."
@@ -53,6 +53,7 @@ private[fire] object FireRocketMQConf {
   // 每次拉取每个partition的消息数
   lazy val ROCKET_PULL_MAX_SPEED_PER_PARTITION = "rocket.pull.max.speed.per.partition"
   lazy val ROCKET_INSTANCE_ID = "rocket.consumer.instance"
+  lazy val ROCKET_SINK_PARALLELISM = "rocket.sink.parallelism"
 
   // 用于标识消费者的名称
   def rocketInstanceId(keyNum: Int = 1): String = PropUtils.getString(this.ROCKET_INSTANCE_ID, "", keyNum)
@@ -74,6 +75,8 @@ private[fire] object FireRocketMQConf {
   def rocketTopics(keyNum: Int = 1): String = PropUtils.getString(this.ROCKET_TOPICS, null, keyNum)
   // 每次拉取每个partition的消息数
   def rocketPullMaxSpeedPerPartition(keyNum: Int = 1): String = PropUtils.getString(this.ROCKET_PULL_MAX_SPEED_PER_PARTITION, "", keyNum)
+  // sink rocketmq的并行度
+  def rocketSinkParallelism(keyNum: Int = 1): Int = PropUtils.getInt(this.ROCKET_SINK_PARALLELISM, -1, keyNum)
 
   // 获取rocketMQ name server 地址
   def rocketNameServer(keyNum: Int = 1): String = {

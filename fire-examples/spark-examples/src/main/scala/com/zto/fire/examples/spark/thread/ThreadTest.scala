@@ -18,14 +18,22 @@
 package com.zto.fire.examples.spark.thread
 
 import com.zto.fire._
-import com.zto.fire.common.util.DateFormatUtils
+import com.zto.fire.common.anno.Config
+import com.zto.fire.common.util.{DateFormatUtils, ThreadUtils}
+import com.zto.fire.core.anno.Kafka
 import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.anno.Streaming
 
 /**
   * 在driver中启用线程池的示例
   * 1. 开启子线程执行一个任务
   * 2. 开启子线程执行周期性任务
+  *
+  * @contact Fire框架技术交流群（钉钉）：35373471
   */
+@Streaming(interval = 10, checkpoint = false, concurrent = 2)
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object ThreadTest extends BaseSparkStreaming {
 
   override def main(args: Array[String]): Unit = {
@@ -41,9 +49,9 @@ object ThreadTest extends BaseSparkStreaming {
     */
   override def process: Unit = {
     // 第一次执行时延迟两分钟，每隔1分钟执行一次showSchema函数
-    this.runAsSchedule(this.showSchema, 1, 1)
+    ThreadUtils.schedule(this.showSchema, 1, 1)
     // 以子线程方式执行print方法中的逻辑
-    this.runAsThread(this.print)
+    ThreadUtils.run(this.print)
 
     val dstream = this.fire.createKafkaDirectStream()
     dstream.foreachRDD(rdd => {

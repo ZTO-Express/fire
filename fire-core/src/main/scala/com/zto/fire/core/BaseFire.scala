@@ -17,19 +17,17 @@
 
 package com.zto.fire.core
 
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.{ExecutorService, ScheduledExecutorService, TimeUnit}
-
-import com.zto.fire.predef._
 import com.zto.fire.common.conf.{FireFrameworkConf, FirePS1Conf}
-import com.zto.fire.common.enu.{JobType, ThreadPoolType}
+import com.zto.fire.common.enu.JobType
 import com.zto.fire.common.util.{FireUtils, _}
+import com.zto.fire.core.plugin.ArthasManager
 import com.zto.fire.core.rest.{RestServerManager, SystemRestful}
 import com.zto.fire.core.task.SchedulerManager
+import com.zto.fire.predef._
 import org.apache.log4j.{Level, Logger}
-import org.slf4j
-import org.slf4j.LoggerFactory
 import spark.Spark
+
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 通用的父接口，提供通用的生命周期方法约束
@@ -37,7 +35,7 @@ import spark.Spark
  * @author ChengLong 2020年1月7日 09:20:02
  * @since 0.4.1
  */
-trait BaseFire {
+trait BaseFire extends Logging {
   // 任务启动时间戳
   protected[fire] val startTime: Long = currentTime
   // web ui地址
@@ -58,14 +56,10 @@ trait BaseFire {
   protected[fire] lazy val className: JString = this.getClass.getName.replace("$", "")
   // 当前任务的类名
   protected[fire] lazy val driverClass: JString = this.getClass.getSimpleName.replace("$", "")
-  protected[fire] lazy val logger: slf4j.Logger = LoggerFactory.getLogger(this.getClass)
   // 默认的任务名称为类名
   protected[fire] var appName: JString = this.driverClass
   // 配置信息
   protected lazy val conf = PropUtils
-  // fire内置线程池
-  protected[fire] lazy val threadPool: ExecutorService = ThreadUtils.createThreadPool("FireThreadPool", ThreadPoolType.FIXED, FireFrameworkConf.threadPoolSize)
-  protected[fire] lazy val threadPoolSchedule: ScheduledExecutorService = ThreadUtils.createThreadPool("FireThreadPoolSchedule", ThreadPoolType.SCHEDULED, FireFrameworkConf.threadPoolSchedulerSize).asInstanceOf[ScheduledExecutorService]
   this.boot()
 
   /**
@@ -74,8 +68,17 @@ trait BaseFire {
    */
   private[fire] def boot(): Unit = {
     FireUtils.splash
+    if (FireFrameworkConf.arthasEnable) ArthasManager.startArthas(this.resourceId, FireFrameworkConf.arthasContainerEnable)
     PropUtils.sliceKeys(FireFrameworkConf.FIRE_LOG_LEVEL_CONF_PREFIX).foreach(kv => Logger.getLogger(kv._1).setLevel(Level.toLevel(kv._2)))
   }
+
+
+  /**
+   * 获取任务的resourceId
+   * @return
+   * spark任务：driver/id  flink任务：JobManager/container_xxx
+   */
+  protected def resourceId: String
 
   /**
    * 在加载任务配置文件前将被加载
@@ -133,7 +136,7 @@ trait BaseFire {
    * 生命周期方法：用于资源回收与清理，子类复写实现具体逻辑
    * 注：该方法会在进行destroy之前自动被系统调用
    */
-  def after(args: Array[String] = null): Unit = {
+  def after(): Unit = {
     // 子类复写该方法，在destroy之前被调用
   }
 
@@ -145,13 +148,13 @@ trait BaseFire {
   /**
    * 生命周期方法：进行fire框架的资源回收
    */
-  protected[fire] def shutdown(stopGracefully: Boolean = true): Unit = {
+  protected[fire] def shutdown(stopGracefully: Boolean = true, inListener: Boolean = false): Unit = {
     if (this.isStoped.compareAndSet(false, true)) {
       ThreadUtils.shutdown
       Spark.stop()
       SchedulerManager.shutdown(stopGracefully)
       this.logger.info(s" ${FirePS1Conf.YELLOW}---> 完成fire资源回收 <---${FirePS1Conf.DEFAULT}")
-      this.logger.info(s"总耗时：${FirePS1Conf.RED}${timecost(startTime)}${FirePS1Conf.DEFAULT} The end...${FirePS1Conf.DEFAULT}")
+      this.logger.info(s"总耗时：${FirePS1Conf.RED}${elapsed(startTime)}${FirePS1Conf.DEFAULT} The end...${FirePS1Conf.DEFAULT}")
       if (FireFrameworkConf.shutdownExit) System.exit(0)
     }
   }
@@ -161,55 +164,6 @@ trait BaseFire {
    * 可根据实际情况，将配置参数放到同名的配置文件中进行差异化的初始化
    */
   def main(args: Array[String]): Unit = {
-    this.init()
+    this.init(null, args)
   }
-
-  /**
-   * 以子线程方式执行函数调用
-   *
-   * @param fun
-   * 用于指定以多线程方式执行的函数
-   * @param threadCount
-   * 表示开启多少个线程执行该fun任务
-   */
-  @deprecated
-  def runAsThread(fun: => Unit, threadCount: Int = 1, threadPool: ExecutorService = this.threadPool): Unit = {
-    ThreadUtils.runAsThread(threadPool, fun, threadCount)
-  }
-
-  /**
-   * 以子线程while循环方式循环执行函数调用
-   *
-   * @param fun
-   * 用于指定以多线程方式执行的函数
-   * @param delay
-   * 循环调用间隔时间（单位s）
-   */
-  @deprecated
-  def runAsThreadLoop(fun: => Unit, delay: Long = 10, threadCount: Int = 1, threadPool: ExecutorService = this.threadPool): Unit = {
-    ThreadUtils.runAsThreadLoop(threadPool, fun, delay, threadCount)
-  }
-
-  /**
-   * 定时调度给定的函数
-   *
-   * @param fun
-   * 定时执行的任务函数引用
-   * @param initialDelay
-   * 第一次延迟执行的时长
-   * @param period
-   * 每隔指定的时长执行一次
-   * @param rate
-   * true：表示周期性的执行，不受上一个定时任务的约束
-   * false：表示当上一次周期性任务执行成功后，period后开始执行
-   * @param timeUnit
-   * 时间单位，默认分钟
-   * @param threadCount
-   * 表示开启多少个线程执行该fun任务
-   */
-  @deprecated
-  def runAsSchedule(fun: => Unit, initialDelay: Long, period: Long, rate: Boolean = true, timeUnit: TimeUnit = TimeUnit.MINUTES, threadCount: Int = 1, threadPoolSchedule: ScheduledExecutorService = this.threadPoolSchedule): Unit = {
-    ThreadUtils.runAsSchedule(threadPoolSchedule, fun, initialDelay, period, rate, timeUnit, threadCount)
-  }
-
 }

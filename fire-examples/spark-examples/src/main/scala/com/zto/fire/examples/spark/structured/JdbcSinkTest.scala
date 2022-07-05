@@ -18,12 +18,20 @@
 package com.zto.fire.examples.spark.structured
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
+import com.zto.fire.core.anno.{HBase, Hive, Kafka}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.spark.BaseStructuredStreaming
 
 /**
  * 结构化流测试
+ *
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Hive("test")
+@HBase("test")
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object JdbcSinkTest extends BaseStructuredStreaming {
 
   override def process: Unit = {

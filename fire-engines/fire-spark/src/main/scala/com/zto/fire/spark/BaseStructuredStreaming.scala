@@ -20,6 +20,7 @@ package com.zto.fire.spark
 import com.zto.fire.common.conf.FireFrameworkConf
 import com.zto.fire.common.enu.JobType
 import com.zto.fire.common.util.PropUtils
+import com.zto.fire.spark.listener.FireStreamingQueryListener
 
 /**
   * Structured Streaming通用父类
@@ -38,7 +39,7 @@ class BaseStructuredStreaming extends BaseSpark {
   override def init(conf: Any = null, args: Array[String] = null): Unit = {
     super.init(conf, args)
     // 添加时间监听器
-    this._spark.streams.addListener(new BaseStreamingQueryListener)
+    this._spark.streams.addListener(new FireStreamingQueryListener)
     this.restfulRegister.startRestServer
     this.process
   }

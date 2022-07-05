@@ -18,6 +18,7 @@
 package com.zto.fire.examples.spark.hbase
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.hbase.HBaseConnector
 import com.zto.fire.spark.BaseSparkCore
@@ -30,7 +31,17 @@ import org.apache.spark.sql.{Encoders, Row}
   * 注：使用Spark写hbase的方式适用于海量数据离线写
   *
   * @author ChengLong 2019-5-9 09:37:25
+  * @contact Fire框架技术交流群（钉钉）：35373471
   */
+@Config(
+  """
+    |# 用于区分不同的hbase集群: batch/streaming/old
+    |spark.hbase.cluster                =       test
+    |spark.hbase.cluster2               =       test
+    |# 通过HBase scan后repartition的分区数，需根据scan后的数据量做配置
+    |spark.fire.hbase.scan.partitions   =       3
+    |spark.fire.hbase.storage.level     =       DISK_ONLY
+    |""")
 object HBaseHadoopTest extends BaseSparkCore {
   private val tableName6 = "fire_test_6"
   private val tableName7 = "fire_test_7"

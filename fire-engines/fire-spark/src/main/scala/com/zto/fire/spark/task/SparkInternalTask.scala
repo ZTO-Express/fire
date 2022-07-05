@@ -17,10 +17,7 @@
 
 package com.zto.fire.spark.task
 
-import com.zto.fire._
 import com.zto.fire.common.anno.Scheduled
-import com.zto.fire.common.conf.FireFrameworkConf
-import com.zto.fire.common.util.{DatasourceManager, JSONUtils}
 import com.zto.fire.core.task.FireInternalTask
 import com.zto.fire.spark.BaseSpark
 
@@ -48,7 +45,7 @@ private[fire] class SparkInternalTask(baseSpark: BaseSpark) extends FireInternal
   /**
    * 数据源收集任务，收集driver与executor用到的数据源信息3600000L
    */
-  @Scheduled(fixedInterval = 10000L, scope = "all", initialDelay = 60000L, concurrent = false, repeatCount = 100)
+  /*@Scheduled(fixedInterval = 10000L, scope = "all", initialDelay = 60000L, concurrent = false, repeatCount = 100)
   def datasource: Unit = {
     if (FireFrameworkConf.restEnable) {
       val datasourceMap = DatasourceManager.get
@@ -57,5 +54,5 @@ private[fire] class SparkInternalTask(baseSpark: BaseSpark) extends FireInternal
         this.restInvoke("/system/collectDatasource", json)
       }
     }
-  }
+  }*/
 }

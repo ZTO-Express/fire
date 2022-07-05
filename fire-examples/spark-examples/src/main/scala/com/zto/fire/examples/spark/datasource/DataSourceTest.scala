@@ -18,6 +18,7 @@
 package com.zto.fire.examples.spark.datasource
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.spark.BaseSparkCore
 import org.apache.spark.sql.SaveMode
@@ -25,7 +26,48 @@ import org.apache.spark.sql.SaveMode
 
 /**
  * Spark DataSource API示例
+ *
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Config(
+  """
+    |# 一、hudi datasource，全部基于配置文件进行配置
+    |spark.datasource.format=org.apache.hudi
+    |spark.datasource.saveMode=Append
+    |# 用于区分调用save(path)还是saveAsTable
+    |spark.datasource.isSaveTable=false
+    |# 传入到底层save或saveAsTable方法中
+    |spark.datasource.saveParam=/user/hive/warehouse/hudi.db/hudi_bill_event_test
+    |
+    |# 以spark.datasource.options.为前缀的配置用于配置hudi相关的参数，可覆盖代码中同名的配置
+    |spark.datasource.options.hoodie.datasource.write.recordkey.field=id
+    |spark.datasource.options.hoodie.datasource.write.precombine.field=id
+    |spark.datasource.options.hoodie.datasource.write.partitionpath.field=ds
+    |spark.datasource.options.hoodie.table.name=hudi.hudi_bill_event_test
+    |spark.datasource.options.hoodie.datasource.write.hive_style_partitioning=true
+    |spark.datasource.options.hoodie.datasource.write.table.type=MERGE_ON_READ
+    |spark.datasource.options.hoodie.insert.shuffle.parallelism=128
+    |spark.datasource.options.hoodie.upsert.shuffle.parallelism=128
+    |spark.datasource.options.hoodie.fail.on.timeline.archiving=false
+    |spark.datasource.options.hoodie.clustering.inline=true
+    |spark.datasource.options.hoodie.clustering.inline.max.commits=8
+    |spark.datasource.options.hoodie.clustering.plan.strategy.target.file.max.bytes=1073741824
+    |spark.datasource.options.hoodie.clustering.plan.strategy.small.file.limit=629145600
+    |spark.datasource.options.hoodie.clustering.plan.strategy.daybased.lookback.partitions=2
+    |
+    |# 二、配置第二个数据源，以数字后缀作为区分，部分使用配置文件进行配置
+    |spark.datasource.format2=org.apache.hudi2
+    |spark.datasource.saveMode2=Overwrite
+    |# 用于区分调用save(path)还是saveAsTable
+    |spark.datasource.isSaveTable2=false
+    |# 传入到底层save或saveAsTable方法中
+    |spark.datasource.saveParam2=/user/hive/warehouse/hudi.db/hudi_bill_event_test2
+    |
+    |# 三、配置第三个数据源，用于代码中进行read操作
+    |spark.datasource.format3=org.apache.hudi3
+    |spark.datasource.loadParam3=/user/hive/warehouse/hudi.db/hudi_bill_event_test3
+    |spark.datasource.options.hoodie.datasource.write.recordkey.field3=id3
+    |""")
 object DataSourceTest extends BaseSparkCore {
 
   override def process: Unit = {

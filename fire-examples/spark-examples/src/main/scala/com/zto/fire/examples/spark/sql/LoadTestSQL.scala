@@ -20,6 +20,7 @@ package com.zto.fire.examples.spark.sql
 /**
  * 用于集群压测程序的SQL
  * @author ChengLong 2019年10月25日 13:32:19
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
 object LoadTestSQL {
 

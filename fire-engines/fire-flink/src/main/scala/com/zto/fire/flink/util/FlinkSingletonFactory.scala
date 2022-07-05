@@ -20,7 +20,7 @@ package com.zto.fire.flink.util
 import com.zto.fire.core.util.SingletonFactory
 import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.apache.flink.table.api.bridge.scala.{BatchTableEnvironment, StreamTableEnvironment}
+import org.apache.flink.table.api.TableEnvironment
 
 /**
   * 单例工厂，用于创建单例的对象
@@ -28,23 +28,14 @@ import org.apache.flink.table.api.bridge.scala.{BatchTableEnvironment, StreamTab
   */
 object FlinkSingletonFactory extends SingletonFactory {
   @transient private[this] var streamEnv: StreamExecutionEnvironment = _
-  @transient private[this] var streamTableEnv: StreamTableEnvironment = _
   @transient private[this] var env: ExecutionEnvironment = _
-  @transient private[this] var tableEnv: BatchTableEnvironment = _
+  @transient private[this] var tableEnv: TableEnvironment = _
 
   /**
    * 设置TableEnv实例
    */
   private[fire] def setStreamEnv(env: StreamExecutionEnvironment): this.type = {
     if (env != null && this.streamEnv == null) this.streamEnv = env
-    this
-  }
-
-  /**
-    * 设置TableEnv实例
-    */
-  private[fire] def setStreamTableEnv(tableEnv: StreamTableEnvironment): this.type = {
-    if (tableEnv != null && this.streamTableEnv == null) this.streamTableEnv = tableEnv
     this
   }
 
@@ -60,7 +51,7 @@ object FlinkSingletonFactory extends SingletonFactory {
   /**
     * 设置TableEnv实例
     */
-  private[fire] def setTableEnv(tableEnv: BatchTableEnvironment): this.type = {
+  private[fire] def setTableEnv(tableEnv: TableEnvironment): this.type = {
     if (tableEnv != null && this.tableEnv == null) this.tableEnv = tableEnv
     this
   }
@@ -73,16 +64,6 @@ object FlinkSingletonFactory extends SingletonFactory {
    */
   private[fire] def getAppName: String = this.appName
 
-  /**
-   * 获取StreamTableEnv实例
-   *
-   * @return
-   * TableEnv实例
-   */
-  private[fire] def getStreamTableEnv: StreamTableEnvironment = {
-    require(this.streamTableEnv != null, "StreamTableEnvironment仍未被实例化，请稍后再试")
-    this.streamTableEnv
-  }
 
   /**
    * 获取TableEnv实例
@@ -90,5 +71,5 @@ object FlinkSingletonFactory extends SingletonFactory {
    * @return
    * TableEnv实例
    */
-  private[fire] def getBatchTableEnv: BatchTableEnvironment = this.tableEnv
+  private[fire] def getTableEnv: TableEnvironment = this.tableEnv
 }

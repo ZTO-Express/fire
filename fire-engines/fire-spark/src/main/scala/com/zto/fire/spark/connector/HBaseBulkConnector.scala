@@ -133,8 +133,8 @@ class HBaseBulkConnector(@scala.transient sc: SparkContext, @scala.transient con
     tryWithReturn {
       val rowKeyRDD = rdd.filter(StringUtils.isNotBlank(_)).map(rowKey => Bytes.toBytes(rowKey))
       val getRDD = this.bulkGet[Array[Byte], E](TableName.valueOf(tableName), batchSize, rowKeyRDD, rowKey => new Get(rowKey), (result: Result) => {
-        HBaseConnector(keyNum = this.keyNum).hbaseRow2Bean(result, clazz)
-      }).filter(bean => bean != null).persist(StorageLevel.fromString(FireHBaseConf.hbaseStorageLevel))
+        HBaseConnector(keyNum = this.keyNum).hbaseRow2Bean(result, clazz).getOrElse(clazz.newInstance())
+      }).filter(bean => noEmpty(bean, bean.rowKey)).persist(StorageLevel.fromString(FireHBaseConf.hbaseStorageLevel(this.keyNum)))
       getRDD
     }(this.logger, s"execute bulkGetRDD(tableName: ${tableName}, batchSize: ${finalBatchSize}) success. keyNum: ${keyNum}")
   }
@@ -276,7 +276,7 @@ class HBaseBulkConnector(@scala.transient sc: SparkContext, @scala.transient con
       if (scan.getCaching == -1) {
         scan.setCaching(this.finalBatchSize)
       }
-      this.hbaseRDD(TableName.valueOf(tableName), scan).mapPartitions(it => HBaseConnector(keyNum = this.keyNum).hbaseRow2BeanList(it, clazz)).persist(StorageLevel.fromString(FireHBaseConf.hbaseStorageLevel))
+      this.hbaseRDD(TableName.valueOf(tableName), scan).mapPartitions(it => HBaseConnector(keyNum = this.keyNum).hbaseRow2BeanList(it, clazz)).persist(StorageLevel.fromString(FireHBaseConf.hbaseStorageLevel(this.keyNum)))
     }(this.logger, s"execute bulkScanRDD(tableName: ${tableName}) success. keyNum: ${keyNum}")
   }
 
@@ -502,7 +502,7 @@ class HBaseBulkConnector(@scala.transient sc: SparkContext, @scala.transient con
  * 用于单例构建伴生类HBaseContextExt的实例对象
  * 每个HBaseContextExt实例使用keyNum作为标识，并且与每个HBase集群一一对应
  */
-private[fire] object HBaseBulkConnector extends ConnectorFactory[HBaseBulkConnector] with HBaseBulkFunctions {
+object HBaseBulkConnector extends ConnectorFactory[HBaseBulkConnector] with HBaseBulkFunctions {
 
   /**
    * 创建指定集群标识的HBaseContextExt对象实例

@@ -122,8 +122,7 @@ public class EncryptUtils {
         if (StringUtils.isBlank(auth)) {
             return false;
         }
-        String fireAuth = EncryptUtils.shaEncrypt(FireFrameworkConf.restServerSecret() + privateKey, "SHA");
+        String fireAuth = EncryptUtils.md5Encrypt(FireFrameworkConf.restServerSecret() + privateKey);
         return fireAuth.equals(auth);
     }
-
 }

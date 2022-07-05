@@ -21,7 +21,9 @@ import java.io.InputStream
 import com.zto.fire._
 import com.zto.fire.core.Api
 import com.zto.fire.jdbc.JdbcConnectorBridge
+import com.zto.fire.spark.bean.GenerateBean
 import com.zto.fire.spark.conf.FireSparkConf
+import com.zto.fire.spark.connector.{BeanGenReceiver, DataGenReceiver}
 import com.zto.fire.spark.ext.provider._
 import com.zto.fire.spark.util.{SparkSingletonFactory, SparkUtils}
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -31,7 +33,9 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.dstream.{DStream, InputDStream, ReceiverInputDStream}
+import org.apache.spark.streaming.receiver.Receiver
 
+import scala.collection.mutable
 import scala.reflect.ClassTag
 
 /**
@@ -135,6 +139,50 @@ class SparkSessionExt(spark: SparkSession) extends Api with JdbcConnectorBridge 
                                instance: String = "",
                                keyNum: Int = 1): InputDStream[MessageExt] = {
     this.ssc.createRocketPullStream(rocketParam, groupId, topics, tag, consumerStrategy, locationStrategy, instance, keyNum)
+  }
+
+  /**
+   * 创建根据指定规则生成对象实例的DataGenReceiver
+   *
+   * @param delay
+   * 数据生成间隔时间（ms）
+   * @param generateFun
+   * 数据生成规则
+   * @tparam T
+   * 生成数据的类型
+   * @return
+   * ReceiverInputDStream[T]
+   */
+  def createDataGenStream[T <: GenerateBean[T] : ClassTag](delay: Long = 1000, generateFun: => mutable.Buffer[T]): ReceiverInputDStream[T] = {
+    this.receiverStream[T](new DataGenReceiver[T](delay, generateFun = generateFun))
+  }
+
+  /**
+   * 创建根据指定规则生成对象实例的BeanDataGenReceiver
+   *
+   * @param delay
+   * 数据生成间隔时间（ms）
+   * @tparam T
+   * 生成数据的类型
+   * @return
+   * ReceiverInputDStream[T]
+   */
+  def createBeanGenStream[T <: GenerateBean[T] : ClassTag](delay: Long = 1000): ReceiverInputDStream[T] = {
+    this.receiverStream[T](new BeanGenReceiver[T](delay))
+  }
+
+  /**
+   * 接受自定义receiver的数据
+   *
+   * @param receiver
+   * 自定义receiver
+   * @tparam T
+   * 接受的数据类型
+   * @return
+   * 包装后的DStream[T]
+   */
+  def receiverStream[T: ClassTag](receiver: Receiver[T]): ReceiverInputDStream[T] = {
+    this.ssc.receiverStream[T](receiver)
   }
 
   /**

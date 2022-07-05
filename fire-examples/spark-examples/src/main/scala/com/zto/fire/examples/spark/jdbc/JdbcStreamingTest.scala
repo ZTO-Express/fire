@@ -18,9 +18,17 @@
 package com.zto.fire.examples.spark.jdbc
 
 import com.zto.fire._
+import com.zto.fire.core.anno.Kafka
 import com.zto.fire.jdbc.JdbcConnector
 import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.anno.Streaming
 
+/**
+ * @contact Fire框架技术交流群（钉钉）：35373471
+ */
+@Streaming(10)
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object JdbcStreamingTest extends BaseSparkStreaming {
   val tableName = "spark_test"
 
@@ -36,14 +44,11 @@ object JdbcStreamingTest extends BaseSparkStreaming {
     dstream.repartition(5).foreachRDD(rdd => {
       rdd.foreachPartition(it => {
         val sql = s"select id from $tableName limit 1"
-        JdbcConnector.executeQueryCall(sql, callback = _ => 1)
+        val retVal = JdbcConnector.executeQuery(sql, callback = _ => 1)
+        logInfo("查询结果：" + retVal)
       })
     })
 
     this.fire.start
-  }
-
-  override def main(args: Array[String]): Unit = {
-    this.init(10, false)
   }
 }

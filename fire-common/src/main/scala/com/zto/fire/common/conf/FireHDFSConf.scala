@@ -39,7 +39,7 @@ private[fire] object FireHDFSConf {
    * 读取HDFS高可用相关配置信息
    */
   def hdfsHAConf: Map[String, String] = {
-    if (FireHDFSConf.hdfsHAEnable) {
+    if (this.hdfsHAEnable) {
       PropUtils.sliceKeys(s"${this.HDFS_HA_PREFIX}${FireHiveConf.hiveCluster}.")
     } else Map.empty
   }

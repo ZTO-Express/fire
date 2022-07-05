@@ -18,7 +18,9 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.{DateFormatUtils, JSONUtils}
+import com.zto.fire.core.anno.{Hive, Kafka}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.flink.BaseFlinkStreaming
 import com.zto.fire.flink.ext.watermark.FirePeriodicWatermarks
@@ -44,6 +46,14 @@ import java.text.SimpleDateFormat
  *
  * @author ChengLong 2020-4-13 15:58:38
  */
+@Config(
+  """
+    |flink.stream.time.characteristic    =       EventTime
+    |flink.default.parallelism           =       2
+    |""")
+@Hive("test")
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object WatermarkTest extends BaseFlinkStreaming {
 
   override def process: Unit = {

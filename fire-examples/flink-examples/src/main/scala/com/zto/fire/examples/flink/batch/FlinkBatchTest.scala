@@ -25,6 +25,9 @@ import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.core.fs.FileSystem
 
+/**
+ * @contact Fire框架技术交流群（钉钉）：35373471
+ */
 object FlinkBatchTest extends BaseFlinkBatch {
 
   /**

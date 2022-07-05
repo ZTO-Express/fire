@@ -21,13 +21,13 @@ import com.google.common.collect.HashBasedTable
 import com.zto.fire.common.conf.FireFrameworkConf
 import com.zto.fire.common.util._
 import com.zto.fire.predef._
+import com.zto.fire.spark.sync.DistributeSyncManager
 import com.zto.fire.spark.task.SparkSchedulerManager
 import com.zto.fire.spark.util.SparkUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.util.LongAccumulator
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
-import org.slf4j.LoggerFactory
 
 import java.nio.ByteBuffer
 import java.util.concurrent.atomic.AtomicInteger
@@ -39,8 +39,7 @@ import scala.collection.mutable
  *
  * @author ChengLong 2019-7-25 19:11:16
  */
-private[fire] object AccumulatorManager {
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+private[fire] object AccumulatorManager extends Logging  {
   private lazy val executorId = SparkUtils.getExecutorId
   // 累加器名称，含有fire的名字将会显示在webui中
   private[this] val counterLabel = "fire-counter"
@@ -64,7 +63,6 @@ private[fire] object AccumulatorManager {
 
   // 累加器注册列表
   private[this] val accMap = Map(this.logAccumulatorLabel -> this.logAccumulator, this.counterLabel -> this.counter, this.multiCounterLabel -> this.multiCounter, this.multiTimerLabel -> this.multiTimer, this.envAccumulatorLabel -> this.envAccumulator)
-  private[this] val initExecutors: AtomicInteger = new AtomicInteger(0)
 
   // 获取当前任务的全类名
   private[this] lazy val jobClassName = SparkEnv.get.conf.get(FireFrameworkConf.DRIVER_CLASS_NAME, "")
@@ -274,45 +272,6 @@ private[fire] object AccumulatorManager {
   def getMultiTimer: HashBasedTable[String, String, Long] = this.multiTimer.value
 
   /**
-   * 获取动态配置信息
-   */
-  def getConf: SparkConf = {
-    if (this.broadcastConf != null) {
-      this.broadcastConf.value
-    } else {
-      new SparkConf().setAll(PropUtils.settings)
-    }
-  }
-
-  /**
-   * 广播新的配置
-   */
-  private[fire] def broadcastNewConf(sc: SparkContext, conf: SparkConf): Unit = {
-    if (sc != null && conf != null && FireFrameworkConf.dynamicConf) {
-      val executorNum = this.getInitExecutors(sc)
-      val broadcastConf = sc.broadcast(conf)
-      this.broadcastConf = broadcastConf
-      val rdd = sc.parallelize(1 to executorNum * 10, executorNum * 3)
-      rdd.foreachPartitionAsync(_ => {
-        this.broadcastConf = broadcastConf
-        this.broadcastConf.value.getAll.foreach(kv => {
-          PropUtils.setProperty(kv._1, kv._2)
-        })
-        this.logger.info("The Executor side configuration has been reloaded.")
-      })
-      this.logger.info("The Driver side configuration has been reloaded.")
-    }
-  }
-
-  /**
-   * 获取当前任务的executor数
-   */
-  private[this] def getInitExecutors(sc: SparkContext): Int = {
-    if (this.initExecutors.get() == 0) this.initExecutors.set(sc.getConf.get("spark.executor.instances", if (OSUtils.isLinux) "1000" else "10").toInt)
-    this.initExecutors.get()
-  }
-
-  /**
    * 注册多个自定义累加器到每个executor
    *
    * @param sc
@@ -321,7 +280,6 @@ private[fire] object AccumulatorManager {
    */
   private[fire] def registerAccumulators(sc: SparkContext): Unit = this.synchronized {
     if (sc != null && accMap != null && accMap.nonEmpty) {
-      val executorNum = this.getInitExecutors(sc)
       // 将定时任务所在类的实例广播到每个executor端
       val taskSet = sc.broadcast(taskRegisterSet)
       val broadcastConf = sc.broadcast(SparkEnv.get.conf)
@@ -339,9 +297,7 @@ private[fire] object AccumulatorManager {
         (accInfo._1, SparkEnv.get.closureSerializer.newInstance().serialize(accInfo._2).array())
       })
 
-      // 获取申请的executor数，设置累加器到conf中
-      val rdd = sc.parallelize(1 to executorNum * 10, executorNum * 3)
-      rdd.foreachPartition(_ => {
+      DistributeSyncManager.sync({
         this.broadcastConf = broadcastConf
         // 将序列化后的累加器放置到conf中
         accumulatorMap.foreach(accSer => SparkEnv.get.conf.set(accSer._1, StringsUtils.toHexString(accSer._2)))
@@ -352,7 +308,7 @@ private[fire] object AccumulatorManager {
             SparkSchedulerManager.getInstance().registerTasks(tasks.toArray: _*)
           }
         }
-      })
+      }, false)
     }
   }
 }

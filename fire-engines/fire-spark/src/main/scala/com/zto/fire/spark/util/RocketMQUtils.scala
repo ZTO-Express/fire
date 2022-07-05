@@ -17,13 +17,11 @@
 
 package com.zto.fire.spark.util
 
+import com.zto.fire._
 import com.zto.fire.common.conf.FireRocketMQConf
-import com.zto.fire.common.util.{LogUtils, StringsUtils}
+import com.zto.fire.common.util.{LogUtils, Logging, StringsUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.rocketmq.spark.{ConsumerStrategy, RocketMQConfig}
-import org.slf4j.LoggerFactory
-
-import com.zto.fire._
 
 /**
  * RocketMQ相关工具类
@@ -32,8 +30,7 @@ import com.zto.fire._
  * @since 1.0.0
  * @create 2020-06-29 10:50
  */
-object RocketMQUtils {
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+object RocketMQUtils extends Logging {
 
   /**
    * rocketMQ配置信息

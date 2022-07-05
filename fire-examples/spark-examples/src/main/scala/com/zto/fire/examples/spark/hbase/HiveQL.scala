@@ -19,7 +19,9 @@ package com.zto.fire.examples.spark.hbase
 
 /**
   * Hive sql
+ *
   * @author ChengLong 2019-1-16 09:53:45
+  * @contact Fire框架技术交流群（钉钉）：35373471
   */
 object HiveQL {
 

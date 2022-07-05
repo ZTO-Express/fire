@@ -17,17 +17,16 @@
 
 package com.zto.fire.spark.ext.provider
 
-import java.sql.Connection
-import java.util.Properties
-
 import com.zto.fire._
 import com.zto.fire.jdbc.JdbcConnector
 import com.zto.fire.jdbc.conf.FireJdbcConf
+import com.zto.fire.spark.util.SparkUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Dataset, Encoders, SaveMode}
+import org.apache.spark.sql.{DataFrame, Row, SaveMode}
 import org.apache.spark.storage.StorageLevel
 
+import java.util.Properties
 import scala.reflect.ClassTag
 
 /**
@@ -46,16 +45,13 @@ trait JdbcSparkProvider extends SparkProvider {
    * 查询语句
    * @param params
    * sql执行参数
-   * @param clazz
-   * JavaBean类型
    * @param keyNum
    * 配置文件中数据源配置的数字后缀，用于应对多数据源的情况，如果仅一个数据源，可不填
    * 比如需要操作另一个数据库，那么配置文件中key需携带相应的数字后缀：spark.db.jdbc.url2，那么此处方法调用传参为3，以此类推
    * @return 查询结果集
    */
-  def jdbcQueryRDD[T <: Object : ClassTag](sql: String, params: Seq[Any] = null, clazz: Class[T], connection: Connection = null, keyNum: Int = 1): RDD[T] = {
-    val rsList = JdbcConnector.executeQuery[T](sql, params, clazz, connection, keyNum)
-    this.sc.parallelize(rsList, FireJdbcConf.jdbcQueryPartition).persist(StorageLevel.fromString(FireJdbcConf.jdbcStorageLevel))
+  def jdbcQueryRDD[T <: Object : ClassTag](sql: String, params: Seq[Any] = null, keyNum: Int = 1): RDD[Row] = {
+    this.jdbcQueryDF(sql, params, keyNum).rdd
   }
 
   /**
@@ -64,36 +60,18 @@ trait JdbcSparkProvider extends SparkProvider {
    * @param sql
    * 查询语句
    * @param params
-   * sql执行参数
-   * @param clazz
    * JavaBean类型
    * @param keyNum
    * 配置文件中数据源配置的数字后缀，用于应对多数据源的情况，如果仅一个数据源，可不填
    * 比如需要操作另一个数据库，那么配置文件中key需携带相应的数字后缀：spark.db.jdbc.url2，那么此处方法调用传参为3，以此类推
    * @return 查询结果集
    */
-  def jdbcQueryDF[T <: Object : ClassTag](sql: String, params: Seq[Any] = null, clazz: Class[T], connection: Connection = null, keyNum: Int = 1): DataFrame = {
-    this.spark.createDataFrame(this.jdbcQueryRDD(sql, params, clazz, connection, keyNum), clazz)
+  def jdbcQueryDF[T <: Object : ClassTag](sql: String, params: Seq[Any] = null, keyNum: Int = 1): DataFrame = {
+    JdbcConnector.executeQuery(sql, params, keyNum = keyNum, callback = rs => {
+      SparkUtils.resultSet2DataFrame(rs, keyNum)
+    }).persist(StorageLevel.fromString(FireJdbcConf.jdbcStorageLevel))
   }
 
-  /**
-   * 执行查询操作，以Dataset方式返回结果集
-   *
-   * @param sql
-   * 查询语句
-   * @param params
-   * sql执行参数
-   * @param clazz
-   * JavaBean类型
-   * @param keyNum
-   * 配置文件中数据源配置的数字后缀，用于应对多数据源的情况，如果仅一个数据源，可不填
-   * 比如需要操作另一个数据库，那么配置文件中key需携带相应的数字后缀：spark.db.jdbc.url2，那么此处方法调用传参为3，以此类推
-   * @return
-   * 查询结果集
-   */
-  def jdbcQueryDS[T <: Object : ClassTag](sql: String, params: Seq[Any] = null, clazz: Class[T], connection: Connection = null, keyNum: Int = 1): Dataset[T] = {
-    this.spark.createDataset[T](this.jdbcQueryRDD(sql, params, clazz, connection, keyNum))(Encoders.bean(clazz))
-  }
 
   /**
    * 将DataFrame数据保存到关系型数据库中

@@ -17,7 +17,7 @@
 
 package com.zto.fire.common.conf
 
-import com.zto.fire.common.util.PropUtils
+import com.zto.fire.common.util.{DateFormatUtils, PropUtils}
 import org.apache.commons.lang3.StringUtils
 
 /**
@@ -39,7 +39,7 @@ private[fire] object FireFrameworkConf {
   lazy val FIRE_REST_ENABLE = "fire.rest.enable"
   lazy val FIRE_REST_URL_HOSTNAME = "fire.rest.url.hostname"
   lazy val FIRE_CONF_DEPLOY_ENGINE = "fire.conf.deploy.engine"
-  lazy val FIRE_ENGINE_CONF_HELPER = "com.zto.fire.core.conf.EngineConfHelper"
+  lazy val FIRE_ENGINE_CONF_HELPER = "com.zto.fire.core.sync.SyncEngineConfHelper"
   // rest接口权限认证
   lazy val FIRE_REST_FILTER_ENABLE = "fire.rest.filter.enable"
   // 用于配置是否关闭fire内置的所有累加器
@@ -71,6 +71,7 @@ private[fire] object FireFrameworkConf {
   lazy val FIRE_RESTFUL_PORT_RETRY_DURATION = "fire.restful.port.retry_duration"
   lazy val FIRE_REST_SERVER_SECRET = "fire.rest.server.secret"
   lazy val FIRE_LOG_LEVEL_CONF_PREFIX = "fire.log.level.conf."
+  lazy val FIRE_ARTHAS_CONF_PREFIX = "fire.analysis.arthas.conf."
   lazy val FIRE_USER_COMMON_CONF = "fire.user.common.conf"
   // 日志记录器保留最少的记录数
   lazy val FIRE_ACC_LOG_MIN_SIZE = "fire.acc.log.min.size"
@@ -93,6 +94,9 @@ private[fire] object FireFrameworkConf {
   // fire框架restful地址
   lazy val FIRE_REST_URL = "fire.rest.url"
   lazy val FIRE_SHUTDOWN_EXIT = "fire.shutdown.auto.exit"
+  // print记录数限制
+  lazy val FIRE_PRINT_LIMIT = "fire.print.limit"
+  lazy val FIRE_HIVE_METASTORE_URL_RANDOM_ENABLE = "fire.hive.metastore.url.random.enable"
   // 配置中心生产环境注册地址
   lazy val FIRE_CONFIG_CENTER_REGISTER_CONF_PROD_ADDRESS = "fire.config_center.register.conf.prod.address"
   // 配置中心测试环境注册地址
@@ -114,11 +118,19 @@ private[fire] object FireFrameworkConf {
   lazy val FIRE_DEPLOY_CONF_ENABLE = "fire.deploy_conf.enable"
   lazy val FIRE_EXCEPTION_BUS_SIZE = "fire.exception_bus.size"
   lazy val FIRE_BURIED_POINT_DATASOURCE_ENABLE = "fire.buried_point.datasource.enable"
+  lazy val FIRE_BURIED_POINT_DATASOURCE_COUNT = "fire.buried_point.datasource.count"
   lazy val FIRE_BURIED_POINT_DATASOURCE_MAX_SIZE = "fire.buried_point.datasource.max.size"
   lazy val FIRE_BURIED_POINT_DATASOURCE_INITIAL_DELAY = "fire.buried_point.datasource.initialDelay"
   lazy val FIRE_BURIED_POINT_DATASOURCE_PERIOD = "fire.buried_point.datasource.period"
   lazy val FIRE_BURIED_POINT_DATASOURCE_MAP = "fire.buried_point.datasource.map."
   lazy val FIRE_CONF_ADAPTIVE_PREFIX = "fire.conf.adaptive.prefix"
+  lazy val FIRE_ANALYSIS_ARTHAS_ENABLE = "fire.analysis.arthas.enable"
+  lazy val FIRE_ANALYSIS_ARTHAS_CONTAINER_ENABLE = "fire.analysis.arthas.container.enable"
+  lazy val FIRE_ANALYSIS_ARTHAS_TUNNEL_SERVER_URL = "fire.analysis.arthas.tunnel_server.url"
+  lazy val FIRE_ARTHAS_LAUNCHER = "fire.analysis.arthas.launcher"
+  lazy val FIRE_ENV_LOCAL = "fire.env.local"
+  lazy val FIRE_CONF_ANNO_MANAGER_CLASS = "fire.conf.anno.manager.class"
+  lazy val FIRE_CONF_ANNOTATION = "fire.conf.annotation.enable"
 
   /**
    * 用于jdbc url的识别，当无法通过driver class识别数据源时，将从url中的端口号进行区分
@@ -132,11 +144,13 @@ private[fire] object FireFrameworkConf {
   // 不同引擎配置获取具体的实现
   lazy val confDeployEngine = PropUtils.getString(this.FIRE_CONF_DEPLOY_ENGINE, "")
   // 定时解析埋点SQL的执行频率（s）
-  lazy val buriedPointDatasourcePeriod = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_PERIOD, 60)
+  lazy val buriedPointDatasourcePeriod = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_PERIOD, 300)
   // 定时解析埋点SQL的初始延迟（s）
-  lazy val buriedPointDatasourceInitialDelay = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_INITIAL_DELAY, 30)
+  lazy val buriedPointDatasourceInitialDelay = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_INITIAL_DELAY, 60)
   // 用于存放埋点的队列最大大小，超过该大小将会被丢弃
-  lazy val buriedPointDatasourceMaxSize = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_MAX_SIZE, 300)
+  lazy val buriedPointDatasourceMaxSize = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_MAX_SIZE, 200)
+  // 异步解析血缘线程执行的次数
+  lazy val buriedPointDatasourceCount = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_COUNT, 10)
   // 是否开启数据源埋点
   lazy val buriedPointDatasourceEnable = PropUtils.getBoolean(this.FIRE_BURIED_POINT_DATASOURCE_ENABLE, true)
   // 每个jvm实例内部queue用于存放异常对象数最大大小，避免队列过大造成内存溢出
@@ -157,6 +171,8 @@ private[fire] object FireFrameworkConf {
   lazy val shutdownExit = PropUtils.getBoolean(this.FIRE_SHUTDOWN_EXIT, false)
   // 是否启用为connector注册shutdown hook，当jvm退出前close
   lazy val connectorShutdownHookEnable = PropUtils.getBoolean(this.FIRE_CONNECTOR_SHUTDOWN_HOOK_ENABLE, false)
+  // 用于指定当前运行环境是否为local模式（主要用于flink-shell的本地配置文件加载）
+  lazy val localEnv = PropUtils.getBoolean(this.FIRE_ENV_LOCAL, false)
 
   // fire日志打印黑名单
   lazy val fireConfBlackList: Set[String] = {
@@ -206,7 +222,7 @@ private[fire] object FireFrameworkConf {
 
 
   // fire框架rest接口服务最大线程数
-  lazy val restfulMaxThread = PropUtils.getInt(this.FIRE_RESTFUL_MAX_THREAD, 8)
+  lazy val restfulMaxThread = PropUtils.getInt(this.FIRE_RESTFUL_MAX_THREAD, 5)
   // 用于配置是否抛弃配置中心独立运行
   lazy val configCenterEnable = PropUtils.getBoolean(this.FIRE_CONFIG_CENTER_ENABLE, true)
   // 本地运行环境下（Windows、Mac）是否调用配置中心接口获取配置信息
@@ -229,4 +245,24 @@ private[fire] object FireFrameworkConf {
   lazy val maxTimerSize = PropUtils.getInt(this.FIRE_ACC_TIMER_MAX_SIZE, 1000).abs
   // 用于指定清理指定小时数之前的记录
   lazy val maxTimerHour = PropUtils.getInt(this.FIRE_ACC_TIMER_MAX_HOUR, 12).abs
+  // print记录数限制
+  lazy val printLimit = PropUtils.getLong(this.FIRE_PRINT_LIMIT, 1000000)
+  // 是否启用hive metastore url的随机选择
+  lazy val hiveMetastoreUrlRandomEnable = PropUtils.getBoolean(this.FIRE_HIVE_METASTORE_URL_RANDOM_ENABLE, true)
+  // 是否启用arthas用于分析实时任务的性能
+  lazy val arthasEnable = PropUtils.getBoolean(this.FIRE_ANALYSIS_ARTHAS_ENABLE, false) && StringUtils.isNotBlank(this.arthasTunnelServerUrl)
+  // 是否在container端启动arthas
+  lazy val arthasContainerEnable = PropUtils.getBoolean(this.FIRE_ANALYSIS_ARTHAS_CONTAINER_ENABLE, false)
+  // arthas tunnel服务的地址
+  lazy val arthasTunnelServerUrl = PropUtils.getString(this.FIRE_ANALYSIS_ARTHAS_TUNNEL_SERVER_URL)
+  // arthas的参数
+  def arthasConfMap: Map[String, String] = PropUtils.sliceKeys(this.FIRE_ARTHAS_CONF_PREFIX)
+  // 动态获取最新的secret
+  def dynamicKey: String = this.restServerSecret + this.driverClassName + DateFormatUtils.formatCurrentDate
+  // arthas启动器
+  lazy val arthasLauncher = PropUtils.getString(this.FIRE_ARTHAS_LAUNCHER)
+  // 主键配置映射管理器子类实现
+  lazy val annoManagerClass = PropUtils.getString(this.FIRE_CONF_ANNO_MANAGER_CLASS)
+  // 是否启用基于注解的方式进行配置
+  lazy val annoConfEnable = PropUtils.getBoolean(this.FIRE_CONF_ANNOTATION, true)
 }

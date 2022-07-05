@@ -17,23 +17,25 @@
 
 package com.zto.fire.common.util
 
+import com.zto.fire.common.anno.{Config, Internal}
 import com.zto.fire.common.conf._
+import com.zto.fire.common.enu.ConfigureLevel
 import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 
-import java.io.{FileInputStream, InputStream}
+import java.io.{FileInputStream, InputStream, StringReader}
 import java.util.Properties
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable.Map
 import scala.collection.{immutable, mutable}
-import scala.reflect.ClassTag
+import scala.reflect.{ClassTag, classTag}
 
 /**
  * 读取配置文件工具类
  * Created by ChengLong on 2016-11-22.
  */
-object PropUtils {
+object PropUtils extends Logging {
   private val props = new Properties()
   private val configurationFiles = Array[String]("fire", "cluster", "spark", "flink")
   // 用于判断是否merge过
@@ -50,7 +52,6 @@ object PropUtils {
   private[fire] lazy val originalSettingsMap = new mutable.HashMap[String, String]()
   // 用于存放固定前缀，而后缀不同的配置信息
   private[this] lazy val cachedConfMap = new mutable.HashMap[String, collection.immutable.Map[String, String]]()
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
 
   /**
    * 判断指定的配置文件是否存在
@@ -143,6 +144,85 @@ object PropUtils {
    */
   def load(fileNames: String*): this.type = {
     if (noEmpty(fileNames)) fileNames.foreach(this.loadFile)
+    this
+  }
+
+  /**
+   * 加载扩展的注解配置信息：
+   * @Kafka、@RocketMQ、@Hive、@HBase等
+   *
+   * @param clazz
+   * 任务入口类
+   */
+  def loadAnnoConf(clazz: Class[_]): this.type = {
+    if (!FireFrameworkConf.annoConfEnable) return this
+    if (clazz == null) return this
+
+    // 加载通过@Config注解配置的信息
+    val option = this.getAnnoConfig(clazz)
+    if (option.nonEmpty) {
+      val (files, props, value) = option.get
+      if (noEmpty(value)) {
+        // 移除所有的注释信息
+        val normalValue = RegularUtils.propAnnotation.replaceAllIn(value, "").replaceAll("\\|", "").trim
+        val valueProps = new Properties()
+        val stringReader = new StringReader(normalValue)
+        valueProps.load(stringReader)
+        stringReader.close()
+        valueProps.map(kv => (StringUtils.trim(kv._1), StringUtils.trim(kv._2))).filter(kv => noEmpty(kv, kv._1, kv._2)).foreach(kv => this.setProperty(kv._1, kv._2))
+      }
+      props.foreach(kv => this.setProperty(kv._1, kv._2))
+      if (noEmpty(files)) this.load(files: _*)
+    }
+
+    // 加载其他注解指定的配置信息
+    val annoManagerClass = FireFrameworkConf.annoManagerClass
+    if (isEmpty(annoManagerClass)) throw new IllegalArgumentException(s"未找到注解管理器，请通过：${FireFrameworkConf.FIRE_CONF_ANNO_MANAGER_CLASS}进行配置！")
+
+    tryWithLog {
+      val annoClazz = Class.forName(annoManagerClass)
+      val method = ReflectionUtils.getMethodByName(annoClazz, "getAnnoProps")
+      if (isEmpty(method)) throw new RuntimeException(s"未找到getAnnoProps()方法，通过${FireFrameworkConf.FIRE_CONF_ANNO_MANAGER_CLASS}指定的类必须是com.zto.fire.core.conf.AnnoManager的子类")
+      val annoProps = method.invoke(annoClazz.newInstance(), clazz)
+      this.setProperties(annoProps.asInstanceOf[mutable.HashMap[String, String]])
+    } (this.logger, "成功加载注解中的配置信息！", "注解配置信息加载失败！")
+
+    this
+  }
+
+  /**
+   * 加载注解配置信息
+   *
+   * @param clazz
+   * 任务入口类
+   */
+  def loadJobConf(clazz: Class[_]): this.type = {
+    if (clazz == null) return this
+    this.load(clazz.getSimpleName.replace("$", ""))
+    this
+  }
+
+  /**
+   * 获取配置中心配置信息并加载用户配置以及注解配置
+   * 配置的优先级：fire公共配置 < 配置中心公共配置 < 用户任务配置 < 配置中心任务级别配置 < 配置中心紧急配置
+   *
+   * @param className
+   * 入口类的包名+类名
+   */
+  def loadJobConf(className: String): this.type = {
+    // 通过接口调用获取配置中心配置各等级的参数信息
+    val centerConfig = this.invokeConfigCenter(className)
+    // 配置中心的默认配置优先级高于框架（fire.properties）以及引擎（spark.properties/flink.properties）等配置
+    this.setProperties(centerConfig.getOrDefault(ConfigureLevel.FRAMEWORK, Map.empty[String, String]))
+    // 加载扩展类注解配置（@Kafka、@RocketMQ、@Hive、@HBase等）
+    this.loadAnnoConf(Class.forName(className))
+    // 加载用户配置文件以及@Config注解配置
+    this.loadJobConf(Class.forName(className))
+    // 配置中心任务级别配置优先级高于用户本地配置文件中的配置，做到重启任务即可生效
+    this.setProperties(centerConfig.getOrDefault(ConfigureLevel.TASK, Map.empty[String, String]))
+    // 配置中心紧急配置优先级最高，用于对所有任务生效的紧急参数调优
+    this.setProperties(centerConfig.getOrDefault(ConfigureLevel.URGENT, Map.empty[String, String]))
+
     this
   }
 
@@ -460,19 +540,47 @@ object PropUtils {
   /**
    * 合并Conf中的配置信息
    */
+  @Internal
   private[this] def mergeEngineConf: Unit = {
     val clazz = Class.forName(FireFrameworkConf.FIRE_ENGINE_CONF_HELPER)
-    val method = clazz.getDeclaredMethod("getEngineConf")
+    val method = clazz.getDeclaredMethod("syncEngineConf")
     val map = method.invoke(null).asInstanceOf[immutable.Map[String, String]]
     if (map.nonEmpty) {
-      this.setProperties(map)
+      this.setProperties(map.filter(kv => !kv._1.contains(FireFrameworkConf.FIRE_REST_SERVER_SECRET)))
       logger.info(s"完成计算引擎配置信息的同步，总计：${map.size}条")
       map.foreach(k => logger.debug("合并：k=" + k._1 + " v=" + k._2))
     }
   }
 
   /**
+   * 获取指定类的配置注解信息
+   *
+   * @param clazz
+   * flink或spark任务的具体入口类
+   * @return
+   * 配置文件名称 & 配置列表
+   */
+  @Internal
+  private[this] def getAnnoConfig(clazz: Class[_]): Option[(Array[String], Array[(String, String)], String)] = {
+    val anno = ReflectionUtils.getClassAnnotation(clazz, classOf[Config])
+    if (anno == null) return None
+    val confAnno = anno.asInstanceOf[Config]
+    val files = confAnno.files().filter(StringUtils.isNotBlank).map(_.trim)
+    val props = confAnno.props().filter(StringUtils.isNotBlank)
+      .map(_.split("=", 2))
+      .filter(prop => noEmpty(prop) && prop.length == 2 && noEmpty(prop(0), prop(1)))
+      .map(prop => {
+        (prop(0).trim, prop(1).trim)
+      })
+    Some(files, props, confAnno.value())
+  }
+
+  /**
    * 调用外部配置中心接口获取配合信息
    */
-  def invokeConfigCenter(className: String): Unit = ConfigurationCenterManager.invokeConfigCenter(className)
+  @Internal
+  private[this] def invokeConfigCenter(className: String): JMap[ConfigureLevel, JMap[String, String]] = {
+    // 调用配置中心接口获取优先级最高的配置信息
+    ConfigurationCenterManager.invokeConfigCenter(className)
+  }
 }

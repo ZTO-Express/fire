@@ -17,18 +17,15 @@
 
 package com.zto.fire.spark.ext.core
 
-import java.util.Properties
-
 import com.zto.fire._
-import com.zto.fire.common.conf.{FireHiveConf, FireKuduConf}
+import com.zto.fire.common.conf.FireHiveConf
 import com.zto.fire.jdbc.conf.FireJdbcConf
 import com.zto.fire.jdbc.util.DBUtils
 import com.zto.fire.spark.conf.FireSparkConf
-import com.zto.fire.spark.ext.module.KuduContextExt
-import com.zto.fire.spark.util.{KuduUtils, SparkSingletonFactory}
 import org.apache.commons.lang3.StringUtils
-import org.apache.kudu.spark.kudu._
 import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+
+import java.util.Properties
 
 /**
  * SQLContext与HiveContext扩展
@@ -38,53 +35,6 @@ import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
  * @author ChengLong 2019-5-18 10:52:00
  */
 class SQLContextExt(sqlContext: SQLContext) {
-
-  /**
-   * 获取KuduContext实例
-   *
-   * @return
-   * kuduContext的扩展实例
-   */
-  def createKuduContext: KuduContextExt = {
-    SparkSingletonFactory.getKuduContextInstance(sqlContext.sparkContext)
-  }
-
-  /**
-   * 判断给定的表是否存在
-   *
-   * @param tableName
-   * 表名
-   * @return
-   * 存在、不存在
-   */
-  def tmpTableExists(tableName: String): Boolean = {
-    val count = sqlContext.tables().where("tableName='zto_sign_new_kudu' and isTemporary=true").count()
-    if (count == 1) true else false
-  }
-
-  /**
-   * 加载kudu表转为DataFrame
-   *
-   * @param map
-   * map集合
-   * @return
-   * DataFrame
-   */
-  def loadKuduTable(map: Map[String, String]): DataFrame = {
-    sqlContext.read.options(map).kudu
-  }
-
-  /**
-   * 加载kudu表转为DataFrame
-   *
-   * @param tableName
-   * 表名
-   * @return
-   * DataFrame
-   */
-  def loadKuduTable(tableName: String): DataFrame = {
-    sqlContext.read.options(Map("kudu.master" -> FireKuduConf.kuduMaster, "kudu.table" -> KuduUtils.packageKuduTableName(tableName))).kudu
-  }
 
   /**
    * 链式设置

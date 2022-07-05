@@ -17,28 +17,39 @@
 
 package com.zto.fire.examples.flink
 
+
 import com.zto.fire._
-import com.zto.fire.common.conf.FireHiveConf
-import com.zto.fire.common.util.{JSONUtils, PropUtils, StringsUtils}
-import com.zto.fire.examples.bean.Student
+import com.zto.fire.common.anno.Config
+import com.zto.fire.core.anno._
 import com.zto.fire.flink.BaseFlinkStreaming
-import org.apache.commons.lang3.StringUtils
-import org.apache.flink.api.scala._
-import org.apache.flink.table.api.SqlDialect
-import org.apache.flink.table.catalog.ObjectPath
+import com.zto.fire.flink.anno.Checkpoint
 
 /**
  * 基于Fire进行Flink Streaming开发
  *
- * @author ChengLong
- * @since 2.0.0
- * @create 2021-06-07 13:14:19
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Config(
+  """
+    |# flink调优参数、fire框架参数、用户自定义参数
+    |flink.kafka.force.overwrite.stateOffset.enable=true
+    |# 是否在开启checkpoint的情况下强制开启周期性offset提交
+    |flink.kafka.force.autoCommit.enable=true
+    |""")
+@HBase("test")  // 配置连接到指定的Hbase
+@Hive("test") // 配置连接到指定的hive
+@Checkpoint(interval = 100, unaligned = true) // 100s做一次checkpoint，开启非对齐checkpoint
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
+@Kafka2(brokers = "bigdata_test", topics = "fire2", groupId = "fire")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object Test extends BaseFlinkStreaming {
 
+  /**
+   * 业务逻辑代码，会被fire自动调用
+   */
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream()
-    dstream.print()
+    dstream.print("fire1==> ")
     this.fire.start
   }
 }

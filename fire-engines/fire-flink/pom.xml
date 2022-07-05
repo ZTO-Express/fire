@@ -21,20 +21,34 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>fire-flink_${flink.reference}</artifactId>
     <packaging>jar</packaging>
-    <name>fire-flink</name>
+    <name>Fire : Engines : Flink </name>
 
     <parent>
         <groupId>com.zto.fire</groupId>
-        <artifactId>fire-engines_2.12</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <artifactId>fire-engines</artifactId>
+        <version>2.3.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <dependencies>
         <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-enhance-flink_${flink.reference}</artifactId>
+            <version>${fire.version}</version>
+            <scope>${maven.scope}</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.zto.fire</groupId>
+            <artifactId>fire-connector-flink-rocketmq_${flink.reference}</artifactId>
+            <version>${fire.version}</version>
+            <scope>${maven.scope}</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>
             <version>${sparkjava.version}</version>
+            <scope>${maven.scope}</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -69,12 +83,6 @@
         <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-runtime-web_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-queryable-state-runtime_${scala.binary.version}</artifactId>
             <version>${flink.version}</version>
             <scope>${maven.scope}</scope>
         </dependency>
@@ -122,18 +130,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-table-planner-blink_${scala.binary.version}</artifactId>
-            <version>${flink.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-common</artifactId>
             <version>${flink.version}</version>
             <scope>${maven.scope}</scope>
@@ -173,7 +169,7 @@
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-exec</artifactId>
-            <version>${hive.apache.version}</version>
+            <version>${hive.flink.version}</version>
             <scope>${maven.scope}</scope>
         </dependency>
 
@@ -204,18 +200,12 @@
         </dependency>
         <dependency>
             <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-client_${scala.binary.version}</artifactId>
+            <artifactId>hbase-client</artifactId>
             <version>${hbase.version}</version>
             <scope>${maven.scope}</scope>
         </dependency>
 
         <!-- RocketMQ相关依赖 -->
-        <dependency>
-            <groupId>org.apache.rocketmq</groupId>
-            <artifactId>rocketmq-flink_${flink.major.version}_${scala.binary.version}</artifactId>
-            <version>${rocketmq.external.version}</version>
-            <scope>${maven.scope}</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-client</artifactId>

@@ -57,4 +57,19 @@ class ValueUtilsTest {
     jset.add(1)
     requireNonEmpty(arr, map, mutableMap, jmap, jset)("参数不合法")
   }
+
+  /**
+   * 测试参数检测API
+   */
+  @Test
+  def testRequireNonNull(): Unit = {
+    val arr = new Array[Int](1)
+    val map = Map("str" -> 1)
+    val mutableMap = scala.collection.mutable.Map("str" -> 1)
+    val jmap = new JHashMap[String, Integer]()
+    jmap.put("str", 1)
+    val jset = new JHashSet[Int]()
+    jset.add(1)
+    requireNonNull(arr, map, mutableMap, jmap, jset)("参数不合法")
+  }
 }

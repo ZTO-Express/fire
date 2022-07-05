@@ -18,6 +18,8 @@
 package com.zto.fire.examples.spark.structured
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
+import com.zto.fire.core.anno.{Hive, Kafka}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.spark.BaseStructuredStreaming
 import org.apache.spark.sql.Encoders
@@ -25,8 +27,13 @@ import com.zto.fire.spark.util.SparkUtils
 
 /**
  * 对结构化流执行map、mapPartition操作
+ *
  * @author ChengLong 2020年1月3日 18:00:59
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Hive("batch")
+@Kafka(brokers = "test", topics = "fire", groupId = "fire")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object MapTest extends BaseStructuredStreaming {
 
   override def process: Unit = {

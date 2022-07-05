@@ -17,18 +17,14 @@
 
 package com.zto.fire.spark.util
 
-import com.zto.fire.common.conf.{FireFrameworkConf, FireKuduConf}
-import com.zto.fire.common.enu.JobType
 import com.zto.fire.core.util.SingletonFactory
 import com.zto.fire.hbase.HBaseConnector
 import com.zto.fire.hbase.conf.FireHBaseConf
 import com.zto.fire.spark.connector.HBaseBulkConnector
-import com.zto.fire.spark.ext.module.KuduContextExt
 import org.apache.commons.lang3.StringUtils
-import org.apache.kudu.spark.kudu.KuduContext
+import org.apache.spark.SparkContext
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.{SparkContext, SparkEnv}
 
 /**
  * 单例工厂，用于创建单例的对象
@@ -38,7 +34,6 @@ object SparkSingletonFactory extends SingletonFactory {
   private[this] var sparkSession: SparkSession = _
   private[this] var streamingContext: StreamingContext = _
   @transient private[this] var hbaseContext: HBaseBulkConnector = _
-  @transient private[this] var kuduContext: KuduContextExt = _
 
   /**
    * 获取SparkSession实例
@@ -88,21 +83,6 @@ object SparkSingletonFactory extends SingletonFactory {
       this.hbaseContext = new HBaseBulkConnector(sparkContext, HBaseConnector.getConfiguration(keyNum))
     }
     this.hbaseContext
-  }
-
-  /**
-   * 获取单例的KuduContext对象
-   *
-   * @param sparkContext
-   * SparkContext实例
-   * @return
-   */
-  def getKuduContextInstance(sparkContext: SparkContext): KuduContextExt = this.synchronized {
-    if (this.kuduContext == null && StringUtils.isNotBlank(FireKuduConf.kuduMaster)) {
-      val kuduContextTmp = new KuduContext(FireKuduConf.kuduMaster, sparkContext)
-      this.kuduContext = new KuduContextExt(this.sparkSession.sqlContext, kuduContextTmp)
-    }
-    this.kuduContext
   }
 
 }

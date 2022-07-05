@@ -18,7 +18,6 @@
 package com.zto.fire.common.util
 
 import com.zto.fire.common.conf.{FireFrameworkConf, FirePS1Conf}
-import org.slf4j.LoggerFactory
 
 /**
  * fire框架通用的工具方法
@@ -28,19 +27,25 @@ import org.slf4j.LoggerFactory
  * @since 1.0.0
  * @create: 2020-05-17 10:17
  */
-private[fire] object FireUtils extends Serializable {
-  private var isSplash = false
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+private[fire] object FireUtils extends Serializable with Logging {
+  private[fire] var isSplash = false
 
   /**
    * 判断是否为spark引擎
    */
-  def isSparkEngine: Boolean = "spark".equals(PropUtils.engine)
+  def isSparkEngine: Boolean = "spark".equals(this.engine)
 
   /**
    * 判断是否为flink引擎
    */
-  def isFlinkEngine: Boolean = "flink".equals(PropUtils.engine)
+  def isFlinkEngine: Boolean = "flink".equals(this.engine)
+
+  /**
+   * 获取当前实时任务所使用的计算引擎
+   * @return
+   * spark / flink
+   */
+  def engine: String = PropUtils.engine
 
   /**
    * 获取fire版本号

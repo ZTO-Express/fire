@@ -18,7 +18,11 @@
 package com.zto.fire.examples.flink.connector.rocketmq
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
+import com.zto.fire.core.anno.RocketMQ
 import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.anno.Checkpoint
+import org.apache.flink.api.scala._
 
 /**
  * Flink流式计算任务消费rocketmq
@@ -26,16 +30,28 @@ import com.zto.fire.flink.BaseFlinkStreaming
  * @author ChengLong
  * @since 2.0.0
  * @create 2021-5-13 14:26:24
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Checkpoint(60)
+@Config("default.parallelism=2")
+@RocketMQ(brokers = "bigdata_test", topics = "fire", groupId = "fire", tag = "*", startingOffset = "latest")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object RocketTest extends BaseFlinkStreaming {
 
   override def process: Unit = {
-    this.fire.createRocketMqPullStreamWithTag().print()
-    // this.fire.createRocketMqPullStreamWithKey()
+    // 1. createRocketMqPullStreamWithTag()返回的是三元组，分别是：(tag, key, value)
+    this.fire.createRocketMqPullStreamWithTag().setParallelism(1).map(t => {
+      this.logInfo("消息：" + t._3)
+      t._3
+    }).print()
+
+    // 2. createRocketMqPullStreamWithKey()返回的是二元组，分别是：(key, value)
+    // this.fire.createRocketMqPullStreamWithKey().map(t => t._2).print()
+
+    // 3. createRocketMqPullStream()返回的是消息体
     // this.fire.createRocketMqPullStream()
 
     // 从另一个rocketmq中消费数据
-    this.fire.createRocketMqPullStream(keyNum = 2).print()
     this.fire.start
   }
 }

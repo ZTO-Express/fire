@@ -18,7 +18,9 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
+import com.zto.fire.core.anno.Kafka
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.flink.BaseFlinkStreaming
 import org.apache.flink.api.scala._
@@ -28,6 +30,8 @@ import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunc
 /**
  * 自定义sink的实现
  */
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object FlinkSinkTest extends BaseFlinkStreaming {
 
   override def process: Unit = {

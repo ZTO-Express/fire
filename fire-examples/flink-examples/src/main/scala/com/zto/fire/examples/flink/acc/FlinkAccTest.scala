@@ -18,8 +18,11 @@
 package com.zto.fire.examples.flink.acc
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
+import com.zto.fire.core.anno.Kafka
 import com.zto.fire.flink.BaseFlinkStreaming
-import com.zto.fire.flink.ext.function.FireMapFunction
+import org.apache.flink.api.common.JobExecutionResult
+import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.scala.DataStream
 
@@ -28,7 +31,14 @@ import org.apache.flink.streaming.api.scala.DataStream
  *
  * @author ChengLong 2020年1月11日 14:08:56
  * @since 0.4.1
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Config(
+  """
+    |flink.max.parallelism               =       8
+    |""")
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object FlinkAccTest extends BaseFlinkStreaming {
 
   /**
@@ -48,7 +58,7 @@ object FlinkAccTest extends BaseFlinkStreaming {
     // FireMapFunction功能较RichMapFunction等更为强大，推荐使用
     // 创建FireMapFunction类型的内部类，支持Map、MapPartition、FlatMap等操作
     // 在不同的map函数中进行累加全局有效
-    dstream.map(new FireMapFunction[Int, Int]() {
+    dstream.map(new RichMapFunction[Int, Int]() {
       override def map(value: Int): Int = {
         // 多值计数器根据累加器的值类型区分不同的计数器，比如传参为Double类型，则累加至DoubleCounter中
         this.addCounter("LongCount", value.longValue())
@@ -63,13 +73,13 @@ object FlinkAccTest extends BaseFlinkStreaming {
     val result = this.fire.start
 
     // 获取计数器中的值
-    val longCount = result.getAccumulatorResult[Long]("LongCount")
+    val longCount = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Long]("LongCount")
     println("累加值Long：" + longCount)
-    val doubleCount = result.getAccumulatorResult[Double]("DoubleCount")
+    val doubleCount = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Double]("DoubleCount")
     println("累加值Double：" + doubleCount)
-    val intCount = result.getAccumulatorResult[Integer]("IntCount")
+    val intCount = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Integer]("IntCount")
     println("累加值IntCount：" + intCount)
-    val intCount2 = result.getAccumulatorResult[Integer]("IntCount2")
+    val intCount2 = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Integer]("IntCount2")
     println("累加值IntCount2：" + intCount2)
     Thread.currentThread().join()
 

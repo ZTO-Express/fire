@@ -19,6 +19,7 @@ package com.zto.fire.examples.spark.jdbc
 
 import com.zto.fire._
 import com.zto.fire.common.util.{DateFormatUtils, JSONUtils}
+import com.zto.fire.core.anno.{Jdbc, Jdbc2}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.jdbc.JdbcConnector
 import com.zto.fire.spark.BaseSparkCore
@@ -29,7 +30,10 @@ import org.apache.spark.sql.SaveMode
  * Spark jdbc操作
  *
  * @author ChengLong 2019-6-17 15:17:38
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Jdbc(url = "jdbc:mysql://mysql-server:3306/fire", username = "root", password = "fire")
+@Jdbc2(url = "jdbc:mysql://mysql-server:3306/fire", username = "root", password = "fire")
 object JdbcTest extends BaseSparkCore {
   lazy val tableName = "spark_test"
   lazy val tableName2 = "t_cluster_info"
@@ -68,7 +72,7 @@ object JdbcTest extends BaseSparkCore {
     // 方式二：通过JdbcConnector.executeUpdate
 
     // 同一个事务
-    /*val connection = this.jdbc.getConnection()
+    /*val connection = JdbcConnector.getConnection(keyNum = 2)
     this.fire.jdbcBatchUpdate("insert", connection = connection, commit = false, closeConnection = false)
     this.fire.jdbcBatchUpdate("delete", connection = connection, commit = false, closeConnection = false)
     this.fire.jdbcBatchUpdate("update", connection = connection, commit = true, closeConnection = true)*/
@@ -82,7 +86,7 @@ object JdbcTest extends BaseSparkCore {
     val sql = s"select * from $tableName where id in (?, ?, ?)"
 
     // 执行sql查询，并对查询结果集进行处理
-    this.fire.jdbcQueryCall(sql, Seq(1, 2, 3), callback = rs => {
+    this.fire.jdbcQuery(sql, Seq(1, 2, 3), callback = rs => {
       while (rs.next()) {
         // 对每条记录进行处理
         println("driver=> id=" + rs.getLong(1))
@@ -91,21 +95,17 @@ object JdbcTest extends BaseSparkCore {
     })
 
     // 将查询结果集以List[JavaBean]方式返回
-    val list = this.fire.jdbcQuery(sql, Seq(1, 2, 3), classOf[Student])
+    val list = this.fire.jdbcQueryList(sql, Seq(1, 2, 3), classOf[Student])
     // 方式二：使用JdbcConnector
     list.foreach(x => println(JSONUtils.toJSONString(x)))
 
     // 将结果集封装到RDD中
-    val rdd = this.fire.jdbcQueryRDD(sql, Seq(1, 2, 3), classOf[Student])
+    val rdd = this.fire.jdbcQueryRDD(sql, Seq(1, 2, 3))
     rdd.printEachPartition
 
     // 将结果集封装到DataFrame中
-    val df = this.fire.jdbcQueryDF(sql, Seq(1, 2, 3), classOf[Student])
+    val df = this.fire.jdbcQueryDF(sql, Seq(1, 2, 3))
     df.show(10, false)
-
-    // 将jdbc查询结果集封装到Dataset中
-    val ds = this.fire.jdbcQueryDS(sql, Seq(1, 2, 3), classOf[Student])
-    ds.show(10, false)
   }
 
   /**
@@ -130,7 +130,7 @@ object JdbcTest extends BaseSparkCore {
     // 第二个参数默认为SaveMode.Append，可以指定SaveMode.Overwrite
     df.jdbcTableSave(this.tableName, SaveMode.Overwrite)
     // 利用sparkSession方式将DataFrame数据保存到配置的第二个数据源中
-    this.fire.jdbcTableSave(df, this.tableName, SaveMode.Overwrite)
+    this.fire.jdbcTableSave(df, this.tableName, SaveMode.Overwrite, keyNum = 2)
   }
 
   /**
@@ -142,11 +142,14 @@ object JdbcTest extends BaseSparkCore {
     val insertSql = s"INSERT INTO spark_test(name, age, createTime, length, sex) VALUES (?, ?, ?, ?, ?)"
     // 指定部分DataFrame列名作为参数，顺序要对应sql中问号占位符的顺序，batch用于指定批次大小，默认取spark.db.jdbc.batch.size配置的值
     df.jdbcBatchUpdate(insertSql, Seq("name", "age", "createTime", "length", "sex"), batch = 100)
+    this.fire.jdbcTableLoadAll(this.tableName).show(100, false)
+
 
     df.createOrReplaceTempViewCache("student")
     val sqlDF = this.fire.sql("select name, age, createTime from student where id>=1").repartition(1)
     // 若不指定字段，则默认传入当前DataFrame所有列，且列的顺序与sql中问号占位符顺序一致
-    sqlDF.jdbcBatchUpdate("insert into spark_test(name, age, createTime) values(?, ?, ?)")
+    sqlDF.jdbcBatchUpdate("insert into spark_test(name, age, createTime) values(?, ?, ?)", keyNum = 2)
+    this.fire.jdbcTableLoadAll(this.tableName, keyNum = 2).show(100, false)
     // 等同以上方式
     // this.fire.jdbcBatchUpdateDF(sqlDF, "insert into spark_test(name, age, createTime) values(?, ?, ?)")
   }
@@ -155,23 +158,16 @@ object JdbcTest extends BaseSparkCore {
    * 在executor中执行jdbc操作
    */
   def testExecutor: Unit = {
-    JdbcConnector.executeQueryCall(s"select id from $tableName limit 1", null, callback = _ => {
-      // this.mark()
+    JdbcConnector.executeQuery(s"select id from $tableName limit 1", null, callback = _ => {
       Thread.sleep(1000)
-      // this.log(s"=============driver123 $tableName2=============")
-      1
     })
-    JdbcConnector.executeQueryCall(s"select id from $tableName limit 1", null, callback = _ => {
-      // this.log(s"=============driver $tableName2=============")
-      1
+    JdbcConnector.executeQuery(s"select id from $tableName limit 1", null, callback = _ => {
     }, keyNum = 2)
     this.logger.info("driver sql执行成功")
     val rdd = this.fire.createRDD(1 to 3, 3)
     rdd.foreachPartition(it => {
       it.foreach(i => {
-        JdbcConnector.executeQueryCall(s"select id from $tableName limit 1", null, callback = _ => {
-          // this.log("------------------------- executorId: " + SparkUtils.getExecutorId + " date:" + DateFormatUtils.formatCurrentDate())
-          1
+        JdbcConnector.executeQuery(s"select id from $tableName limit 1", null, callback = _ => {
         })
       })
       this.logger.info("sql执行成功")
@@ -181,7 +177,7 @@ object JdbcTest extends BaseSparkCore {
     val rdd2 = this.fire.createRDD(1 to 3, 3)
     rdd2.foreachPartition(it => {
       it.foreach(i => {
-        JdbcConnector.executeQueryCall(s"select id from $tableName limit 1", null, callback = _ => {
+        JdbcConnector.executeQuery(s"select id from $tableName limit 1", null, callback = _ => {
           this.logConf
           1
         }, keyNum = 2)
@@ -202,17 +198,13 @@ object JdbcTest extends BaseSparkCore {
   override def process: Unit = {
     // 测试环境测试
     this.testJdbcUpdate
+    /*this.testJdbcUpdate
     this.testJdbcQuery
     this.testTableLoad
     this.testTableSave
-    this.testDataFrameSave
+    this.testDataFrameSave*/
     // 测试配置分发
     this.testExecutor
-  }
-
-  override def main(args: Array[String]): Unit = {
-    this.init(args = args)
-
-    Thread.currentThread().join()
+    Thread.sleep(100000)
   }
 }

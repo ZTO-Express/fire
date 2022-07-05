@@ -18,25 +18,24 @@
 package com.zto.fire.examples.spark
 
 import com.zto.fire._
-import com.zto.fire.common.util.{DateFormatUtils, PropUtils}
-import com.zto.fire.examples.bean.Student
-import com.zto.fire.examples.spark.jdbc.JdbcTest.tableName
-import com.zto.fire.hbase.HBaseConnector
-import com.zto.fire.spark.{BaseSparkCore, BaseSparkStreaming}
-
+import com.zto.fire.core.anno.Kafka
+import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.anno.Streaming
 
 /**
  * 基于Fire进行Spark Streaming开发
  *
- * @author ChengLong
- * @since 2.0.0
- * @create 2021-06-07 13:14:19
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+// 60s一个批，最大同时执行2个streaming批次，开启反压机制、每个分区每秒最大消费100条消息
+@Streaming(interval = 60, concurrent = 2, backpressure = true, maxRatePerPartition = 100)
+// 配置消费的kafka信息
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
 object Test extends BaseSparkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream()
     dstream.print()
-    this.fire.start
+    this.fire.start()
   }
 }

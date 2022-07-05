@@ -18,7 +18,9 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
+import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
+import com.zto.fire.core.anno.Kafka
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.flink.BaseFlinkStreaming
 import org.apache.flink.api.scala._
@@ -33,6 +35,14 @@ import org.apache.flink.streaming.api.windowing.time.Time
  *
  * @author ChengLong 2020-4-18 14:34:58
  */
+@Config(
+  """
+    |flink.fire.rest.filter.enable       =       false
+    |flink.default.parallelism           =       8
+    |flink.max.parallelism               =       8
+    |""")
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object WindowTest extends BaseFlinkStreaming {
 
   override def process: Unit = {

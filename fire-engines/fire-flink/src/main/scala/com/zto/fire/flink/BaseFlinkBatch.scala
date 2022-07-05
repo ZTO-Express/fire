@@ -25,7 +25,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.flink.api.java.utils.ParameterTool
 import org.apache.flink.api.scala.ExecutionEnvironment
 import org.apache.flink.configuration.{ConfigConstants, Configuration}
-import org.apache.flink.table.api.bridge.scala.BatchTableEnvironment
+import org.apache.flink.table.api.{EnvironmentSettings, TableEnvironment}
 
 /**
  * flink batch通用父接口
@@ -34,7 +34,7 @@ import org.apache.flink.table.api.bridge.scala.BatchTableEnvironment
 trait BaseFlinkBatch extends BaseFlink {
   override val jobType: JobType = JobType.FLINK_BATCH
   protected var env, flink, fire: ExecutionEnvironment = _
-  protected var tableEnv: BatchTableEnvironment = _
+  protected var tableEnv: TableEnvironment = _
 
   /**
    * 构建或合并Configuration
@@ -89,7 +89,7 @@ trait BaseFlinkBatch extends BaseFlink {
     }
     this.env.getConfig.setGlobalJobParameters(ParameterTool.fromMap(finalConf.toMap))
     this.configParse(this.env)
-    this.tableEnv = BatchTableEnvironment.create(this.env)
+    this.tableEnv = TableEnvironment.create(EnvironmentSettings.newInstance.inBatchMode().build())
     if (StringUtils.isNotBlank(FireHiveConf.getHiveConfDir)) {
       this.tableEnv.registerCatalog(FireHiveConf.hiveCatalogName, this.hiveCatalog)
     }

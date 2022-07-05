@@ -19,7 +19,6 @@ package com.zto.fire.common.util
 
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateUtils
-import org.slf4j.{Logger, LoggerFactory}
 
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date, TimeZone}
@@ -29,14 +28,13 @@ import scala.collection.mutable.ArrayBuffer
   * 日期格式化工具类
   * Created by ChengLong on 2016-11-24.
   */
-object DateFormatUtils {
+object DateFormatUtils extends Logging {
   lazy val yyyyMMdd = "yyyyMMdd"
   lazy val yyyy_MM_dd = "yyyy-MM-dd"
   lazy val yyyyMMddHH = "yyyyMMddHH"
   lazy val yyyy_MM_ddHHmmss = "yyyy-MM-dd HH:mm:ss"
   lazy val TRUNCATE_MIN = "yyyy-MM-dd HH:mm:00"
   private val timeZoneShangHai = "Asia/Shanghai"
-  private lazy val logger: Logger = LoggerFactory.getLogger(this.getClass)
   lazy val HOUR = "hour"
   lazy val DAY = "day"
   lazy val WEEK = "week"

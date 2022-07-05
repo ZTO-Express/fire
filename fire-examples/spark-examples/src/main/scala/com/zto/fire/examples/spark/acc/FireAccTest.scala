@@ -18,18 +18,24 @@
 package com.zto.fire.examples.spark.acc
 
 import java.util.concurrent.TimeUnit
-
 import com.zto.fire._
-import com.zto.fire.common.anno.Scheduled
-import com.zto.fire.common.util.{DateFormatUtils, PropUtils}
+import com.zto.fire.common.anno.{Config, Scheduled}
+import com.zto.fire.common.util.{DateFormatUtils, PropUtils, ThreadUtils}
+import com.zto.fire.core.anno.{Hive, Kafka}
 import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.anno.Streaming
 
 
 /**
  * 用于演示与测试Fire框架内置的累加器
  *
  * @author ChengLong 2019年9月10日 09:50:16
+ * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Streaming(10)
+@Hive("test")
+@Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
+// 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object FireAccTest extends BaseSparkStreaming {
   val key = "fire.partitions"
 
@@ -52,7 +58,7 @@ object FireAccTest extends BaseSparkStreaming {
     })
 
     // 定时打印fire内置累加器中的值
-    this.runAsSchedule(this.printAcc, 0, 10, true, TimeUnit.MINUTES)
+    ThreadUtils.schedule(this.printAcc, 0, 10, true, TimeUnit.MINUTES)
 
     this.fire.start
   }
@@ -86,10 +92,5 @@ object FireAccTest extends BaseSparkStreaming {
   @Scheduled(cron = "0 0 9 * * ?")
   def loadTable3: Unit = {
     println(s"${DateFormatUtils.formatCurrentDateTime()}=================== 每天9点执行loadTable3 ===================")
-  }
-
-
-  override def main(args: Array[String]): Unit = {
-    this.init(1, false, args)
   }
 }

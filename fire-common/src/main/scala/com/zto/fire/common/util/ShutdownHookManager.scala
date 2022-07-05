@@ -17,11 +17,10 @@
 
 package com.zto.fire.common.util
 
+import com.zto.fire.predef._
+
 import java.util.PriorityQueue
 import java.util.concurrent.atomic.AtomicBoolean
-
-import com.zto.fire.predef._
-import org.slf4j.LoggerFactory
 
 /**
  * Fire框架统一的shutdown hook管理器，所有注册了的hook将会在jvm退出前根据优先级依次调用
@@ -30,8 +29,7 @@ import org.slf4j.LoggerFactory
  * @create 2020-11-20 14:06
  * @since 1.1.2
  */
-private[fire] class ShutdownHookManager {
-  private lazy val logger = LoggerFactory.getLogger(this.getClass)
+private[fire] class ShutdownHookManager  extends Logging  {
   // 具有优先级的队列，存放各处注册的hook信息，在jvm退出前根据优先级依次调用
   private[this] val hooks = new PriorityQueue[HookEntry]()
   private[this] val shuttingDown = new AtomicBoolean(false)

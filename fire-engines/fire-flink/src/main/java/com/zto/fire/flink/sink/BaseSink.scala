@@ -17,14 +17,14 @@
 
 package com.zto.fire.flink.sink
 
+import com.zto.fire.common.util.Logging
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.runtime.state.{FunctionInitializationContext, FunctionSnapshotContext}
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction
 import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunction}
-import org.slf4j.LoggerFactory
 
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent._
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.util.control._
 
 /**
@@ -38,13 +38,12 @@ import scala.util.control._
  * @since 1.1.0
  * @create 2020-05-21 15:27
  */
-abstract class BaseSink[IN, OUT](batch: Int, flushInterval: Long) extends RichSinkFunction[IN] with CheckpointedFunction {
+abstract class BaseSink[IN, OUT](batch: Int, flushInterval: Long) extends RichSinkFunction[IN] with CheckpointedFunction with Logging {
   protected var maxRetry: Long = 3
   private var flushException: Exception = _
   @transient protected var scheduler: ScheduledExecutorService = _
   @transient protected var scheduledFuture: ScheduledFuture[_] = _
   protected lazy val closed = new AtomicBoolean(false)
-  protected lazy val logger = LoggerFactory.getLogger(this.getClass)
   @transient protected lazy val buffer = new CopyOnWriteArrayList[OUT]()
 
   /**
