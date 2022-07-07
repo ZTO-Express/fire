@@ -216,7 +216,9 @@ this.fire.hbasePutDF(hTableName2, studentDF, classOf[Student], keyNum=2)	// keyN
 
 ​		fire框架整合spark shell与flink shell，支持通过REPL方式去动态调试spark和flink任务，并且支持fire框架的所有API。fire框架将shell能力通过接口方式暴露给实时平台，如此一来就可以通过web页面去调试spark和flink任务了。
 
-## 四、期待你的加入
+## *[四、升级日志](./docs/feature.md)*
+
+## 五、期待你的加入
 
 **技术交流（钉钉群）：*35373471***
 

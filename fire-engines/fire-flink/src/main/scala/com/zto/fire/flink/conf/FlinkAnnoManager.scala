@@ -36,7 +36,8 @@ private[fire] class FlinkAnnoManager extends AnnoManager {
    */
   def mapCheckpoint(checkpoint: Checkpoint): Unit = {
     this.put(FLINK_STREAM_CHECKPOINT_INTERVAL, checkpoint.value())
-    this.put(FLINK_STREAM_CHECKPOINT_INTERVAL, checkpoint.interval())
+    val interval = if (checkpoint.interval() > 0) checkpoint.interval() * 1000 else -1
+    this.put(FLINK_STREAM_CHECKPOINT_INTERVAL, interval)
     this.put(FLINK_STREAM_CHECKPOINT_TIMEOUT, checkpoint.timeout())
     this.put(FLINK_STREAM_CHECKPOINT_UNALIGNED, checkpoint.unaligned())
     this.put(FLINK_STREAM_CHECKPOINT_MAX_CONCURRENT, checkpoint.concurrent())

@@ -171,7 +171,7 @@
 
         <!-- 以hadoop2.7、hive1.2低版本编译 -->
         <profile>
-            <id>spark-3.0.2-hadoop-2.7</id>
+            <id>hadoop-2.7</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -278,7 +278,7 @@
             </dependencies>
         </profile>
         <profile>
-            <id>spark-3.0.2-hadoop-3.2</id>
+            <id>hadoop-3.2</id>
             <properties>
                 <hadoop.version>3.2.0</hadoop.version>
             </properties>
