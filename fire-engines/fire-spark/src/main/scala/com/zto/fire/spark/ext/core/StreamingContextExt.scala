@@ -26,7 +26,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.rocketmq.common.message.MessageExt
 import org.apache.rocketmq.spark.{ConsumerStrategy, LocationStrategy, RocketMQConfig, RocketMqUtils}
 import org.apache.spark.streaming.StreamingContext
-import org.apache.spark.streaming.dstream.{DStream, InputDStream}
+import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka010.KafkaUtils
 
 /**
@@ -93,7 +93,7 @@ class StreamingContextExt(ssc: StreamingContext) extends Logging {
                              consumerStrategy: ConsumerStrategy = ConsumerStrategy.lastest,
                              locationStrategy: LocationStrategy = LocationStrategy.PreferConsistent,
                              instance: String = "",
-                             keyNum: Int = 1): InputDStream[MessageExt] = {
+                             keyNum: Int = 1): DStream[MessageExt] = {
 
     // 获取topic信息，配置文件优先级高于代码中指定的
     val confTopics = FireRocketMQConf.rocketTopics(keyNum)
@@ -125,7 +125,7 @@ class StreamingContextExt(ssc: StreamingContext) extends Logging {
     // 消费rocketmq埋点信息
     DatasourceManager.addMQDatasource("rocketmq", finalRocketParam(RocketMQConfig.NAME_SERVER_ADDR), finalTopics, finalGroupId)
 
-    RocketMqUtils.createMQPullStream(this.ssc,
+    val inputDStream = RocketMqUtils.createMQPullStream(this.ssc,
       finalGroupId,
       finalTopics.split(",").toList,
       finalConsumerStrategy,
@@ -133,6 +133,11 @@ class StreamingContextExt(ssc: StreamingContext) extends Logging {
       forceSpecial = FireRocketMQConf.rocketForceSpecial(keyNum),
       failOnDataLoss = FireRocketMQConf.rocketFailOnDataLoss(keyNum),
       locationStrategy, finalRocketParam)
+      if ("*".equals(finalRocketParam(RocketMQConfig.CONSUMER_TAG))) {
+        inputDStream
+      } else {
+        inputDStream.filter(msg => msg.getTags.equals(finalRocketParam(RocketMQConfig.CONSUMER_TAG)))
+      }
   }
 
   /**

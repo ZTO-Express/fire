@@ -17,17 +17,15 @@
 
 package com.zto.fire.flink.rest
 
-import com.zto.fire.predef._
 import com.zto.fire.common.anno.Rest
 import com.zto.fire.common.bean.rest.ResultMsg
 import com.zto.fire.common.enu.{ErrorCode, RequestMethod}
-import com.zto.fire.common.util.{ExceptionBus, _}
-import com.zto.fire.core.bean.ArthasParam
+import com.zto.fire.common.util._
 import com.zto.fire.core.rest.{RestCase, RestServerManager, SystemRestful}
 import com.zto.fire.flink.BaseFlink
 import com.zto.fire.flink.bean.{CheckpointParams, DistributeBean}
 import com.zto.fire.flink.enu.DistributeModule
-import com.zto.fire.flink.plugin.FlinkArthasLauncher
+import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 import org.apache.flink.runtime.checkpoint.CheckpointCoordinator
 import spark._
@@ -79,7 +77,7 @@ private[fire] class FlinkSystemRestful(var baseFlink: BaseFlink, val restfulRegi
    */
   @Rest("/system/distributeSync")
   def distributeSync(request: Request, response: Response): AnyRef = {
-    this.logger.debug(s"内部请求分布式更新信息，ip：${request.ip()}")
+    this.logger.warn(s"内部请求分布式更新信息，ip：${request.ip()}")
     this.distributeJson
   }
 

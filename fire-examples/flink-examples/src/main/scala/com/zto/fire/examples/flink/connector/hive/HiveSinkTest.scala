@@ -18,7 +18,6 @@
 package com.zto.fire.examples.flink.connector.hive
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
 import com.zto.fire.flink.BaseFlinkStreaming
 
 /**
@@ -35,6 +34,7 @@ object HiveSinkTest extends BaseFlinkStreaming {
 
   // 具体的业务逻辑放到process方法中
   override def process: Unit = {
+    this.fire.disableOperatorChaining()
     this.fire.sql(
       """
         |CREATE TABLE t_student (

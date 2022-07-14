@@ -18,7 +18,6 @@
 package com.zto.fire.examples.spark.streaming
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
 import com.zto.fire.core.anno.{RocketMQ, RocketMQ2}
 import com.zto.fire.examples.bean.Student
@@ -36,7 +35,7 @@ import com.zto.fire.spark.anno.Streaming
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
 object RocketTest extends BaseSparkStreaming {
   override def process: Unit = {
-    //读取RocketMQ消息流
+    // 读取RocketMQ消息流
     val dStream = this.fire.createRocketMqPullStream()
     this.fire.createRocketMqPullStream(keyNum = 2).print()
     dStream.foreachRDDAtLeastOnce(rdd => {

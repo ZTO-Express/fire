@@ -57,7 +57,7 @@ object RocketMQUtils extends Logging {
     // tag配置
     val confTag = FireRocketMQConf.rocketConsumerTag(keyNum)
     val finalTag = if (StringUtils.isNotBlank(confTag)) confTag else tag
-    if (StringUtils.isNotBlank(finalTag)) optionParams.put(RocketMQConfig.CONSUMER_TAG, finalTag)
+    if (StringUtils.isNotBlank(finalTag)) optionParams.put(RocketMQConfig.CONSUMER_TAG, finalTag) else optionParams.put(RocketMQConfig.CONSUMER_TAG, RocketMQConfig.DEFAULT_TAG)
 
     // 每个分区拉取的消息数
     val maxSpeed = FireRocketMQConf.rocketPullMaxSpeedPerPartition(keyNum)

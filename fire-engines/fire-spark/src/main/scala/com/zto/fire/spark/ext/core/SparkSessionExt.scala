@@ -17,7 +17,6 @@
 
 package com.zto.fire.spark.ext.core
 
-import java.io.InputStream
 import com.zto.fire._
 import com.zto.fire.core.Api
 import com.zto.fire.jdbc.JdbcConnectorBridge
@@ -32,9 +31,10 @@ import org.apache.rocketmq.spark.{ConsumerStrategy, LocationStrategy}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.streaming.dstream.{DStream, InputDStream, ReceiverInputDStream}
+import org.apache.spark.streaming.dstream.{DStream, ReceiverInputDStream}
 import org.apache.spark.streaming.receiver.Receiver
 
+import java.io.InputStream
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
@@ -137,7 +137,7 @@ class SparkSessionExt(spark: SparkSession) extends Api with JdbcConnectorBridge 
                                consumerStrategy: ConsumerStrategy = ConsumerStrategy.lastest,
                                locationStrategy: LocationStrategy = LocationStrategy.PreferConsistent,
                                instance: String = "",
-                               keyNum: Int = 1): InputDStream[MessageExt] = {
+                               keyNum: Int = 1): DStream[MessageExt] = {
     this.ssc.createRocketPullStream(rocketParam, groupId, topics, tag, consumerStrategy, locationStrategy, instance, keyNum)
   }
 
