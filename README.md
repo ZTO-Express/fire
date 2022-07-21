@@ -83,7 +83,7 @@ object Demo extends BaseSparkStreaming {
 mvn clean install -DskipTests -Pspark-3.0.2 -Pflink-1.14.3 -Pscala-2.12
 ```
 
-| Apache Spark | Apache Spark |
+| Apache Spark | Apache Flink |
 | ------------ | ------------ |
 | 2.3.x        | 1.10.x       |
 | 2.4.x        | 1.11.x       |
