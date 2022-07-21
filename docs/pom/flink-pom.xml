@@ -24,7 +24,7 @@
   <name>${project.artifactId}</name>
 
   <properties>
-    <fire.version>2.3.0-SNAPSHOT</fire.version>
+    <fire.version>2.3.1-SNAPSHOT</fire.version>
     <hudi.version>0.9.0</hudi.version>
     <maven.scope>provided</maven.scope>
     <scala.binary.version>2.12</scala.binary.version>

@@ -26,14 +26,13 @@ import com.zto.fire.spark.acc.AccumulatorManager
 import com.zto.fire.spark.conf.FireSparkConf
 import com.zto.fire.spark.listener.FireSparkListener
 import com.zto.fire.spark.rest.SparkSystemRestful
-import com.zto.fire.spark.sql.{SparkSqlExtensionsParser, SqlExtensions}
+import com.zto.fire.spark.sql.SqlExtensions
 import com.zto.fire.spark.task.{SparkInternalTask, SparkSchedulerManager}
 import com.zto.fire.spark.util.{SparkSingletonFactory, SparkUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.scheduler.SparkListener
 import org.apache.spark.sql.catalog.Catalog
-import org.apache.spark.sql.catalyst.parser.ParserInterface
-import org.apache.spark.sql.{SQLContext, SparkSession, SparkSessionExtensions}
+import org.apache.spark.sql.{SQLContext, SparkSession}
 import org.apache.spark.streaming.{StreamingContext, StreamingContextState}
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -45,6 +44,7 @@ trait BaseSpark extends SparkListener with BaseFire with Serializable {
   private[fire] var _conf: SparkConf = _
   protected[fire] var _spark: SparkSession = _
   protected lazy val spark, fire: SparkSession = _spark
+  protected lazy val sql = _spark.sql _
   protected[fire] var sc: SparkContext = _
   protected[fire] var catalog: Catalog = _
   protected[fire] var ssc: StreamingContext = _

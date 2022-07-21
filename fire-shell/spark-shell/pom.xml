@@ -9,7 +9,7 @@
     <parent>
         <artifactId>fire-shell</artifactId>
         <groupId>com.zto.fire</groupId>
-        <version>2.3.0-SNAPSHOT</version>
+        <version>2.3.1-SNAPSHOT</version>
     </parent>
 
     <dependencies>

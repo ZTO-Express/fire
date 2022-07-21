@@ -25,7 +25,7 @@
 
   <properties>
     <maven.scope>provided</maven.scope>
-    <fire.version>2.3.0-SNAPSHOT</fire.version>
+    <fire.version>2.3.1-SNAPSHOT</fire.version>
     <hadoop.version>2.6.0</hadoop.version>
     <hive.version>1.1.0</hive.version>
     <hbase.version>1.2.0</hbase.version>

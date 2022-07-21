@@ -41,7 +41,7 @@ object SparkDemo extends BaseSparkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream() 	// 使用api的方式消费kafka
-    this.fire.sql("""select * from xxx""").show()
+    sql("""select * from xxx""").show()
     this.fire.start
   }
 }

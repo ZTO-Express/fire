@@ -42,8 +42,8 @@ object FlinkDemo extends BaseFlinkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream() 	// 使用api的方式消费kafka
-    this.fire.sql("""create table statement ...""")
-    this.fire.sql("""insert into statement ...""")
+    sql("""create table statement ...""")
+    sql("""insert into statement ...""")
     this.fire.start
   }
 }

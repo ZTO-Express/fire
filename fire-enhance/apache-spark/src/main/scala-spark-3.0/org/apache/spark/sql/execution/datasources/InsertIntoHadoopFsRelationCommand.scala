@@ -33,6 +33,7 @@ import org.apache.spark.sql.internal.SQLConf.PartitionOverwriteMode
 import org.apache.spark.sql.util.SchemaUtils
 
 import java.io.IOException
+import scala.util.Try
 
 /**
  * A command for writing data to a [[HadoopFsRelation]].  Supports both overwriting and appending.
@@ -195,44 +196,66 @@ case class InsertIntoHadoopFsRelationCommand(
 
       if (catalogTable.nonEmpty) {
         CommandUtils.updateTableStats(sparkSession, catalogTable.get)
-      }
 
-      // TODO: ------------ start：二次开发代码 --------------- //
-      if (catalogTable.get.partitionColumnNames.nonEmpty) {
-        logWarning("Current partition table, will update partition information soon")
-        val catalog = sparkSession.sessionState.catalog
-        val identifier = catalogTable.get.identifier
-        val partitions = updatedPartitionPaths.map(partitionColumnName => {
-          val partitionMap = partitionColumnName.split("=")
-          catalog.getPartition(identifier, Map[String, String](partitionMap(0) -> partitionMap(1)))
-        })
-
-        val newPartitions = partitions.zipWithIndex.flatMap { case (p, _) =>
-          // Statistical partition file size
-          val newSize = CommandUtils.calculateSingleLocationSize(sparkSession.sessionState, identifier, Some(p.location))
-          val rowCount = if (p.stats.isDefined && p.stats.get.rowCount.isDefined) p.stats.get.rowCount.get else BigInt(1)
-          val newStats = CommandUtils.compareAndGetNewStats(p.stats, newSize, Some(rowCount + 1))
-          val newStatParameters =
-            Map("numFiles" -> 1.toString,
-                "rawDataSize" -> newSize.toString,
-                "totalSize" -> newSize.toString)
-          val newParameters = p.parameters ++ newStatParameters
-          newStats.map(_ => p.copy(stats = newStats, parameters = newParameters))
+        // TODO: ------------ start：二次开发代码 --------------- //
+        if (catalogTable.get.partitionColumnNames.nonEmpty && updatedPartitionPaths.nonEmpty) {
+          updatePartitionsMetadata(sparkSession, updatedPartitionPaths)
         }
-
-        // update metastore partition metadata
-        newPartitions.foreach(partition => {
-          catalog.alterPartitions(identifier, newPartitions.toSeq)
-          logWarning(s"Complete partition information update, partition: $partition")
-        })
+        // TODO: ------------ end：二次开发代码 --------------- //
       }
-      // TODO: ------------ end：二次开发代码 --------------- //
 
     } else {
       logInfo("Skipping insertion into a relation that already exists.")
     }
 
     Seq.empty[Row]
+  }
+
+  /**
+   * Update the specified partition metadata information.
+   */
+  private def updatePartitionsMetadata(sparkSession: SparkSession,
+                                       updatedPartitionPaths: Set[String]): Unit = {
+    logInfo("Current partition table, will update partition information soon.")
+    val catalog = sparkSession.sessionState.catalog
+    val identifier = catalogTable.get.identifier
+
+    try {
+      val partitions = updatedPartitionPaths.map(partitionPath => Try {
+        val partitionSpec = partitionPath.split("/").map(_.split("="))
+          .filter(_.length == 2).map {case Array(a, b) => (a, b)}.toMap
+
+        catalog.getPartition(identifier, partitionSpec)
+      })
+
+      val newPartitions = partitions.filter(_.isSuccess).map(_.get)
+        .zipWithIndex.flatMap { case (p, _) =>
+        // Statistical partition file size
+        val newSize = CommandUtils.calculateSingleLocationSize(
+          sparkSession.sessionState, identifier, Some(p.location))
+
+        val rowCount = if (p.stats.isDefined && p.stats.get.rowCount.isDefined) {
+          p.stats.get.rowCount.get
+        } else BigInt(1)
+
+        val newStats = CommandUtils.compareAndGetNewStats(p.stats, newSize, Some(rowCount))
+        val numFiles = p.parameters.getOrElse("numFiles", "1")
+
+        val newStatParameters =
+          Map("numFiles" -> numFiles,
+            "rawDataSize" -> newSize.toString,
+            "totalSize" -> newSize.toString)
+        val newParameters = p.parameters ++ newStatParameters
+        newStats.map(_ => p.copy(stats = newStats, parameters = newParameters))
+      }
+
+      // update metastore partition metadata
+      catalog.alterPartitions(identifier, newPartitions.toSeq)
+      logInfo(s"All partition information updates have been completed")
+    } catch {
+      case e: Throwable => logError(
+        "Partition table metadata information update failed.", e)
+    }
   }
 
   /**

@@ -17,6 +17,7 @@
 
 package com.zto.fire.examples.spark.hive
 
+import com.zto.fire.common.anno.Config
 import com.zto.fire.core.anno.{Hive, Kafka}
 import com.zto.fire.spark.BaseSparkCore
 
@@ -25,16 +26,52 @@ import com.zto.fire.spark.BaseSparkCore
  *
  * @contact Fire框架技术交流群（钉钉）：35373471
  */
+@Config(
+  """
+    |spark.sql.statistics.size.autoUpdate.enabled=true
+    |""")
 @Hive("test")
 // 配置消费的kafka信息
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
 object HiveMetadataTest extends BaseSparkCore {
   val sourceTable = "ods.mdb_md_dbs"
   val partitionTable = "dw.mdb_md_dbs_fire_orc"
+  val multiPartitionTable = "tmp.mdb_md_dbs_fire_multi_partition_orc"
+  val bucketTable = "tmp.mdb_md_dbs_fire_bucket"
 
   override def process: Unit = {
-    this.testPartitionTable
+    this.testSinglePartitionTable
+    // this.testMultiPartitionTable
     // this.testNoPartitionTable
+
+    this.fire.sql(
+      s"""
+        |INSERT INTO ${bucketTable}
+        |SELECT * FROM VALUES(1,1,1)
+        |""".stripMargin)
+  }
+
+  /**
+   * 测试分区表更新hive元数据用例
+   */
+  def testMultiPartitionTable: Unit = {
+    this.fire.sql(
+      s"""
+         |insert into table ${multiPartitionTable} partition(ds, city) select *,'sh' as city from dw.mdb_md_dbs where ds='20211001' limit 100
+         |""".stripMargin)
+    (1 to 3).foreach(x => {
+      this.fire.sql(
+        s"""
+           |insert into table ${multiPartitionTable} partition(ds, city) select *,'sh' as city from dw.mdb_md_dbs where ds='20211001' limit 100
+           |""".stripMargin)
+    })
+
+    (1 to 3).foreach(x => {
+      this.fire.sql(
+        s"""
+           |insert overwrite table ${multiPartitionTable} partition(ds, city) select *,'bj' as city from dw.mdb_md_dbs where ds='20211001' limit 100
+           |""".stripMargin)
+    })
   }
 
   /**
@@ -63,7 +100,7 @@ object HiveMetadataTest extends BaseSparkCore {
   /**
    * 测试分区表更新hive元数据用例
    */
-  def testPartitionTable: Unit = {
+  def testSinglePartitionTable: Unit = {
     (1 to 3).foreach(_ => {
       this.fire.sql(
         """
