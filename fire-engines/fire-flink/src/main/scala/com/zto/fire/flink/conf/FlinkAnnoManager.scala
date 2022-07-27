@@ -35,13 +35,17 @@ private[fire] class FlinkAnnoManager extends AnnoManager {
    * Checkpoint注解实例
    */
   def mapCheckpoint(checkpoint: Checkpoint): Unit = {
-    this.put(FLINK_STREAM_CHECKPOINT_INTERVAL, checkpoint.value())
-    val interval = if (checkpoint.interval() > 0) checkpoint.interval() * 1000 else -1
-    this.put(FLINK_STREAM_CHECKPOINT_INTERVAL, interval)
-    this.put(FLINK_STREAM_CHECKPOINT_TIMEOUT, checkpoint.timeout())
+    /**
+     * 将时间单位由s转为ms
+     */
+    def unitConversion(value: Int): Int = if (value > 0) value * 1000 else -1
+
+    this.put(FLINK_STREAM_CHECKPOINT_INTERVAL, unitConversion(checkpoint.value()))
+    this.put(FLINK_STREAM_CHECKPOINT_INTERVAL, unitConversion(checkpoint.interval()))
+    this.put(FLINK_STREAM_CHECKPOINT_TIMEOUT, unitConversion(checkpoint.timeout()))
+    this.put(FLINK_STREAM_CHECKPOINT_MIN_PAUSE_BETWEEN, unitConversion(checkpoint.pauseBetween()))
     this.put(FLINK_STREAM_CHECKPOINT_UNALIGNED, checkpoint.unaligned())
     this.put(FLINK_STREAM_CHECKPOINT_MAX_CONCURRENT, checkpoint.concurrent())
-    this.put(FLINK_STREAM_CHECKPOINT_MIN_PAUSE_BETWEEN, checkpoint.pauseBetween())
     this.put(FLINK_STREAM_CHECKPOINT_TOLERABLE_FAILURE_NUMBER, checkpoint.failureNumber())
     this.put(FLINK_STREAM_CHECKPOINT_MODE, checkpoint.mode())
     this.put(streamCheckpointExternalized, checkpoint.cleanup())
