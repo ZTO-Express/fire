@@ -28,14 +28,11 @@ import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 import org.apache.flink.api.common.ExecutionConfig.ClosureCleanerLevel
 import org.apache.flink.api.common.{ExecutionConfig, ExecutionMode, InputDependencyConstraint}
-import org.apache.flink.configuration.HighAvailabilityOptions
 import org.apache.flink.runtime.util.EnvironmentInformation
 import org.apache.flink.table.data.binary.BinaryStringData
 import org.apache.flink.table.data.{DecimalData, GenericRowData, RowData}
 import org.apache.flink.table.types.logical.RowType
 import org.apache.flink.types.Row
-import org.apache.spark.sql.SparkSession
-import org.slf4j.LoggerFactory
 
 import java.net.{URL, URLClassLoader}
 import scala.util.Try
