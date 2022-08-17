@@ -18,9 +18,8 @@
 package com.zto.fire.examples.flink.connector.hive
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.Hive
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.core.anno.connector.Hive
+import com.zto.fire.flink.FlinkStreaming
 
 /**
  * 基于fire框架进行Flink SQL开发<br/>
@@ -34,20 +33,20 @@ import com.zto.fire.flink.BaseFlinkStreaming
  */
 @Hive("test")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object HiveBatchSinkTest extends BaseFlinkStreaming {
+object HiveBatchSinkTest extends FlinkStreaming {
 
   // 具体的业务逻辑放到process方法中
   override def process: Unit = {
     this.fire.useHiveCatalog()
-    this.fire.sql("drop table if exists tmp.flink_hive_sink4")
-    this.fire.sql(
+    sql("drop table if exists tmp.flink_hive_sink4")
+    sql(
       """
         |CREATE TABLE if not exists tmp.flink_hive_sink4 (
         |   bill_num BIGINT,
         |   disorsen_man_code STRING
         | ) PARTITIONED BY (ds STRING) STORED AS textfile
         |""".stripMargin)
-    this.fire.sql(
+    sql(
       """
         |insert overwrite table tmp.flink_hive_sink4 select bill_num,disorsen_man_code,ds from dw.zto_rn_bill_statis limit 10
         |""".stripMargin)

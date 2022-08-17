@@ -46,6 +46,7 @@
         <guava.version>15.0</guava.version>
         <curator.verrsion>2.6.0</curator.verrsion>
         <arthas.version>3.5.4</arthas.version>
+        <calcite.version>1.26.0</calcite.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <scala.version>${scala.binary.version}.${scala.minor.version}</scala.version>
         <spark.reference>${spark.version}_${scala.binary.version}</spark.reference>

@@ -19,7 +19,7 @@ under the License.
 
 # JDBC读写
 
-​		实时任务开发中，对jdbc读写的需求很高。为了简化jdbc开发步骤，fire框架对jdbc操作做了进一步封装，将许多常见操作简化成一行代码。另外，fire框架支持在同一个任务中对任意多个数据源进行读写。
+　　实时任务开发中，对jdbc读写的需求很高。为了简化jdbc开发步骤，fire框架对jdbc操作做了进一步封装，将许多常见操作简化成一行代码。另外，fire框架支持在同一个任务中对任意多个数据源进行读写。
 
 ### 一、数据源配置
 
@@ -32,7 +32,7 @@ under the License.
 
 #### 1.2 基于配置文件
 
-​		数据源包括jdbc的url、driver、username与password等重要信息，建议将这些配置放到commons.properties中，避免每个任务单独配置。fire框架内置了c3p0数据库连接池，在分布式场景下，限制每个container默认最多3个connection，避免申请过多资源时申请太多的数据库连接。
+　　数据源包括jdbc的url、driver、username与password等重要信息，建议将这些配置放到commons.properties中，避免每个任务单独配置。fire框架内置了c3p0数据库连接池，在分布式场景下，限制每个container默认最多3个connection，避免申请过多资源时申请太多的数据库连接。
 
 ```properties
 db.jdbc.url                  =       jdbc:derby:memory:fire;create=true
@@ -162,7 +162,7 @@ def testStreamJdbcSink(stream: DataStream[Student]): Unit = {
 
 ### 三、多个数据源读写
 
-fire框架支持同一个任务中读写任意个数的数据源，只需要通过keyNum指定即可。配置和使用方式可以参考：HBase、kafka等。
+Fire框架支持同一个任务中读写任意个数的数据源，只需要通过keyNum指定即可。配置和使用方式可以参考：HBase、kafka等。
 
 ### 四、@JDBC
 

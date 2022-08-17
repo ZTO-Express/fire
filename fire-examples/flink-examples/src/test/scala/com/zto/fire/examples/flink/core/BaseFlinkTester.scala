@@ -17,8 +17,7 @@
 
 package com.zto.fire.examples.flink.core
 
-import com.zto.fire.flink.BaseFlinkStreaming
-import com.zto.fire._
+import com.zto.fire.flink.FlinkStreaming
 import org.junit.{After, Before}
 
 /**
@@ -28,7 +27,7 @@ import org.junit.{After, Before}
  * @date 2022-05-17 09:55:30
  * @since 2.2.2
  */
-trait BaseFlinkTester extends BaseFlinkStreaming {
+trait BaseFlinkTester extends FlinkStreaming {
 
   /**
    * 初始化fire框架与flink相关的运行时上下文
@@ -40,6 +39,5 @@ trait BaseFlinkTester extends BaseFlinkStreaming {
 
   @After
   override def after: Unit = {
-    // this.fire.start("JdbcTest")
   }
 }

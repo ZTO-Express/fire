@@ -36,11 +36,11 @@ val dstream = this.fire.createKafkaDirectStream()
 
 ### 二、kafka配置
 
-​		你可能会疑惑，kafka的broker与topic信息并没有在代码中指定，程序是如何消费的呢？其实，这些信息都放到了任务同名的配置文件中。当然，你可以选择将这些kafka信息放到代码中指定。如果代码中指定了集群信息，同时配置文件中也有指定，则配置文件的优先级更高。
+　　你可能会疑惑，kafka的broker与topic信息并没有在代码中指定，程序是如何消费的呢？其实，这些信息都放到了任务同名的配置文件中。当然，你可以选择将这些kafka信息放到代码中指定。如果代码中指定了集群信息，同时配置文件中也有指定，则配置文件的优先级更高。
 
 #### 2.1 定义别名
 
-​		建议将kafka集群url信息定义成别名，别名定义放到名为common.properties的配置文件中。别名的好处是一处维护到处生效，方便共用，便于记忆。
+　　建议将kafka集群url信息定义成别名，别名定义放到名为common.properties的配置文件中。别名的好处是一处维护到处生效，方便共用，便于记忆。
 
 ```properties
 # 以下定义了两个kafka集群的别名，分别叫mq和test，别名与定义的url对应
@@ -95,7 +95,7 @@ dstream.kafkaCommitOffsets()
 
 #### 3.2 自动提交
 
-​		spark streaming在处理数据过程中，由于offset提交与数据处理可能不再一个算子中，就会出现stage失败，数据丢失，但offset却提交了。为了解决这个问题，fire框架提供了***foreachRDDAtLeastOnce***算子，来保证计算的数据不丢，失败重试（默认3次），成功自动提交等特性。
+　　Spark streaming在处理数据过程中，由于offset提交与数据处理可能不再一个算子中，就会出现stage失败，数据丢失，但offset却提交了。为了解决这个问题，fire框架提供了***foreachRDDAtLeastOnce***算子，来保证计算的数据不丢，失败重试（默认3次），成功自动提交等特性。
 
 ```scala
 @Streaming(20) // spark streaming的批次时间

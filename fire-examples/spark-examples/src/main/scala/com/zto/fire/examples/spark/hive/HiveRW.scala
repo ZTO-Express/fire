@@ -1,11 +1,10 @@
 package com.zto.fire.examples.spark.hive
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
-import com.zto.fire.core.anno.{Hive, Kafka}
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.SparkStreaming
 import org.apache.spark.sql.DataFrame
 
 
@@ -17,7 +16,7 @@ import org.apache.spark.sql.DataFrame
 @Hive("test")
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object HiveRW extends BaseSparkStreaming {
+object HiveRW extends SparkStreaming {
 
   // 消息格式
   // {"age":16,"className":"Student","createTime":"2020-08-03 17:23:05","id":6,"length":15.0,"name":"root","sex":true}
@@ -45,19 +44,18 @@ object HiveRW extends BaseSparkStreaming {
       val df = this.fire.createDataFrame(rdd, classOf[Student])
       insert(df)
     })
-    this.fire.start
   }
 
   /**
    * 创建表
    */
   def ddl: Unit = {
-    this.fire.sql(
+    sql(
       """
         |drop table if exists tmp.baseorganize_fire
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |create table tmp.baseorganize_fire (
         |    id bigint,
@@ -72,11 +70,11 @@ object HiveRW extends BaseSparkStreaming {
    * 动态分区写入
    */
   def insert(df: DataFrame): Unit = {
-    this.fire.sql("set hive.exec.dynamic.partition = true")
-    this.fire.sql("set hive.exec.dynamic.partition.mode=nonstrict")
+    sql("set hive.exec.dynamic.partition = true")
+    sql("set hive.exec.dynamic.partition.mode=nonstrict")
     df.createOrReplaceTempView("t_student")
 
-    this.fire.sql(
+    sql(
       """
         |insert into table tmp.baseorganize_fire
         |select
@@ -87,7 +85,7 @@ object HiveRW extends BaseSparkStreaming {
         |from t_student
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |select
         | *,

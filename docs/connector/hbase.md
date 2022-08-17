@@ -19,7 +19,7 @@ under the License.
 
 # HBase 读写
 
-​	HBase对更新和点查具有很好的支持，在实时计算场景下也是应用十分广泛的。为了进一步简化HBase读写api，提高开发效率，fire框架对HBase API进行了深度封装。目前支持3种读写模式，分别是：Java API、Bulk API以及Spark提供的API。另外，fire框架支持在同一个任务中对任意多个hbase集群同时进行读写。
+　　HBase对更新和点查具有很好的支持，在实时计算场景下也是应用十分广泛的。为了进一步简化HBase读写api，提高开发效率，fire框架对HBase API进行了深度封装。目前支持3种读写模式，分别是：Java API、Bulk API以及Spark提供的API。另外，fire框架支持在同一个任务中对任意多个hbase集群同时进行读写。
 
 ## 一、HBase集群配置
 
@@ -52,7 +52,7 @@ hbase.cluster2								=				test
 
 ## 二、表与JavaBean映射
 
-fire框架通过Javabean与HBase表建立的关系简化读写api：
+Fire框架通过Javabean与HBase表建立的关系简化读写api：
 
 ```java
 /**
@@ -87,9 +87,9 @@ public class Student extends HBaseBaseBean<Student> {
 
 ```
 
-​		上述代码中定义了名为Student的Javabean，该Javabean需要继承自HBaseBaseBean，并实现buildRowKey方法，这个方法中需要告诉fire框架，rowKey是如何构建的。
+　　上述代码中定义了名为Student的Javabean，该Javabean需要继承自HBaseBaseBean，并实现buildRowKey方法，这个方法中需要告诉fire框架，rowKey是如何构建的。
 
-​		通过以上两步即可实现Javabean与HBase表的关系绑定。对于个性化需求，如果需要以多版本的方式进行读写，则需在类名上添加@HConfig(multiVersion = true)注解。如果Javabean中的列名与HBase中的字段名不一致，可以通过@FieldName(family = "data", value = "length1")进行单独指定，当然，列族也可以通过这个注解指定。如果不知道列族名称，则默认只有一个名为info的列族。
+　　通过以上两步即可实现Javabean与HBase表的关系绑定。对于个性化需求，如果需要以多版本的方式进行读写，则需在类名上添加@HConfig(multiVersion = true)注解。如果Javabean中的列名与HBase中的字段名不一致，可以通过@FieldName(family = "data", value = "length1")进行单独指定，当然，列族也可以通过这个注解指定。如果不知道列族名称，则默认只有一个名为info的列族。
 
 目前暂不支持scala语言的class以及case class，仅支持基本的字段数据类型，不支持嵌套的或者复杂的字段类型。
 
@@ -353,7 +353,7 @@ def testHBase: Unit = {
 
 ## 五、多集群读写
 
-fire框架支持同一个任务中对任意多个hbase集群进行读写，首先要在配置文件中以keyNum进行指定要连接的所有hbase集群的zk地址：
+Fire框架支持同一个任务中对任意多个hbase集群进行读写，首先要在配置文件中以keyNum进行指定要连接的所有hbase集群的zk地址：
 
 ```scala
 @HBase("zk01:2181")

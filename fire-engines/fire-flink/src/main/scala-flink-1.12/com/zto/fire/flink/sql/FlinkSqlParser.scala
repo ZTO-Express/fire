@@ -20,9 +20,9 @@ package com.zto.fire.flink.sql
 import com.zto.fire._
 import com.zto.fire.common.anno.Internal
 import com.zto.fire.common.enu.{Datasource, Operation}
-import com.zto.fire.common.util.TableMeta
+import com.zto.fire.common.util.{ExceptionBus, TableMeta}
 import com.zto.fire.core.sql.SqlParser
-import com.zto.fire.flink.util.FlinkSingletonFactory
+import com.zto.fire.flink.util.{FlinkSingletonFactory, FlinkUtils}
 import org.apache.calcite.avatica.util.{Casing, Quoting}
 import org.apache.calcite.sql._
 import org.apache.calcite.sql.parser.{SqlParser => CalciteParser}
@@ -35,6 +35,7 @@ import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
 import org.apache.flink.table.catalog.ObjectPath
 
 import scala.collection.JavaConversions
+import scala.util.Try
 
 /**
  * Flink SQL解析器，用于解析Flink SQL语句中的库、表、分区、操作类型等信息
@@ -248,7 +249,7 @@ object FlinkSqlParser extends SqlParser {
       case sqlAlterTable: SqlAlterTable => {
         this.parseSqlNode(sqlAlterTable.getTableName, Operation.ALTER_TABLE)
       }
-      case _ => this.logger.warn(s"可忽略异常：实时血缘解析SQL报错，SQL：\n${sql}")
+      case _ => this.logger.debug(s"可忽略异常：实时血缘解析SQL报错，SQL：\n${sql}")
     }
   }
 
@@ -302,4 +303,14 @@ object FlinkSqlParser extends SqlParser {
 
     this.hiveTableMap(tableIdentifier)
   }
+
+  /**
+   * SQL语法校验
+   *
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  override def sqlLegal(sql: JString): Boolean = FlinkUtils.sqlLegal(sql)
 }

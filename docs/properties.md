@@ -19,7 +19,7 @@ under the License.
 
 # fire框架参数
 
-​		fire框架提供了很多参数，这些参数为个性化调优带来了很大的灵活性。参数大体分为：**fire框架参数**（*fire.properties*）、**spark引擎参数**（*spark.properties*）、**flink引擎参数**（*flink.properties*）、**kafka参数**、**hbase参数**等。详见以下列表：
+　　Fire框架提供了很多参数，这些参数为个性化调优带来了很大的灵活性。参数大体分为：**fire框架参数**（*fire.properties*）、**spark引擎参数**（*spark.properties*）、**flink引擎参数**（*flink.properties*）、**kafka参数**、**hbase参数**等。详见以下列表：
 
 # 一、fire框架参数
 

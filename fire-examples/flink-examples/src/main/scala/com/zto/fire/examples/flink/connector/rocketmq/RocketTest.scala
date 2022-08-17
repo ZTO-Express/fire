@@ -19,8 +19,8 @@ package com.zto.fire.examples.flink.connector.rocketmq
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.RocketMQ
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.core.anno.connector.RocketMQ
+import com.zto.fire.flink.FlinkStreaming
 import com.zto.fire.flink.anno.Checkpoint
 import org.apache.flink.api.scala._
 
@@ -36,7 +36,7 @@ import org.apache.flink.api.scala._
 @Config("default.parallelism=2")
 @RocketMQ(brokers = "bigdata_test", topics = "fire", groupId = "fire", tag = "*", startingOffset = "latest")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object RocketTest extends BaseFlinkStreaming {
+object RocketTest extends FlinkStreaming {
 
   override def process: Unit = {
     // 1. createRocketMqPullStreamWithTag()返回的是三元组，分别是：(tag, key, value)
@@ -52,6 +52,5 @@ object RocketTest extends BaseFlinkStreaming {
     // this.fire.createRocketMqPullStream()
 
     // 从另一个rocketmq中消费数据
-    this.fire.start
   }
 }

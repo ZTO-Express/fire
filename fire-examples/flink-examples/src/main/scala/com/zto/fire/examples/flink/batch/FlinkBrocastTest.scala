@@ -19,8 +19,8 @@ package com.zto.fire.examples.flink.batch
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.Hive
-import com.zto.fire.flink.BaseFlinkBatch
+import com.zto.fire.core.anno.connector.Hive
+import com.zto.fire.flink.FlinkBatch
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.scala._
 
@@ -32,7 +32,7 @@ import org.apache.flink.api.scala._
  */
 @Hive("test")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object FlinkBrocastTest extends BaseFlinkBatch {
+object FlinkBrocastTest extends FlinkBatch {
 
   override def process: Unit = {
     val ds = this.fire.createCollectionDataSet(Seq(1, 2, 3, 4, 5))

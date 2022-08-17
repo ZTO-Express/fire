@@ -21,8 +21,9 @@ import com.zto.fire.common.anno.{Config, TestStep}
 import com.zto.fire.common.conf.{FireFrameworkConf, FireHiveConf, FireKafkaConf, FireRocketMQConf}
 import com.zto.fire.common.util.PropUtils
 import com.zto.fire.core.anno._
+import com.zto.fire.core.anno.connector.{HBase, HBase2, HBase3, Hive, Jdbc, Jdbc2, Jdbc3, Kafka, Kafka2, Kafka3, RocketMQ, RocketMQ2}
 import com.zto.fire.examples.flink.core.BaseFlinkTester
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import com.zto.fire.flink.anno.Checkpoint
 import com.zto.fire.flink.conf.FireFlinkConf
 import com.zto.fire.hbase.conf.FireHBaseConf
@@ -50,7 +51,7 @@ import org.junit.Test
 @Jdbc(url = "jdbc:mysql://localhost:3306", username = "root1", password = "root1", maxPoolSize = 10, maxIdleTime = 10, batchSize = 51, flushInterval = 1000, logSqlLength = 20, storageLevel = "memory", queryPartitions = 12)
 @Jdbc2(url = "jdbc:mysql://192.168.0.1:3306", driver = "com.fire", username = "root2", minPoolSize = 9, initialPoolSize = 8, password = "root2", maxRetries = 6, config = Array[String]("hello=world", "scala=flink"))
 @Jdbc3(url = "jdbc:mysql://192.168.0.2:3306", username = "root3", isolationLevel = "read",  password = "root3", acquireIncrement = 2)
-class AnnoConfTest extends BaseFlinkStreaming with BaseFlinkTester {
+class AnnoConfTest extends FlinkStreaming with BaseFlinkTester {
 
   @Test
   @TestStep(step = 1, desc = "测试@Jdbc注解")

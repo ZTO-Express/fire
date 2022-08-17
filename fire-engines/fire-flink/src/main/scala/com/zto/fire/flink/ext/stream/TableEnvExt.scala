@@ -21,7 +21,7 @@ import com.zto.fire.common.conf.FireHiveConf
 import com.zto.fire.flink.conf.FireFlinkConf
 import com.zto.fire.flink.util.FlinkSingletonFactory
 import com.zto.fire.noEmpty
-import org.apache.flink.table.api.{SqlDialect, TableEnvironment}
+import org.apache.flink.table.api.{SqlDialect, Table, TableEnvironment}
 import org.apache.flink.table.catalog.Catalog
 import org.apache.flink.table.functions.ScalarFunction
 
@@ -92,5 +92,17 @@ trait TableApi {
   def useDefaultCatalog: Unit = {
     this.tableEnv.useCatalog(FireFlinkConf.defaultCatalogName)
     this.tableEnv.getConfig.setSqlDialect(SqlDialect.DEFAULT)
+  }
+
+  /**
+   * 获取当前catalog
+   */
+  def getCurrentCatalog: String = this.tableEnv.getCurrentCatalog
+
+  /**
+   * 创建临时视图
+   */
+  def createTemporaryView(path: String, view: Table): Unit = {
+    this.tableEnv.createTemporaryView(path, view)
   }
 }

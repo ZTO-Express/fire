@@ -17,6 +17,7 @@
 
 package com.zto.fire.spark.conf
 
+import com.zto.fire.common.conf.FireFrameworkConf.FIRE_JOB_AUTO_START
 import com.zto.fire.core.conf.AnnoManager
 import com.zto.fire.spark.anno.{Streaming, StreamingDuration}
 
@@ -54,13 +55,14 @@ private[fire] class SparkAnnoManager extends AnnoManager {
     this.put("spark.streaming.kafka.maxRatePerPartition", streaming.maxRatePerPartition())
     this.put("spark.streaming.backpressure.initialRate", streaming.backpressureInitialRate())
     this.put("spark.rocket.pull.max.speed.per.partition", streaming.maxRatePerPartition())
+    this.put(FIRE_JOB_AUTO_START, streaming.autoStart())
   }
 
   /**
    * 用于注册需要映射配置信息的自定义主键
    */
   override protected[fire] def register: Unit = {
-    this.registerAnnoSet.add(classOf[StreamingDuration])
-    this.registerAnnoSet.add(classOf[Streaming])
+    AnnoManager.registerAnnoSet.add(classOf[StreamingDuration])
+    AnnoManager.registerAnnoSet.add(classOf[Streaming])
   }
 }

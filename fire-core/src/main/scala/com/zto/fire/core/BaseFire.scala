@@ -20,6 +20,8 @@ package com.zto.fire.core
 import com.zto.fire.common.conf.{FireFrameworkConf, FirePS1Conf}
 import com.zto.fire.common.enu.JobType
 import com.zto.fire.common.util.{FireUtils, _}
+import com.zto.fire.core.anno.lifecycle.{After, Before}
+import com.zto.fire.core.conf.AnnoManager
 import com.zto.fire.core.plugin.ArthasManager
 import com.zto.fire.core.rest.{RestServerManager, SystemRestful}
 import com.zto.fire.core.task.SchedulerManager
@@ -28,6 +30,7 @@ import org.apache.log4j.{Level, Logger}
 import spark.Spark
 
 import java.util.concurrent.atomic.AtomicBoolean
+import scala.util.Try
 
 /**
  * 通用的父接口，提供通用的生命周期方法约束
@@ -70,8 +73,24 @@ trait BaseFire extends Logging {
     FireUtils.splash
     if (FireFrameworkConf.arthasEnable) ArthasManager.startArthas(this.resourceId, FireFrameworkConf.arthasContainerEnable)
     PropUtils.sliceKeys(FireFrameworkConf.FIRE_LOG_LEVEL_CONF_PREFIX).foreach(kv => Logger.getLogger(kv._1).setLevel(Level.toLevel(kv._2)))
+    ExceptionBus.sendToMQ
   }
 
+  /**
+   * SQL语法校验，如果语法错误，则返回错误堆栈
+   * @param sql
+   * sql statement
+   */
+  def sqlValidate(sql: String): Try[Unit]
+
+  /**
+   * SQL语法校验
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  def sqlLegal(sql: String): Boolean
 
   /**
    * 获取任务的resourceId
@@ -103,6 +122,7 @@ trait BaseFire extends Logging {
    */
   def before(args: Array[String]): Unit = {
     // 生命周期方法，在init之前被调用
+    AnnoManager.lifeCycleAnno(this, classOf[Before])
   }
 
   /**
@@ -133,11 +153,20 @@ trait BaseFire extends Logging {
   def process(): Unit
 
   /**
+   * 生命周期方法：依次调用process方法以及加了注解的业务逻辑处理方法
+   * 注：此方法会被自动调用，不需要在main中手动调用
+   */
+  protected[fire] def processAll: Unit = {
+    this.process()
+    AnnoManager.processAnno(this)
+  }
+
+  /**
    * 生命周期方法：用于资源回收与清理，子类复写实现具体逻辑
    * 注：该方法会在进行destroy之前自动被系统调用
    */
   def after(): Unit = {
-    // 子类复写该方法，在destroy之前被调用
+    AnnoManager.lifeCycleAnno(this, classOf[After])
   }
 
   /**
@@ -158,6 +187,16 @@ trait BaseFire extends Logging {
       if (FireFrameworkConf.shutdownExit) System.exit(0)
     }
   }
+
+  /**
+   * 声明周期方法，禁止子类覆写
+   */
+  final protected def init: Unit = {}
+
+  /**
+   * 声明周期方法，禁止子类覆写
+   */
+  final protected def destory: Unit = {}
 
   /**
    * 初始化引擎上下文，如SparkSession、StreamExecutionEnvironment等

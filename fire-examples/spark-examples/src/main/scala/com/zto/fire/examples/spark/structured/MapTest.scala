@@ -19,7 +19,7 @@ package com.zto.fire.examples.spark.structured
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.{Hive, Kafka}
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.spark.BaseStructuredStreaming
 import org.apache.spark.sql.Encoders
@@ -40,7 +40,7 @@ object MapTest extends BaseStructuredStreaming {
     this.fire.loadKafkaParseJson()
 
     // 将字段转为与JavaBean对应的类型
-    val sqlDF = this.fire.sql("select cast(age as int), createTime, cast(length as decimal), name, rowKey, cast(sex as boolean) from kafka")
+    val sqlDF = sql("select cast(age as int), createTime, cast(length as decimal), name, rowKey, cast(sex as boolean) from kafka")
 
     // 执行map操作
     sqlDF.map(row => {

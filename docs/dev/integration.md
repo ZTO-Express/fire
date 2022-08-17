@@ -91,7 +91,7 @@ import com.zto.fire._
 
 #### 3.2 继承父类
 
-fire框架针对不同的引擎、不同的场景提供了对应的父类，用户需要根据实际情况去继承：
+Fire框架针对不同的引擎、不同的场景提供了对应的父类，用户需要根据实际情况去继承：
 
 ##### 3.2.1 spark引擎父类列表：
 
@@ -106,7 +106,7 @@ fire框架针对不同的引擎、不同的场景提供了对应的父类，用�
 
 #### 3.3 业务逻辑
 
-fire父类中统一约定了process方法，该方法会被fire框架自动调用，用户无需在代码中主动调用该方法。process方法作为业务逻辑的聚集地，是业务逻辑的开始。
+Fire父类中统一约定了process方法，该方法会被fire框架自动调用，用户无需在代码中主动调用该方法。process方法作为业务逻辑的聚集地，是业务逻辑的开始。
 
 ```scala
 override def process: Unit = {
@@ -117,5 +117,5 @@ override def process: Unit = {
 }
 ```
 
-***说明：**fire框架无需编写main方法，无需主动初始化sparksession或flink的environment等对象。这些会被fire框架自动初始化完成，开发者只需在代码中使用this.的方式引用即可。如果有spark或flink调优参数，可以直接复制到@Config注解中，这些调优参数会在fire框架初始化spark或flink引擎上下文时自动生效。*
+***说明：**Fire框架无需编写main方法，无需主动初始化sparksession或flink的environment等对象。这些会被fire框架自动初始化完成，开发者只需在代码中使用this.的方式引用即可。如果有spark或flink调优参数，可以直接复制到@Config注解中，这些调优参数会在fire框架初始化spark或flink引擎上下文时自动生效。*
 

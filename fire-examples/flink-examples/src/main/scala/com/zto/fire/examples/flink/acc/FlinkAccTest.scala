@@ -19,8 +19,8 @@ package com.zto.fire.examples.flink.acc
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.Kafka
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.core.anno.connector.Kafka
+import com.zto.fire.flink.FlinkStreaming
 import org.apache.flink.api.common.JobExecutionResult
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.scala._
@@ -39,7 +39,7 @@ import org.apache.flink.streaming.api.scala.DataStream
     |""")
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object FlinkAccTest extends BaseFlinkStreaming {
+object FlinkAccTest extends FlinkStreaming {
 
   /**
    * 生命周期方法：具体的用户开发的业务逻辑代码
@@ -69,20 +69,5 @@ object FlinkAccTest extends BaseFlinkStreaming {
         value
       }
     })
-
-    val result = this.fire.start
-
-    // 获取计数器中的值
-    val longCount = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Long]("LongCount")
-    println("累加值Long：" + longCount)
-    val doubleCount = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Double]("DoubleCount")
-    println("累加值Double：" + doubleCount)
-    val intCount = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Integer]("IntCount")
-    println("累加值IntCount：" + intCount)
-    val intCount2 = result.asInstanceOf[JobExecutionResult].getAccumulatorResult[Integer]("IntCount2")
-    println("累加值IntCount2：" + intCount2)
-    Thread.currentThread().join()
-
-    this.stop
   }
 }

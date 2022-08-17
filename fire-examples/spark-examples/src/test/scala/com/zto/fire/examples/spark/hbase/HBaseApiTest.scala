@@ -19,11 +19,11 @@ package com.zto.fire.examples.spark.hbase
 
 import com.zto.fire.common.anno.TestStep
 import com.zto.fire.common.util.DatasourceManager
-import com.zto.fire.core.anno.{HBase, HBase2}
+import com.zto.fire.core.anno.connector.{HBase, HBase2}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.hbase.HBaseConnector
 import com.zto.fire.predef._
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.spark.SparkCore
 import org.junit.Assert._
 import org.junit.Test
 
@@ -36,7 +36,7 @@ import org.junit.Test
  */
 @HBase("test")
 @HBase2(cluster = "test", scanPartitions = 3, storageLevel = "DISK_ONLY")
-class HBaseApiTest extends BaseSparkCore with HBaseBaseTester {
+class HBaseApiTest extends SparkCore with HBaseTester {
 
   /**
    * 用于测试以下api：

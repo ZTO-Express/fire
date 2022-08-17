@@ -19,7 +19,7 @@ under the License.
 
 # 依赖管理
 
-​		fire框架中很多依赖的scope指定为provided，好处是避免jar包冲突、避免jar包过于臃肿。带来的问题是会引擎依赖找不到（class not found）异常。解决这个问题的方案有两个，一个是将fire中使用到的生命周期为provided的依赖改成compile（任务的pom.xml中指定），一个是将相应依赖的jar包放到spark或flink的lib目录下。本文档选择的是第二个方案，将缺失的依赖放到引擎部署目录的lib下。缺失的jar包可以从[网盘下载](https://pan.baidu.com/s/16kUGQIj2gQjWZdbmuxuyXw?pwd=fire)、[*maven中央仓库*](http://mvnrepository.com/)或本地仓库搜索找到。依赖列表如下：
+　　Fire框架中很多依赖的scope指定为provided，好处是避免jar包冲突、避免jar包过于臃肿。带来的问题是会引擎依赖找不到（class not found）异常。解决这个问题的方案有两个，一个是将fire中使用到的生命周期为provided的依赖改成compile（任务的pom.xml中指定），一个是将相应依赖的jar包放到spark或flink的lib目录下。本文档选择的是第二个方案，将缺失的依赖放到引擎部署目录的lib下。缺失的jar包可以从[网盘下载](https://pan.baidu.com/s/16kUGQIj2gQjWZdbmuxuyXw?pwd=fire)、[*maven中央仓库*](http://mvnrepository.com/)或本地仓库搜索找到。依赖列表如下：
 
 ## 一、Flink on yarn环境
 

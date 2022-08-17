@@ -20,9 +20,9 @@ package com.zto.fire.examples.flink.stream
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
-import com.zto.fire.core.anno.{Hive, Kafka}
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import com.zto.fire.flink.anno.Checkpoint
 import org.apache.flink.api.scala._
 
@@ -50,7 +50,7 @@ import org.apache.flink.api.scala._
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
 @Checkpoint(interval = 60, concurrent = 1, pauseBetween = 60, timeout = 60)
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object FlinkHiveTest extends BaseFlinkStreaming {
+object FlinkHiveTest extends FlinkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream().filter(json => JSONUtils.isJson(json))
@@ -60,7 +60,7 @@ object FlinkHiveTest extends BaseFlinkStreaming {
 
     // 2. 切换hive catalog以及方言，表示从hive中读取维表数据
     this.fire.useHiveCatalog()
-    val dimTable = this.fire.sqlQuery(
+    val dimTable = sql(
       """
         |select id,shortname
         |from tmp.baseorganize_flink
@@ -77,14 +77,12 @@ object FlinkHiveTest extends BaseFlinkStreaming {
     // dimTable.createOrReplaceTempView("baseorganize")
 
     // 5. 关联流表与hive维表，当hive维表更新后flink会自动周期性的刷新维表数据，并体现在关联的结果中
-    this.fire.sql(
+    sql(
       s"""
         |select s.id,s.name,b.shortname
         |from student s
         |left join $dimTable b
         |on s.id=b.id
         |""".stripMargin).print()
-
-    this.fire.start
   }
 }

@@ -19,7 +19,7 @@ under the License.
 
 # hive集成与配置
 
-​		使用fire框架，仅需一行配置即可实现spark&flink与hive的无缝读写，甚至支持跨集群的读写（实时任务与hive不再同一个集群中）。
+使用fire框架，仅需一行配置即可实现spark&flink与hive的无缝读写，甚至支持跨集群的读写（实时任务与hive不再同一个集群中）。
 
 ### 一、基于注解
 
@@ -52,7 +52,7 @@ this.fire.sql("select * from hive.tableName").show
 
 ### 四、高可用
 
-​		NameNode主备切换会导致那些读写hive的spark streaming任务挂掉。为了提高灵活性，避免将core-site.xml与hdfs-site.xml放到工程的resources目录下，fire提供了配置的方式，将Name Node HA信息通过配置文件进行指定。每项配置中的batch对应fire.hive.cluster.map.batch所指定的别名：batch，其他信息根据集群不同进行单独配置。如果有多个hive集群，可以配置多套HA配置。
+　　NameNode主备切换会导致那些读写hive的spark streaming任务挂掉。为了提高灵活性，避免将core-site.xml与hdfs-site.xml放到工程的resources目录下，fire提供了配置的方式，将Name Node HA信息通过配置文件进行指定。每项配置中的batch对应fire.hive.cluster.map.batch所指定的别名：batch，其他信息根据集群不同进行单独配置。如果有多个hive集群，可以配置多套HA配置。
 
 ```properties
 # 用于是否启用HDFS HA

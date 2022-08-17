@@ -18,11 +18,10 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
-import com.zto.fire.core.anno.Kafka
+import com.zto.fire.core.anno.connector.Kafka
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunction}
@@ -32,13 +31,11 @@ import org.apache.flink.streaming.api.functions.sink.{RichSinkFunction, SinkFunc
  */
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object FlinkSinkTest extends BaseFlinkStreaming {
+object FlinkSinkTest extends FlinkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createDirectStream().map(json => JSONUtils.parseObject[Student](json))
     dstream.map(t => t.getName).addSink(new MySink).setParallelism(1)
-
-    this.fire.start
   }
 }
 

@@ -18,9 +18,8 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.{Hive, Kafka}
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
+import com.zto.fire.flink.FlinkStreaming
 import org.apache.flink.api.common.functions.Partitioner
 import org.apache.flink.api.scala._
 
@@ -32,7 +31,7 @@ import org.apache.flink.api.scala._
 @Hive("test")
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object FlinkPartitioner extends BaseFlinkStreaming {
+object FlinkPartitioner extends FlinkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createCollectionStream(1 to 10)
@@ -55,9 +54,6 @@ object FlinkPartitioner extends BaseFlinkStreaming {
     // dstream.map(t => (t, t)).keyBy(KeySelector[Int, Int]())
     // 自定义分区，需继承Partitioner并实现自己的partition分区算法
     dstream.map(t => (t, t)).partitionCustom(new HashPartitioner, 0).print()
-    this.fire.start
-
-    this.stop
   }
 
   /**

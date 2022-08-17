@@ -18,10 +18,11 @@
 package com.zto.fire.core.rest
 
 import com.zto.fire.common.anno.Rest
+import com.zto.fire.common.bean.analysis.ExceptionMsg
 import com.zto.fire.common.bean.rest.ResultMsg
 import com.zto.fire.common.conf.FireFrameworkConf
 import com.zto.fire.common.enu.ErrorCode
-import com.zto.fire.common.util.{DatasourceManager, DateFormatUtils, EncryptUtils, HttpClientUtils, JSONUtils, Logging, PropUtils}
+import com.zto.fire.common.util._
 import com.zto.fire.core.BaseFire
 import com.zto.fire.core.bean.ArthasParam
 import com.zto.fire.core.plugin.ArthasDynamicLauncher
@@ -29,6 +30,8 @@ import com.zto.fire.predef.noEmpty
 import org.apache.commons.httpclient.Header
 import org.slf4j.{Logger, LoggerFactory}
 import spark.{Request, Response}
+
+import scala.collection.JavaConversions
 
 /**
  * 系统预定义的restful服务抽象
@@ -83,6 +86,25 @@ protected[fire] abstract class SystemRestful(engine: BaseFire) {
       case e: Exception => {
         this.logger.error(s"[arthas] 调用arthas接口失败，参数不合法，请检查", e)
         ResultMsg.buildError("调用arthas接口失败，参数不合法，请检查", ErrorCode.ERROR)
+      }
+    }
+  }
+
+  /**
+   * 异常信息采集接口
+   */
+  @Rest("/system/exception")
+  protected def exception(request: Request, response: Response): AnyRef = {
+    try {
+      this.logger.info(s"Ip address ${request.ip()} request /system/exception")
+      val msg = ExceptionBus.getAndClear
+      val exceptions = msg._1.map(t => new ExceptionMsg(t._2, t._3))
+      logger.debug(s"异常诊断：本轮发送异常共计${msg._1.size}个.")
+      ResultMsg.buildSuccess(JSONUtils.toJSONString(JavaConversions.seqAsJavaList(exceptions)), s"获取exception信息成功，共计：${exceptions.size}条")
+    } catch {
+      case e: Exception => {
+        this.logger.error(s"调用exception接口失败，请检查", e)
+        ResultMsg.buildError("调用exception接口失败，请检查", ErrorCode.ERROR)
       }
     }
   }

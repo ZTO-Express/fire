@@ -19,7 +19,7 @@ under the License.
 
 # Spark DataSource增强
 
-Spark DataSource API很强大，为了进一步增强灵活性，Fire框架针对DataSource API做了进一步封装，允许将options等信息放到配置文件中，提高灵活性，如果与实时平台的配置中心集成，可做到重启即完成调优。
+　　Spark DataSource API很强大，为了进一步增强灵活性，Fire框架针对DataSource API做了进一步封装，允许将options等信息放到配置文件中，提高灵活性，如果与实时平台的配置中心集成，可做到重启即完成调优。
 
 [示例程序：](../fire-examples/spark-examples/src/main/scala/com/zto/fire/examples/spark/datasource/DataSourceTest.scala)
 

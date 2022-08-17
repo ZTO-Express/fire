@@ -18,16 +18,12 @@
 package com.zto.fire.examples.flink.jdbc
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
-import com.zto.fire.common.util.{DateFormatUtils, JSONUtils, PropUtils}
-import com.zto.fire.core.anno.Kafka
+import com.zto.fire.common.util.{DateFormatUtils, JSONUtils}
+import com.zto.fire.core.anno.connector.Kafka
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.examples.flink.core.BaseFlinkTester
-import com.zto.fire.flink.BaseFlinkStreaming
-import com.zto.fire.flink.util.FlinkUtils
+import com.zto.fire.flink.FlinkStreaming
 import org.apache.flink.api.scala._
 import org.apache.flink.streaming.api.scala.DataStream
-import org.junit.Test
 
 /**
  * flink jdbc sink
@@ -37,7 +33,7 @@ import org.junit.Test
  * @create 2020-05-22 11:10
  */
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
-object JdbcUnitTest extends BaseFlinkStreaming {
+object JdbcUnitTest extends FlinkStreaming {
   lazy val tableName = "spark_test"
   lazy val tableName2 = "spark_test2"
 
@@ -105,7 +101,6 @@ object JdbcUnitTest extends BaseFlinkStreaming {
 
     // 执行增删改操作
     this.fire.jdbcUpdate(s"delete from $tableName")
-    this.fire.start("")
   }
 
 /*  @Test

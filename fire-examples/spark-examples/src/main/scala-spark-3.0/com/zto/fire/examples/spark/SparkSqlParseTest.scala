@@ -1,8 +1,8 @@
 package com.zto.fire.examples.spark
 
+import com.zto.fire.core.anno.connector.Hive
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.spark.BaseSparkCore
-import com.zto.fire.core.anno.Hive
+import com.zto.fire.spark.SparkCore
 import com.zto.fire.spark.sql.SparkSqlParser
 
 /**
@@ -10,7 +10,7 @@ import com.zto.fire.spark.sql.SparkSqlParser
  * @contact Fire框架技术交流群（钉钉）：35373471
  */
 @Hive("test")
-object SparkSqlParseTest extends BaseSparkCore {
+object SparkSqlParseTest extends SparkCore {
 
 
   override def process: Unit = {

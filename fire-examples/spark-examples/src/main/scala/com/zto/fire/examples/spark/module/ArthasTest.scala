@@ -20,9 +20,9 @@ package com.zto.fire.examples.spark.module
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
-import com.zto.fire.core.anno.{Hive, Kafka}
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.Streaming
 
 /**
@@ -44,7 +44,7 @@ import com.zto.fire.spark.anno.Streaming
 @Streaming(20)
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object ArthasTest extends BaseSparkStreaming {
+object ArthasTest extends SparkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream()
@@ -77,7 +77,6 @@ object ArthasTest extends BaseSparkStreaming {
         |  order_create_date>= cast( date_add(current_date,-10) as timestamp )
         |  AND order_create_date< cast( date_add(current_date,1) as timestamp )
         |""".stripMargin).show(100000, false)
-    this.fire.start
   }
 
   def printConf: Unit = {

@@ -22,18 +22,23 @@ import com.zto.fire.common.anno.FieldName
 import com.zto.fire.common.util._
 import com.zto.fire.flink.bean.FlinkTableSchema
 import com.zto.fire.flink.conf.FireFlinkConf
+import com.zto.fire.flink.sql.FlinkSqlParser
 import com.zto.fire.hbase.bean.HBaseBaseBean
 import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 import org.apache.flink.api.common.ExecutionConfig.ClosureCleanerLevel
 import org.apache.flink.api.common.{ExecutionConfig, ExecutionMode, InputDependencyConstraint}
+import org.apache.flink.configuration.HighAvailabilityOptions
+import org.apache.flink.runtime.util.EnvironmentInformation
 import org.apache.flink.table.data.binary.BinaryStringData
 import org.apache.flink.table.data.{DecimalData, GenericRowData, RowData}
 import org.apache.flink.table.types.logical.RowType
 import org.apache.flink.types.Row
+import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
 
 import java.net.{URL, URLClassLoader}
+import scala.util.Try
 
 /**
  * flink相关工具类
@@ -46,6 +51,32 @@ object FlinkUtils extends Serializable with Logging {
   private[this] val schemaTable = HashBasedTable.create[FlinkTableSchema, String, Int]
   private var jobManager: Option[Boolean] = None
   private var mode: Option[String] = None
+
+  /**
+   * SQL语法校验，如果语法错误，则返回错误堆栈
+   * @param sql
+   * sql statement
+   */
+  def sqlValidate(sql: String): Try[Unit] = {
+    val retVal = Try {
+      FlinkSqlParser.sqlParser(sql)
+    }
+
+    if (retVal.isFailure) {
+      ExceptionBus.post(retVal.failed.get, sql)
+    }
+
+    retVal
+  }
+
+  /**
+   * SQL语法校验
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  def sqlLegal(sql: String): Boolean = this.sqlValidate(sql).isSuccess
 
   /**
    * 将schema、fieldName与fieldIndex信息维护到table中
@@ -318,4 +349,14 @@ object FlinkUtils extends Serializable with Logging {
   def getResourceId: String = {
     if (isJobManager) "JobManager" else PropUtils.getString("taskmanager.resource-id", OSUtils.getHostName)
   }
+
+  /**
+   * 获取applicationId
+   */
+  def getApplicationId: String = PropUtils.getString("high-availability.cluster-id")
+
+  /**
+   * 获取flink版本号
+   */
+  def getVersion: String = EnvironmentInformation.getVersion
 }

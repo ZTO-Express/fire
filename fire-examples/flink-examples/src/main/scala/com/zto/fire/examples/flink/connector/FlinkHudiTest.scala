@@ -18,11 +18,11 @@
 package com.zto.fire.examples.flink.connector
 
 import com.zto.fire.common.conf.FireKafkaConf
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import com.zto.fire.flink.anno.Checkpoint
 
 @Checkpoint(60)
-object FlinkHudiTest extends BaseFlinkStreaming {
+object FlinkHudiTest extends FlinkStreaming {
 
   /**
    * 生命周期方法：具体的用户开发的业务逻辑代码

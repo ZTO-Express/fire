@@ -326,6 +326,15 @@ class StreamExecutionEnvExt(env: StreamExecutionEnvironment) extends Api with Ta
   }
 
   /**
+   * 执行sql语句
+   * 支持DDL、DML
+   *
+   * @param keyNum
+   * 指定sql的with列表对应的配置文件中key的值，如果为<0则表示不从配置文件中读取with表达式
+   */
+  private[fire] def _sql(sql: String): TableResult = this.sql(sql)
+
+  /**
    * 创建并返回StatementSet对象实例
    */
   def createStatementSet: StatementSet = StreamExecutionEnvExt.createStatementSet

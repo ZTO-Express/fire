@@ -41,7 +41,6 @@
             <groupId>com.zto.fire</groupId>
             <artifactId>fire-enhance-arthas_${scala.binary.version}</artifactId>
             <version>${fire.version}</version>
-            <scope>${maven.scope}</scope>
         </dependency>
         <dependency>
             <groupId>com.taobao.arthas</groupId>

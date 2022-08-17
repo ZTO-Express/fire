@@ -20,7 +20,7 @@ package com.zto.fire.examples.spark.schedule
 import com.zto.fire._
 import com.zto.fire.common.anno.{Config, Scheduled}
 import com.zto.fire.common.util.DateFormatUtils
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.util.SparkUtils
 
 /**
@@ -36,7 +36,7 @@ import com.zto.fire.spark.util.SparkUtils
     |# 定时任务黑名单，配置方法名，多个以逗号分隔，配置的方法将不再被定时任务定时拉起
     |spark.fire.scheduler.blacklist          =       jvmMonitor,setConf2,registerAcc
     |""")
-object ScheduleTest extends BaseSparkStreaming {
+object ScheduleTest extends SparkStreaming {
 
   /**
    * 声明了@Scheduled注解的方法是定时任务方法，会周期性执行

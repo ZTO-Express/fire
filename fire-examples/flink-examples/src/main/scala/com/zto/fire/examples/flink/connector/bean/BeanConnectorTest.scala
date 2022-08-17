@@ -18,7 +18,7 @@
 package com.zto.fire.examples.flink.connector.bean
 
 import com.zto.fire._
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 
 /**
  * Flink流式计算任务模板
@@ -27,11 +27,11 @@ import com.zto.fire.flink.BaseFlinkStreaming
  * @since 1.0.0
  * @create 2021-01-18 17:24
  */
-object BeanConnectorTest extends BaseFlinkStreaming {
+object BeanConnectorTest extends FlinkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.createKafkaDirectStream()
-    this.fire.sql(
+    sql(
       """
         |CREATE table source (
         |  id bigint,
@@ -49,7 +49,7 @@ object BeanConnectorTest extends BaseFlinkStreaming {
         |   )
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |CREATE table sink (
         |  id bigint,
@@ -64,11 +64,10 @@ object BeanConnectorTest extends BaseFlinkStreaming {
         |   'table-name' = 'sink'
         |   )
         |""".stripMargin)
-    this.fire.sql(
+    sql(
       """
         |insert into sink select * from source
         |""".stripMargin)
     dstream.print()
-    this.fire.start
   }
 }

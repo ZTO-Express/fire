@@ -19,7 +19,7 @@ package com.zto.fire.examples.spark.structured
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.{Hive, Kafka}
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
 import com.zto.fire.spark.BaseStructuredStreaming
 
 /**
@@ -40,7 +40,7 @@ object StructuredStreamingTest extends BaseStructuredStreaming {
     // 接入kafka消息，并将消息解析为DataFrame，同时注册临时表，表名默认为kafka，也可传参手动指定表名
     val kafkaDataset = this.fire.loadKafkaParseJson()
     // 进行sql查询，支持嵌套的json，并且支持大小写的json
-    this.fire.sql("select table, after.bill_code, after.scan_site from kafka").print()
+    sql("select table, after.bill_code, after.scan_site from kafka").print()
     // 使用api的方式进行查询操作
     kafkaDataset.select("after.PDA_CODE", "after.bill_code").print(numRows = 1, truncate = false)
   }

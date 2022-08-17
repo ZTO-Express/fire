@@ -19,10 +19,10 @@ package com.zto.fire.examples.spark.hbase
 
 import com.zto.fire._
 import com.zto.fire.common.anno.TestStep
-import com.zto.fire.core.anno.{HBase, HBase2}
+import com.zto.fire.core.anno.connector.{HBase, HBase2}
 import com.zto.fire.examples.bean.{Student, StudentMulti}
 import com.zto.fire.hbase.HBaseConnector
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.spark.SparkCore
 import org.apache.hadoop.hbase.client.Get
 import org.apache.spark.sql.Encoders
 import org.junit.Test
@@ -38,7 +38,7 @@ import scala.collection.mutable.ListBuffer
   */
 @HBase("test")
 @HBase2(cluster = "test", scanPartitions = 3, storageLevel = "DISK_ONLY")
-class HBaseConnectorUnitTest extends BaseSparkCore with HBaseBaseTester {
+class HBaseConnectorUnitTest extends SparkCore with HBaseTester {
 
   /**
     * 使用HBaseConnector插入一个集合，可以是list、set等集合

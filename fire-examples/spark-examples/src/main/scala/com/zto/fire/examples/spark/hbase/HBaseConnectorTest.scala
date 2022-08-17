@@ -19,11 +19,10 @@ package com.zto.fire.examples.spark.hbase
 
 import java.nio.charset.StandardCharsets
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.{HBase, HBase2}
+import com.zto.fire.core.anno.connector.{HBase, HBase2}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.hbase.HBaseConnector
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.spark.SparkCore
 import org.apache.hadoop.hbase.client.Get
 import org.apache.spark.sql.Encoders
 
@@ -39,7 +38,7 @@ import scala.collection.mutable.ListBuffer
 @HBase("test")
 @HBase2(cluster = "test", scanPartitions = 3, storageLevel = "DISK_ONLY")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object HBaseConnectorTest extends BaseSparkCore {
+object HBaseConnectorTest extends SparkCore {
   private val tableName1 = "fire_test_1"
   private val tableName2 = "fire_test_2"
 

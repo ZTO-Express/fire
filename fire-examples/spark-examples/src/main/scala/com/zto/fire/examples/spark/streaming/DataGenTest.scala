@@ -19,7 +19,7 @@ package com.zto.fire.examples.spark.streaming
 
 import com.zto.fire._
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.Streaming
 
 /**
@@ -31,7 +31,7 @@ import com.zto.fire.spark.anno.Streaming
  * @contact Fire框架技术交流群（钉钉）：35373471
  */
 @Streaming(20)
-object DataGenTest extends BaseSparkStreaming {
+object DataGenTest extends SparkStreaming {
 
   override def process: Unit = {
     // 方式一、在JavaBean中实现generate方法，在该方法中定义对象生成的规则
@@ -41,7 +41,5 @@ object DataGenTest extends BaseSparkStreaming {
     // 方式二、通过实现generateFun函数来定义数据生成规则
     val dstream2 = this.fire.createDataGenStream(10, generateFun = Student.newStudentList())
     dstream2.print(1)
-
-    this.fire.start()
   }
 }

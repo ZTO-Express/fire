@@ -18,7 +18,7 @@
 package com.zto.fire.shell.flink
 
 import com.zto.fire.common.anno.Config
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
 
@@ -41,7 +41,7 @@ import org.apache.flink.table.api.bridge.scala.StreamTableEnvironment
     |fire.analysis.arthas.container.enable=false
     |fire.rest.filter.enable=true
     |""")
-object Test extends BaseFlinkStreaming {
+object Test extends FlinkStreaming {
 
   def getFire: StreamExecutionEnvironment = this.fire
 

@@ -70,7 +70,7 @@ trait BaseFlinkBatch extends BaseFlink {
     super.init(conf, args)
     if (conf != null) conf.asInstanceOf[Configuration].setBoolean(ConfigConstants.LOCAL_START_WEBSERVER, true)
 
-    this.process
+    this.processAll
   }
 
   /**

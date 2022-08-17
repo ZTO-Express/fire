@@ -49,6 +49,7 @@ private[fire] class FlinkSystemRestful(var baseFlink: BaseFlink, val restfulRegi
       .addRest(RestCase(RequestMethod.GET.toString, s"/system/distributeSync", distributeSync))
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/setConf", setConf))
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/arthas", arthas))
+      .addRest(RestCase(RequestMethod.GET.toString, s"/system/exception", exception))
   }
 
   /**
@@ -77,7 +78,7 @@ private[fire] class FlinkSystemRestful(var baseFlink: BaseFlink, val restfulRegi
    */
   @Rest("/system/distributeSync")
   def distributeSync(request: Request, response: Response): AnyRef = {
-    this.logger.warn(s"内部请求分布式更新信息，ip：${request.ip()}")
+    this.logger.debug(s"内部请求分布式更新信息，ip：${request.ip()}")
     this.distributeJson
   }
 

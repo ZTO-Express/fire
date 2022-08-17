@@ -18,7 +18,7 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import org.apache.flink.api.common.functions.{RichAggregateFunction, RichMapFunction}
 import org.apache.flink.api.common.state.StateTtlConfig
 import org.apache.flink.api.common.time.Time
@@ -33,7 +33,7 @@ import org.apache.flink.api.scala._
  * @author ChengLong 2021年1月5日09:13:50
  * @since 2.0.0
  */
-object FlinkStateTest extends BaseFlinkStreaming {
+object FlinkStateTest extends FlinkStreaming {
   // 将dstream声明为成员变量时，一定要加lazy关键字，避免env还没初始化导致空指针异常
   lazy val dstream = this.fire.createCollectionStream(Seq((1, 1), (1, 2), (1, 3), (1, 6), (1, 9), (2, 1), (2, 2), (3, 1))).keyBy(0)
 
@@ -156,7 +156,5 @@ object FlinkStateTest extends BaseFlinkStreaming {
     // this.testFunctionState
     // 演示mapWithState的使用
     // this.testWithState
-
-    this.fire.start("Flink State Test")
   }
 }

@@ -18,9 +18,8 @@
 package com.zto.fire.examples.flink.stream
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.Hive
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.core.anno.connector.Hive
+import com.zto.fire.flink.FlinkStreaming
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.functions.source.{RichParallelSourceFunction, SourceFunction}
@@ -32,14 +31,12 @@ import org.apache.flink.streaming.api.windowing.time.Time
  */
 @Hive("test")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object FlinkSourceTest extends BaseFlinkStreaming {
+object FlinkSourceTest extends FlinkStreaming {
 
   override def process: Unit = {
     val dstream = this.fire.addSource(new MySource).setParallelism(2)
     // 注意Time的包不要导错，来自org.apache.flink.streaming.api.windowing.time.Time
     dstream.timeWindowAll(Time.seconds(2)).sum(0).setParallelism(1).print
-
-    this.fire.start
   }
 }
 

@@ -18,13 +18,12 @@
 package com.zto.fire.examples.spark.jdbc
 
 import com.zto.fire.common.anno.TestStep
-import com.zto.fire.common.util.{DatasourceManager, PropUtils}
-import com.zto.fire.core.anno.{Jdbc, Jdbc3}
+import com.zto.fire.core.anno.connector.{Jdbc, Jdbc3}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.examples.spark.core.BaseSparkTester
+import com.zto.fire.examples.spark.core.SparkTester
 import com.zto.fire.jdbc.JdbcConnector
 import com.zto.fire.predef._
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.spark.SparkCore
 import org.junit.Assert._
 import org.junit.{After, Before, Test}
 
@@ -37,7 +36,7 @@ import org.junit.{After, Before, Test}
  */
 @Jdbc(url = "jdbc:derby:memory:fire;create=true", username = "fire", password = "fire", driver = "org.apache.derby.jdbc.EmbeddedDriver")
 @Jdbc3(url = "jdbc:derby:memory:fire2;create=true", username = "fire", password = "fire", maxPoolSize = 1, driver = "org.apache.derby.jdbc.EmbeddedDriver")
-class JdbcConnectorTest extends BaseSparkCore with BaseSparkTester {
+class JdbcConnectorTest extends SparkCore with SparkTester {
   private var jdbc: JdbcConnector = _
   private var jdbc3: JdbcConnector = _
   private val tableName = "t_student"

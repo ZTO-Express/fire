@@ -17,13 +17,14 @@
 
 package com.zto.fire.examples.spark.acc
 
-import java.util.concurrent.TimeUnit
 import com.zto.fire._
-import com.zto.fire.common.anno.{Config, Scheduled}
+import com.zto.fire.common.anno.Scheduled
 import com.zto.fire.common.util.{DateFormatUtils, PropUtils, ThreadUtils}
-import com.zto.fire.core.anno.{Hive, Kafka}
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.Streaming
+
+import java.util.concurrent.TimeUnit
 
 
 /**
@@ -36,7 +37,7 @@ import com.zto.fire.spark.anno.Streaming
 @Hive("test")
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object FireAccTest extends BaseSparkStreaming {
+object FireAccTest extends SparkStreaming {
   val key = "fire.partitions"
 
   override def process: Unit = {
@@ -59,8 +60,6 @@ object FireAccTest extends BaseSparkStreaming {
 
     // 定时打印fire内置累加器中的值
     ThreadUtils.schedule(this.printAcc, 0, 10, true, TimeUnit.MINUTES)
-
-    this.fire.start
   }
 
   /**

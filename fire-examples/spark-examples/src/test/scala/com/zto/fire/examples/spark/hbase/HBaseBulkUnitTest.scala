@@ -19,16 +19,12 @@ package com.zto.fire.examples.spark.hbase
 
 import com.zto.fire._
 import com.zto.fire.common.anno.TestStep
-import com.zto.fire.core.anno.{HBase, HBase2}
-import com.zto.fire.examples.bean.{Student, StudentMulti}
+import com.zto.fire.core.anno.connector.{HBase, HBase2}
+import com.zto.fire.examples.bean.Student
 import com.zto.fire.hbase.HBaseConnector
-import com.zto.fire.spark.BaseSparkCore
-import org.apache.hadoop.hbase.client.Get
+import com.zto.fire.spark.SparkCore
 import org.apache.spark.sql.{Encoders, Row}
 import org.junit.Test
-
-import java.nio.charset.StandardCharsets
-import scala.collection.mutable.ListBuffer
 
 /**
   * 测试基于bulk的方式读写HBase
@@ -39,7 +35,7 @@ import scala.collection.mutable.ListBuffer
   */
 @HBase("test")
 @HBase2(cluster = "test", scanPartitions = 3)
-class HBaseBulkUnitTest extends BaseSparkCore with HBaseBaseTester {
+class HBaseBulkUnitTest extends SparkCore with HBaseTester {
 
   /**
    * 使用id作为rowKey

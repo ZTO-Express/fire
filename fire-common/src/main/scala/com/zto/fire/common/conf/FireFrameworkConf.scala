@@ -131,6 +131,12 @@ private[fire] object FireFrameworkConf {
   lazy val FIRE_ENV_LOCAL = "fire.env.local"
   lazy val FIRE_CONF_ANNO_MANAGER_CLASS = "fire.conf.anno.manager.class"
   lazy val FIRE_CONF_ANNOTATION = "fire.conf.annotation.enable"
+  lazy val FIRE_ANALYSIS_LOG_EXCEPTION_STACK_ENABLE = "fire.analysis.log.exception.stack.enable"
+  lazy val FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MAX_RETIRES = "fire.analysis.log.exception.send.maxRetires"
+  lazy val FIRE_ANALYSIS_LOG_EXCEPTION_SEND_TIMEOUT = "fire.analysis.log.exception.send.timeout"
+  lazy val FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MQ_URL = "fire.analysis.log.exception.send.mq.url"
+  lazy val FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MQ_TOPIC = "fire.analysis.log.exception.send.mq.topic"
+  lazy val FIRE_JOB_AUTO_START = "fire.job.autoStart"
 
   /**
    * 用于jdbc url的识别，当无法通过driver class识别数据源时，将从url中的端口号进行区分
@@ -265,4 +271,19 @@ private[fire] object FireFrameworkConf {
   lazy val annoManagerClass = PropUtils.getString(this.FIRE_CONF_ANNO_MANAGER_CLASS)
   // 是否启用基于注解的方式进行配置
   lazy val annoConfEnable = PropUtils.getBoolean(this.FIRE_CONF_ANNOTATION, true)
+  // 是否启用异常堆栈采集
+  def exceptionTraceEnable: Boolean = PropUtils.getBoolean(this.FIRE_ANALYSIS_LOG_EXCEPTION_STACK_ENABLE, false)
+  // 异常堆栈发送MQ失败最大重试次数
+  lazy val exceptionTraceSendMQMaxRetries = PropUtils.getInt(this.FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MAX_RETIRES, 10)
+  // 异常日志发送MQ超时时间
+  lazy val exceptionSendTimeout = PropUtils.getInt(this.FIRE_ANALYSIS_LOG_EXCEPTION_SEND_TIMEOUT, 3000)
+  // 异常发送的mq的集群url
+  def exceptionTraceMQ: String = {
+    val url = PropUtils.getString(this.FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MQ_URL, "")
+    FireKafkaConf.kafkaBrokers(url)
+  }
+  // 异常发送到mq的哪个topic
+  def exceptionTraceMQTopic: String = PropUtils.getString(this.FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MQ_TOPIC, "")
+  // 是否自动提交job
+  lazy val jobAutoStart = PropUtils.getBoolean(this.FIRE_JOB_AUTO_START, true)
 }

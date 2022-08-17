@@ -19,9 +19,7 @@ package com.zto.fire.examples.flink.connector.kafka
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.flink.BaseFlinkStreaming
-
-import java.time.Duration
+import com.zto.fire.flink.FlinkStreaming
 
 /**
  *
@@ -31,7 +29,7 @@ import java.time.Duration
   """
     |flink.sql.conf.table.exec.state.ttl   =       1 ms
     |""")
-object KafkaConsumer extends BaseFlinkStreaming {
+object KafkaConsumer extends FlinkStreaming {
 
   override def process: Unit = {
     // this.insertPrint
@@ -81,7 +79,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |)
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |create view kafka_join
         |as
@@ -96,7 +94,7 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |where k1.bage > 10
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |select * from kafka_join
         |""".stripMargin).print()
@@ -124,12 +122,12 @@ object KafkaConsumer extends BaseFlinkStreaming {
         |)
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |create table `print` with('connector' = 'print') like kafka (EXCLUDING ALL)
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |insert into print select * from kafka
         |""".stripMargin)

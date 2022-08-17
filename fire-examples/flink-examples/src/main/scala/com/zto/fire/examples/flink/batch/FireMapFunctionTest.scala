@@ -19,7 +19,7 @@ package com.zto.fire.examples.flink.batch
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.flink.BaseFlinkBatch
+import com.zto.fire.flink.FlinkBatch
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.common.state.StateTtlConfig
 import org.apache.flink.api.common.time.Time
@@ -37,7 +37,7 @@ import org.apache.flink.api.scala._
   """
     |flink.fire.config_center.enable=false
     |""")
-object FireMapFunctionTest extends BaseFlinkBatch {
+object FireMapFunctionTest extends FlinkBatch {
   lazy val dataset = this.fire.createCollectionDataSet(1 to 10)
   lazy val dataset2 = this.fire.createCollectionDataSet(1 to 3)
 

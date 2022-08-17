@@ -20,10 +20,10 @@ package com.zto.fire.examples.spark.anno
 import com.zto.fire.common.anno.Config
 import com.zto.fire.common.conf.{FireFrameworkConf, FireHiveConf, FireKafkaConf, FireRocketMQConf}
 import com.zto.fire.common.util.PropUtils
-import com.zto.fire.core.anno._
+import com.zto.fire.core.anno.connector._
 import com.zto.fire.hbase.conf.FireHBaseConf
 import com.zto.fire.jdbc.conf.FireJdbcConf
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.{Streaming, StreamingDuration}
 import com.zto.fire.spark.conf.FireSparkConf
 import org.junit.Test
@@ -47,7 +47,7 @@ import org.junit.Test
 @Jdbc3(url = "jdbc:mysql://192.168.0.2:3306", username = "root3", isolationLevel = "read",  password = "root3", acquireIncrement = 2)
 @StreamingDuration(value = 20, checkpoint = false)
 @Streaming(value = 10, interval = 11, checkpoint = true, concurrent = 3, maxRatePerPartition = 10, backpressure = false, backpressureInitialRate = 26, stopGracefullyOnShutdown = false)
-class AnnoConfTest extends BaseSparkStreaming{
+class AnnoConfTest extends SparkStreaming {
 
   /**
    * 测试@Streaming注解

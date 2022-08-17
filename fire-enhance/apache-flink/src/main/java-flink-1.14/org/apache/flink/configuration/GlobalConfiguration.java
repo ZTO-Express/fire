@@ -362,6 +362,7 @@ public final class GlobalConfiguration {
                     config.setString(k, v);
                     settings.put(k, v);
                 });
+                LOG.info("main class：" + PropUtils.getProperty("driver.class.name"));
             }
         }
     }

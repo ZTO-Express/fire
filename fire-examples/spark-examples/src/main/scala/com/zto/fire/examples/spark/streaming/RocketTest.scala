@@ -19,9 +19,9 @@ package com.zto.fire.examples.spark.streaming
 
 import com.zto.fire._
 import com.zto.fire.common.util.JSONUtils
-import com.zto.fire.core.anno.{RocketMQ, RocketMQ2}
+import com.zto.fire.core.anno.connector.{RocketMQ, RocketMQ2}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.Streaming
 
 /**
@@ -33,7 +33,7 @@ import com.zto.fire.spark.anno.Streaming
 @RocketMQ(brokers = "bigdata_test", topics = "fire", groupId = "fire", tag = "*")
 @RocketMQ2(brokers = "bigdata_test", topics = "fire2", groupId = "fire2", tag = "*", startingOffset = "latest")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object RocketTest extends BaseSparkStreaming {
+object RocketTest extends SparkStreaming {
   override def process: Unit = {
     // 读取RocketMQ消息流
     val dStream = this.fire.createRocketMqPullStream()
@@ -44,6 +44,5 @@ object RocketTest extends BaseSparkStreaming {
       println("rocket.brokers.name=>" + this.conf.getString("rocket.brokers.name"))
       studentRDD.toDF().jdbcBatchUpdate(insertSql, Seq("name", "age", "createTime", "length", "sex"), batch = 100)
     })(reTry = 5, exitOnFailure = true)
-    this.fire.start()
   }
 }

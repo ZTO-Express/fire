@@ -20,8 +20,8 @@ package com.zto.fire.examples.spark.streaming
 import com.zto.fire._
 import com.zto.fire.common.anno.Scheduled
 import com.zto.fire.common.util.DateFormatUtils
-import com.zto.fire.core.anno.{Kafka, Kafka2, Kafka3}
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.core.anno.connector.{Kafka, Kafka2, Kafka3}
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.Streaming
 
 /**
@@ -35,7 +35,7 @@ import com.zto.fire.spark.anno.Streaming
 @Kafka2(brokers = "bigdata_test", topics = "fire2", groupId = "fire")
 @Kafka3(brokers = "bigdata_test", topics = "fire3", groupId = "fire")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object KafkaTest extends BaseSparkStreaming {
+object KafkaTest extends SparkStreaming {
 
   // 每天凌晨4点01将锁标志设置为false，这样下一个批次就可以先更新维表再执行sql
   @Scheduled(cron = "0 1 4 * * ?")
@@ -59,9 +59,9 @@ object KafkaTest extends BaseSparkStreaming {
       // 一、将json解析并注册为临时表，默认不cache临时表
       rdd.kafkaJson2Table("test", cacheTable = true)
       // toLowerDF表示将大写的字段转为小写
-      this.fire.sql("select * from test").toLowerDF.show(1, false)
-      /*this.fire.sql("select after.* from test").toLowerDF.show(1, false)
-      this.fire.sql("select after.* from test where after.order_type=1").toLowerDF.show(1, false)*/
+      sql("select * from test").toLowerDF.show(1, false)
+      /*sql("select after.* from test").toLowerDF.show(1, false)
+      sql("select after.* from test where after.order_type=1").toLowerDF.show(1, false)*/
 
       // 二、直接将json按指定的schema解析（只解析after），fieldNameUpper=true表示按大写方式解析，并自动转为小写
       // rdd.kafkaJson2DF(classOf[OrderCommon], fieldNameUpper = true).show(1, false)
@@ -78,8 +78,6 @@ object KafkaTest extends BaseSparkStreaming {
       println("count=" + rdd.count())
     })
     dstream3.print(1)
-
-    this.fire.start
   }
 
   @Scheduled(fixedInterval = 60 * 1000, scope = "all")

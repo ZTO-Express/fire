@@ -17,6 +17,7 @@
 
 package com.zto.fire.common.util
 
+import com.zto.fire.predef._
 import com.zto.fire.common.conf.{FireFrameworkConf, FirePS1Conf}
 
 /**
@@ -53,6 +54,29 @@ private[fire] object FireUtils extends Serializable with Logging {
   def fireVersion: String = FireFrameworkConf.fireVersion
 
   /**
+   * 获取当前执行引擎的版本号
+   * @return
+   * spark-version / flink-version
+   */
+  def engineVersion: String = {
+    tryWithReturn {
+      val methodName = "getVersion"
+      if (this.isSparkEngine) {
+        val getVersionMethod = ReflectionUtils.getMethodByName("com.zto.fire.spark.util.SparkUtils", methodName)
+        "spark version:" + getVersionMethod.invoke(null)
+      } else {
+        val getVersionMethod = ReflectionUtils.getMethodByName("com.zto.fire.flink.util.FlinkUtils", methodName)
+        "flink version:" + getVersionMethod.invoke(null)
+      }
+    } (this.logger, catchLog = "未获取到引擎版本信息")
+  }
+
+  /**
+   * 当前任务实例的主类名：packageName+className
+   */
+  def mainClass: String = FireFrameworkConf.driverClassName
+
+  /**
    * 用于在fire框架启动时展示信息
    */
   private[fire] def splash: Unit = {
@@ -71,7 +95,7 @@ private[fire] object FireUtils extends Serializable with Logging {
           |                 \/__/        |:|  |        \:\__\
           |                               \|__|         \/__/     version
           |
-          |""".stripMargin.replace("version", s"version ${FirePS1Conf.PINK + this.fireVersion}")
+          |""".stripMargin.replace("version", s"fire version:${FirePS1Conf.PINK + this.fireVersion + FirePS1Conf.GREEN} $engineVersion")
 
       this.logger.warn(FirePS1Conf.GREEN + info + FirePS1Conf.DEFAULT)
       this.isSplash = true

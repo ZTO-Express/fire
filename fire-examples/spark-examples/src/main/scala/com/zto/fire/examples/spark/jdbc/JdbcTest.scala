@@ -19,10 +19,10 @@ package com.zto.fire.examples.spark.jdbc
 
 import com.zto.fire._
 import com.zto.fire.common.util.{DateFormatUtils, JSONUtils}
-import com.zto.fire.core.anno.{Jdbc, Jdbc2}
+import com.zto.fire.core.anno.connector.{Jdbc, Jdbc2}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.jdbc.JdbcConnector
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.spark.SparkCore
 import com.zto.fire.spark.util.SparkUtils
 import org.apache.spark.sql.SaveMode
 
@@ -32,9 +32,9 @@ import org.apache.spark.sql.SaveMode
  * @author ChengLong 2019-6-17 15:17:38
  * @contact Fire框架技术交流群（钉钉）：35373471
  */
-@Jdbc(url = "jdbc:mysql://mysql-server:3306/fire", username = "root", password = "fire")
-@Jdbc2(url = "jdbc:mysql://mysql-server:3306/fire", username = "root", password = "fire")
-object JdbcTest extends BaseSparkCore {
+@Jdbc(url = "jdbc:mysql://mysql-server:3306/fire", username = "root", password = "root")
+@Jdbc2(url = "jdbc:mysql://mysql-server:3306/fire", username = "root", password = "root")
+object JdbcTest extends SparkCore {
   lazy val tableName = "spark_test"
   lazy val tableName2 = "t_cluster_info"
   lazy val tableName3 = "t_cluster_status"
@@ -146,7 +146,7 @@ object JdbcTest extends BaseSparkCore {
 
 
     df.createOrReplaceTempViewCache("student")
-    val sqlDF = this.fire.sql("select name, age, createTime from student where id>=1").repartition(1)
+    val sqlDF = sql("select name, age, createTime from student where id>=1").repartition(1)
     // 若不指定字段，则默认传入当前DataFrame所有列，且列的顺序与sql中问号占位符顺序一致
     sqlDF.jdbcBatchUpdate("insert into spark_test(name, age, createTime) values(?, ?, ?)", keyNum = 2)
     this.fire.jdbcTableLoadAll(this.tableName, keyNum = 2).show(100, false)
@@ -197,14 +197,16 @@ object JdbcTest extends BaseSparkCore {
 
   override def process: Unit = {
     // 测试环境测试
-    this.testJdbcUpdate
+    // this.testJdbcUpdate
+    this.testJdbcQuery
+    // this.testJdbcUpdate
     /*this.testJdbcUpdate
     this.testJdbcQuery
     this.testTableLoad
     this.testTableSave
     this.testDataFrameSave*/
     // 测试配置分发
-    this.testExecutor
+    // this.testExecutor
     Thread.sleep(100000)
   }
 }

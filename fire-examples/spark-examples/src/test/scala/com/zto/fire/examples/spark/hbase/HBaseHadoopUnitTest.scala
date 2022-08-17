@@ -19,10 +19,9 @@ package com.zto.fire.examples.spark.hbase
 
 import com.zto.fire._
 import com.zto.fire.common.anno.TestStep
-import com.zto.fire.core.anno.{HBase, HBase2}
+import com.zto.fire.core.anno.connector.{HBase, HBase2}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.hbase.HBaseConnector
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.spark.SparkCore
 import org.apache.spark.sql.{Encoders, Row}
 import org.junit.Test
 
@@ -35,7 +34,7 @@ import org.junit.Test
   */
 @HBase("test")
 @HBase2(cluster = "test", scanPartitions = 3)
-class HBaseHadoopUnitTest extends BaseSparkCore with HBaseBaseTester {
+class HBaseHadoopUnitTest extends SparkCore with HBaseTester {
 
   /**
    * 基于saveAsNewAPIHadoopDataset封装，将rdd数据保存到hbase中
@@ -90,7 +89,7 @@ class HBaseHadoopUnitTest extends BaseSparkCore with HBaseBaseTester {
     val studentRDD = this.fire.createRDD(Student.newStudentList(), 2)
     this.fire.createDataFrame(studentRDD, classOf[Student]).createOrReplaceTempView("student")
     // 指定rowKey构建的函数
-    this.fire.sql("select age,createTime,id,length,name,sex from student").hbaseHadoopPutDFRow(this.tableName1, buildRowKey)
+    sql("select age,createTime,id,length,name,sex from student").hbaseHadoopPutDFRow(this.tableName1, buildRowKey)
     this.assertScan
   }
 

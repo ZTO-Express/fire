@@ -46,6 +46,32 @@ object SparkUtils extends Logging {
   private lazy val spark = SparkSingletonFactory.getSparkSession
 
   /**
+   * SQL语法校验，如果语法错误，则返回错误堆栈
+   * @param sql
+   * sql statement
+   */
+  def sqlValidate(sql: String): Try[Unit] = {
+    val retVal = Try {
+      val t = this.spark.sessionState.sqlParser.parseExpression(sql)
+    }
+
+    if (retVal.isFailure) {
+      ExceptionBus.post(retVal.failed.get, sql)
+    }
+
+    retVal
+  }
+
+  /**
+   * SQL语法校验
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  def sqlLegal(sql: String): Boolean = this.sqlValidate(sql).isSuccess
+
+  /**
    * 将Row转为自定义bean，以JavaBean中的Field为基准
    * bean中的field名称要与DataFrame中的field名称保持一致
    */
@@ -328,13 +354,13 @@ object SparkUtils extends Logging {
 
   /**
    * 获取applicationId
-   *
-   * @param spark
-   * @return
    */
-  def getApplicationId(spark: SparkSession): String = {
-    spark.sparkContext.applicationId
-  }
+  def getApplicationId: String = spark.sparkContext.applicationId
+
+  /**
+   * 获取spark版本号
+   */
+  def getVersion: String = org.apache.spark.SPARK_VERSION
 
   /**
    * 使用配置文件中的spark.streaming.batch.duration覆盖传参的batchDuration

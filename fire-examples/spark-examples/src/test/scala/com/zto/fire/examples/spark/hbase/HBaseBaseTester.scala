@@ -19,7 +19,7 @@ package com.zto.fire.examples.spark.hbase
 
 import com.zto.fire._
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.examples.spark.core.BaseSparkTester
+import com.zto.fire.examples.spark.core.SparkTester
 import com.zto.fire.hbase.HBaseConnector
 import org.junit.Before
 
@@ -30,7 +30,7 @@ import org.junit.Before
  * @date 2022-05-11 13:52:25
  * @since 2.2.2
  */
-trait HBaseBaseTester extends BaseSparkTester {
+trait HBaseTester extends SparkTester {
   val tableName1 = "fire_test_1"
   val tableName2 = "fire_test_2"
 

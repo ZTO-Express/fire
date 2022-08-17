@@ -18,7 +18,7 @@
 package com.zto.fire.examples.flink.connector.hive
 
 import com.zto.fire._
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 
 /**
  * 基于fire框架进行Flink SQL开发<br/>
@@ -30,12 +30,12 @@ import com.zto.fire.flink.BaseFlinkStreaming
  * @create 2021-01-18 17:24
  * @contact Fire框架技术交流群（钉钉）：35373471
  */
-object HiveSinkTest extends BaseFlinkStreaming {
+object HiveSinkTest extends FlinkStreaming {
 
   // 具体的业务逻辑放到process方法中
   override def process: Unit = {
     this.fire.disableOperatorChaining()
-    this.fire.sql(
+    sql(
       """
         |CREATE TABLE t_student (
         |  `table` STRING,
@@ -50,7 +50,7 @@ object HiveSinkTest extends BaseFlinkStreaming {
         |  'format' = 'json'										-- 指定解析的kafka消息为json格式
         |)
         |""".stripMargin)
-    this.fire.sql(
+    sql(
       """
         |create view v_student as
         |select
@@ -64,7 +64,7 @@ object HiveSinkTest extends BaseFlinkStreaming {
         |""".stripMargin)
     this.fire.useHiveCatalog()
     println(this.tableEnv.getCurrentCatalog)
-    this.fire.sql(
+    sql(
       """
         |CREATE TABLE if not exists tmp.flink_hive_sink (
         |  id BIGINT,
@@ -76,7 +76,7 @@ object HiveSinkTest extends BaseFlinkStreaming {
         |  'sink.partition-commit.policy.kind'='metastore,success-file'    -- 提交类型
         |)
         |""".stripMargin)
-    this.fire.sql(
+    sql(
       """
         |INSERT INTO TABLE hive.tmp.flink_hive_sink SELECT id, name, age, DATE_FORMAT(create_time, 'yyyyMMdd') FROM default_catalog.default_database.v_student
         |""".stripMargin)

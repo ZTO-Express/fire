@@ -143,7 +143,7 @@ object RocketMQOptions {
 
     val physicalFieldCount = LogicalTypeChecks.getFieldCount(physicalType)
     // val physicalFields = IntStream.range(0, physicalFieldCount)
-    val physicalFields = (1 until physicalFieldCount).toArray
+    val physicalFields = (0 until physicalFieldCount).toArray
 
     val keyPrefix = options.getOptional(KEY_FIELDS_PREFIX).orElse("")
 

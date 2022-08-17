@@ -17,6 +17,7 @@
 
 package com.zto.fire.common.util;
 
+import com.zto.fire.common.conf.FirePS1Conf;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static com.zto.fire.common.util.UnitFormatUtils.readable;
 
 /**
  * 反射工具类，获取各元素信息后缓存到map中
@@ -144,6 +147,18 @@ public class ReflectionUtils {
     public static Method getMethodByName(Class<?> clazz, String methodName) {
         return getAllMethods(clazz).get(methodName);
     }
+
+    /**
+     * 根据方法名称获取Method类型（从缓存中获取）
+     *
+     * @param className      类名
+     * @param methodName 方法名称
+     * @return Method
+     */
+    public static Method getMethodByName(String className, String methodName) {
+        return getAllMethods(forName(className)).get(methodName);
+    }
+
 
     /**
      * 用于判断某类是否存在指定的方法名
@@ -295,5 +310,99 @@ public class ReflectionUtils {
      */
     public static List<Annotation> getClassAnnotations(Class<?> clazz) {
         return getAnnotations(clazz, ElementType.TYPE, clazz.getName());
+    }
+
+    /**
+     * 根据注解调用对应的方法
+     * @param target
+     * 目标对象
+     * @param annotationClass
+     * 注解类型
+     * @param args
+     * 方法反射调用传参
+     */
+    public static void invokeAnnoMethod(Object target, Class<? extends Annotation> annotationClass, Object ...args) throws Exception {
+        if (target == null || annotationClass == null) return;
+
+        try {
+            for (Method method : getAllMethods(target.getClass()).values()) {
+                if (method.isAnnotationPresent(annotationClass)) {
+                    method.invoke(target, args);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("反射调用方法失败，请检查：" + target.getClass().getName());
+            throw e;
+        }
+    }
+
+    /**
+     * 根据注解调用步骤方法
+     * @param target
+     * 目标对象
+     * @param annotations
+     * 注解类型列表
+     */
+    public static void invokeStepAnnoMethod(Object target, Class<? extends Annotation> ... annotations) throws Exception {
+        if (target == null || annotations == null || annotations.length == 0) return;
+        long successCount = 0, failedCount = 0, begin = System.currentTimeMillis();
+
+        try {
+            Collection<Method> methods = getAllMethods(target.getClass()).values();
+            for (Class<? extends Annotation> annotationClass : annotations) {
+                for (Method method : methods) {
+                    // 避免因为将注解标注到process方法上导致process执行多次
+                    if (!"process".equals(method.getName()) && method.isAnnotationPresent(annotationClass)) {
+                        Annotation anno = method.getAnnotation(annotationClass);
+                        Object retVal = getAnnoFieldValue(anno, "value");
+                        String desc = retVal == null ? "" : retVal.toString();
+                        if (StringUtils.isBlank(desc)) desc = "开始执行";
+                        String step = annotationClass.getSimpleName();
+                        logger.warn(FirePS1Conf.GREEN() + " " + step + ". " + desc + " " + FirePS1Conf.DEFAULT());
+
+                        long start = System.currentTimeMillis();
+                        Object skipError = getAnnoFieldValue(anno, "skipError");
+                        try {
+                            method.invoke(target, null);
+                            successCount += 1;
+                        } catch (Exception e) {
+                            long end = System.currentTimeMillis();
+                            logger.error(FirePS1Conf.RED() + " " + step + ". 执行报错！耗时："+ (readable(end - start, UnitFormatUtils.TimeUnitEnum.MS))  + " " + FirePS1Conf.DEFAULT() + "\n", e);
+                            boolean isSkip = Boolean.parseBoolean(skipError.toString());
+                            failedCount += 1;
+                            if (!isSkip) throw e;
+                        }
+                        long end = System.currentTimeMillis();
+                        logger.warn(FirePS1Conf.GREEN() + " " + step + ". 执行耗时：" + (readable(end - start, UnitFormatUtils.TimeUnitEnum.MS)) + " " + FirePS1Conf.DEFAULT() + "\n");
+                    }
+                }
+            }
+            long finalEnd = System.currentTimeMillis();
+            long allCount = successCount + failedCount;
+            if (allCount > 0) {
+                logger.warn(FirePS1Conf.GREEN() + " Finished. 总计：" + allCount + "个 成功：" + successCount + "个 失败：" + failedCount + "个, 执行耗时：" + (readable(finalEnd - begin, UnitFormatUtils.TimeUnitEnum.MS)) + " " + FirePS1Conf.DEFAULT() + "\n");
+            }
+        } catch (Exception e) {
+            logger.error("反射调用方法失败，请检查：" + target.getClass().getName());
+            throw e;
+        }
+    }
+
+    /**
+     * 获取指定Annotation的字段配置值
+     * @param anno
+     * 具体的注解类
+     * @param methodName
+     * 注解的field
+     */
+    public static Object getAnnoFieldValue(Annotation anno, String methodName) throws Exception {
+        Method[] methods = anno.getClass().getMethods();
+        Object retVal = null;
+        for (Method method : methods) {
+            if (method.getName().equalsIgnoreCase(methodName)) {
+                retVal = method.invoke(anno, null);
+            }
+        }
+        return retVal;
     }
 }

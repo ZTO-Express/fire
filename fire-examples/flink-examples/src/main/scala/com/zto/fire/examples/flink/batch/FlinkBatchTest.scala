@@ -18,7 +18,7 @@
 package com.zto.fire.examples.flink.batch
 
 import com.zto.fire._
-import com.zto.fire.flink.BaseFlinkBatch
+import com.zto.fire.flink.FlinkBatch
 import org.apache.flink.api.common.accumulators.IntCounter
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.scala._
@@ -28,7 +28,7 @@ import org.apache.flink.core.fs.FileSystem
 /**
  * @contact Fire框架技术交流群（钉钉）：35373471
  */
-object FlinkBatchTest extends BaseFlinkBatch {
+object FlinkBatchTest extends FlinkBatch {
 
   /**
    * 生命周期方法：具体的用户开发的业务逻辑代码

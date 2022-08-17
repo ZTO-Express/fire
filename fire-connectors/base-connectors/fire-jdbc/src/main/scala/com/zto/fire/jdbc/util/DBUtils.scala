@@ -26,9 +26,10 @@ import com.zto.fire.jdbc.conf.FireJdbcConf
 import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 
-import java.sql.ResultSet
+import java.sql.{ResultSet, Types}
 import java.util.Properties
 import scala.collection.mutable.ListBuffer
+import scala.reflect.ClassTag
 import scala.util.Try
 
 /**
@@ -58,33 +59,38 @@ object DBUtils extends Logging {
     val list = ListBuffer[T]()
     val fields = clazz.getDeclaredFields
     try {
+      val columnMap = this.columns(rs)
       while (rs.next()) {
         val obj = clazz.newInstance()
         fields.foreach(field => {
           ReflectionUtils.setAccessible(field)
-          val fieldType = field.getType
           val anno = field.getAnnotation(classOf[FieldName])
           if (!(anno != null && anno.disuse())) {
             val fieldName = if (anno != null && StringUtils.isNotBlank(anno.value())) anno.value() else field.getName
-            if (this.containsColumn(rs, fieldName)) {
-              if (fieldType eq classOf[JString]) field.set(obj, rs.getString(fieldName))
-              else if (fieldType eq classOf[JInt]) field.set(obj, rs.getInt(fieldName))
-              else if (fieldType eq classOf[JDouble]) field.set(obj, rs.getDouble(fieldName))
-              else if (fieldType eq classOf[JLong]) field.set(obj, rs.getLong(fieldName))
-              else if (fieldType eq classOf[JBigDecimal]) field.set(obj, rs.getBigDecimal(fieldName))
-              else if (fieldType eq classOf[JFloat]) field.set(obj, rs.getFloat(fieldName))
-              else if (fieldType eq classOf[JBoolean]) field.set(obj, rs.getBoolean(fieldName))
-              else if (fieldType eq classOf[JShort]) field.set(obj, rs.getShort(fieldName))
-              else if (fieldType eq classOf[java.sql.Date]) field.set(obj, rs.getDate(fieldName))
-              else if (fieldType eq classOf[java.sql.Time]) field.set(obj, rs.getTime(fieldName))
-              else if (fieldType eq classOf[java.sql.Timestamp]) field.set(obj, rs.getTimestamp(fieldName))
+            if (columnMap.containsKey(fieldName)) {
+              val fieldType = columnMap.get(fieldName)
+              fieldType match {
+                case Types.INTEGER | Types.SMALLINT=> field.set(obj, rs.getInt(fieldName))
+                case Types.VARCHAR | Types.CHAR | Types.LONGVARCHAR => field.set(obj, rs.getString(fieldName))
+                case Types.BIGINT => field.set(obj, rs.getLong(fieldName))
+                case Types.FLOAT => field.set(obj, rs.getFloat(fieldName))
+                case Types.DOUBLE => field.set(obj, rs.getDouble(fieldName))
+                case Types.DECIMAL => field.set(obj, rs.getBigDecimal(fieldName))
+                case Types.BOOLEAN | Types.TINYINT | Types.BIT => field.set(obj, rs.getBoolean(fieldName))
+                case Types.DATE => field.set(obj, rs.getDate(fieldName))
+                case Types.TIME => field.set(obj, rs.getTime(fieldName))
+                case Types.TIMESTAMP => field.set(obj, rs.getTimestamp(fieldName))
+                case _ => logger.error(s"ResultSet转换成JavaBean过程中遇到不支持的类型，字段名称：${fieldName}，字段类型：${fieldType}")
+              }
             }
           }
         })
         list += obj
       }
     } catch {
-      case e: Exception => e.printStackTrace()
+      case e: Exception =>
+        logger.error("ResultSet转换成JavaBean过程中出现异常.", e)
+        throw e
     }
     list
   }
@@ -107,7 +113,26 @@ object DBUtils extends Logging {
       }
     }
     if (retVal.isFailure) this.logger.warn(s"ResultSet结果集中未找到列名：${columnName}，请保证ResultSet与JavaBean中的字段一一对应，耗时：${elapsed(start)}")
+    rs.getMetaData
     retVal.isSuccess
+  }
+
+  /**
+   * 根据查询结果集获取字段名称与类型的映射关系
+   * @param rs
+   * jdbc query结果集
+   * @return
+   * Map[FieldName, FieldType]
+   */
+  def columns(rs: ResultSet): JHashMap[String, Int] = {
+    val metaData = rs.getMetaData
+    val fieldMap = new JHashMap[String, Int]()
+    for (i <- 1 until metaData.getColumnCount) {
+      val fieldName = metaData.getColumnName(i)
+      val fieldType = metaData.getColumnType(i)
+      fieldMap.put(fieldName, fieldType)
+    }
+    fieldMap
   }
 
   /**

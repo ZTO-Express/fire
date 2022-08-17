@@ -19,9 +19,9 @@ package com.zto.fire.spark.sql
 
 import com.zto.fire.common.anno.Internal
 import com.zto.fire.common.enu.{Datasource, Operation}
-import com.zto.fire.common.util.TableMeta
+import com.zto.fire.common.util.{ExceptionBus, TableMeta}
 import com.zto.fire.core.sql.SqlParser
-import com.zto.fire.spark.util.SparkSingletonFactory
+import com.zto.fire.spark.util.{SparkSingletonFactory, SparkUtils}
 import com.zto.fire.{isEmpty, tryWithLog}
 import org.apache.spark.sql.catalyst.TableIdentifier
 import org.apache.spark.sql.catalyst.analysis._
@@ -29,6 +29,7 @@ import org.apache.spark.sql.catalyst.plans.logical._
 import org.apache.spark.sql.execution.datasources.CreateTable
 
 import scala.collection.mutable
+import scala.util.Try
 
 
 /**
@@ -236,4 +237,13 @@ object SparkSqlParser extends SqlParser {
       }
     }(this.logger, isThrow = false)
   }
+
+  /**
+   * SQL语法校验
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  def sqlLegal(sql: String): Boolean = SparkUtils.sqlLegal(sql)
 }

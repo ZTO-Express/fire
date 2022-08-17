@@ -17,13 +17,9 @@
 
 package com.zto.fire.examples.spark.conf
 
-import com.zto.fire._
 import com.zto.fire.common.anno.{Config, TestStep}
-import com.zto.fire.common.util.JSONUtils
-import com.zto.fire.core.anno.{Hive, Kafka}
-import com.zto.fire.examples.bean.Student
-import com.zto.fire.examples.spark.core.BaseSparkTester
-import com.zto.fire.spark.{BaseSparkCore, BaseSparkStreaming}
+import com.zto.fire.examples.spark.core.SparkTester
+import com.zto.fire.spark.SparkCore
 import com.zto.fire.spark.anno.Streaming
 import com.zto.fire.spark.util.SparkUtils
 import org.junit.Test
@@ -44,7 +40,7 @@ import org.junit.Test
     |fire.conf.test=spark
     |""")
 @Streaming(20) // spark streaming的批次时间
-class ConfigCenterUnitTest extends BaseSparkCore with BaseSparkTester {
+class ConfigCenterUnitTest extends SparkCore with SparkTester {
 
   /**
    * 配置信息打印

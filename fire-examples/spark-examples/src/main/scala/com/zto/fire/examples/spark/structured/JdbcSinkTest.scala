@@ -19,7 +19,7 @@ package com.zto.fire.examples.spark.structured
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.{HBase, Hive, Kafka}
+import com.zto.fire.core.anno.connector.{HBase, Hive, Kafka}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.spark.BaseStructuredStreaming
 
@@ -39,7 +39,7 @@ object JdbcSinkTest extends BaseStructuredStreaming {
     val kafkaDataset = this.fire.loadKafkaParseJson()
     // 直接使用或sql
     /*kafkaDataset.print()
-    this.fire.sql("select * from kafka").print()*/
+    sql("select * from kafka").print()*/
 
     // jdbc的sql语句
     val insertSql = "insert into spark_test(name, age, createTime, length, sex, rowKey) values(?,?,?,?,?,?)"
@@ -50,7 +50,7 @@ object JdbcSinkTest extends BaseStructuredStreaming {
     kafkaDataset.select("data.*").jdbcBatchUpdate(insertSql, Seq("name", "age", "createTime", "length", "sex", "rowKey"), keyNum = 6)
 
     this.fire.createDataFrame(Student.newStudentList(), classOf[Student]).createOrReplaceTempViewCache("student")
-    this.fire.sql(
+    sql(
       """
         |select
         | t.name,

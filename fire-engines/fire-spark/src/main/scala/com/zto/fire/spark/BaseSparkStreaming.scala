@@ -27,14 +27,14 @@ import com.zto.fire.core.rest.RestCase
 import com.zto.fire.spark.bean.RestartParams
 import com.zto.fire.spark.util.{SparkSingletonFactory, SparkUtils}
 import org.apache.spark.SparkConf
-import org.apache.spark.streaming.{Milliseconds, Seconds, StreamingContext}
+import org.apache.spark.streaming.{Milliseconds, Seconds, StreamingContext, StreamingContextState}
 import spark.{Request, Response}
 import com.zto.fire._
 import com.zto.fire.spark.conf.FireSparkConf
 
 
 /**
- * 实时平台Spark通用父类
+ * Spark Streaming通用父接口
  * Created by ChengLong on 2018-03-28.
  */
 trait BaseSparkStreaming extends BaseSpark {
@@ -64,6 +64,7 @@ trait BaseSparkStreaming extends BaseSpark {
    */
   def init(batchDuration: Long, isCheckPoint: Boolean, args: Array[String]): Unit = {
     this.init(batchDuration, isCheckPoint, null, args)
+    if (FireFrameworkConf.jobAutoStart && this.ssc.getState() == StreamingContextState.INITIALIZED) this.fire.start
   }
 
   /**
@@ -98,7 +99,7 @@ trait BaseSparkStreaming extends BaseSpark {
       val rememberTime = FireSparkConf.streamingRemember
       if (rememberTime > 0) this.ssc.remember(Milliseconds(Math.abs(rememberTime)))
       SparkSingletonFactory.setStreamingContext(this.ssc)
-      this.process
+      this.processAll
     } else {
       this.checkPointDir = FireSparkConf.chkPointDirPrefix + this.appName
       this.ssc = StreamingContext.getOrCreate(this.checkPointDir, createStreamingContext _)
@@ -115,7 +116,7 @@ trait BaseSparkStreaming extends BaseSpark {
         }
         this.ssc.checkpoint(checkPointDir)
         SparkSingletonFactory.setStreamingContext(this.ssc)
-        this.process
+        this.processAll
         this.ssc
       }
     }

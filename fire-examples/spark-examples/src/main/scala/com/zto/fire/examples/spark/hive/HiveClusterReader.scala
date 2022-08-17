@@ -17,12 +17,11 @@
 
 package com.zto.fire.examples.spark.hive
 
-import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.Hive
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.core.anno.connector.Hive
+import com.zto.fire.spark.SparkCore
 
 /**
-  * 本示例用于演示spark读取不同hive集群，配置文件请见 HiveClusterReader.properties，继承自BaseSparkCore表示是一个离线的spark程序
+  * 本示例用于演示spark读取不同hive集群，配置文件请见 HiveClusterReader.properties，继承自SparkCore表示是一个离线的spark程序
   * 如果需要使用不同的hive集群，只需在该类同名的配置文件中加一下配置即可：hive.cluster=streaming，表示读取180实时集群的hive元数据
   *
   * @author ChengLong 2019-5-17 10:39:19
@@ -30,11 +29,11 @@ import com.zto.fire.spark.BaseSparkCore
   */
 @Hive("test")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object HiveClusterReader extends BaseSparkCore {
+object HiveClusterReader extends SparkCore {
 
   override def process: Unit = {
     // spark为sparkSession的实例，已经在init()中完成初始化，可以直接通过this.fire或this.spark方式调用
-    this.fire.sql("use tmp")
-    this.fire.sql("show tables").show(100, false)
+    sql("use tmp")
+    sql("show tables").show(100, false)
   }
 }

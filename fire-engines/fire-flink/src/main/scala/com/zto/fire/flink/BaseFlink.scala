@@ -37,6 +37,8 @@ import org.apache.flink.streaming.api.{CheckpointingMode, TimeCharacteristic}
 import org.apache.flink.table.catalog.hive.HiveCatalog
 import org.apache.hadoop.hive.conf.HiveConf
 
+import scala.util.Try
+
 
 /**
  * Flink引擎通用父接口
@@ -184,6 +186,23 @@ trait BaseFlink extends BaseFire {
    * spark任务：driver/id  flink任务：JobManager/container_xxx
    */
   override protected def resourceId: String = FlinkUtils.getResourceId
+
+  /**
+   * SQL语法校验，如果语法错误，则返回错误堆栈
+   *
+   * @param sql
+   * sql statement
+   */
+  override def sqlValidate(sql: JString): Try[Unit] = FlinkUtils.sqlValidate(sql)
+
+  /**
+   * SQL语法校验
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  override def sqlLegal(sql: JString): Boolean = FlinkUtils.sqlLegal(sql)
 
   /**
    * 初始化引擎上下文，如SparkSession、StreamExecutionEnvironment等

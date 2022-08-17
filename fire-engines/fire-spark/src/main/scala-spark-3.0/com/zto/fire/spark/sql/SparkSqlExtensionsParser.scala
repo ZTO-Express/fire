@@ -1,12 +1,9 @@
 package com.zto.fire.spark.sql
 
-import com.zto.fire.core.sql.SqlExtensionsParser
-import org.apache.spark.sql.catalyst.expressions.Expression
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.parser.ParserInterface
-import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.{FunctionIdentifier, TableIdentifier}
 import org.apache.spark.sql.types.{DataType, StructType}
-import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
 
 
 /**
@@ -15,20 +12,8 @@ import org.apache.spark.sql.{SparkSession, SparkSessionExtensions}
  * @author ChengLong 2021-6-23 10:25:17
  * @since 2.0.0
  */
-private[fire] class SparkSqlExtensionsParser(parser: ParserInterface) extends ParserInterface {
-
-  /**
-   * Parse a string to a [[LogicalPlan]].
-   */
-  override def parsePlan(sqlText: String): LogicalPlan = {
-    SparkSqlParser.sqlParse(sqlText)
-    parser.parsePlan(sqlText)
-  }
-
-  /**
-   * Parse a string to an [[Expression]].
-   */
-  override def parseExpression(sqlText: String): Expression = parser.parseExpression(sqlText)
+private[fire] class SparkSqlExtensionsParser(sparkSession: SparkSession, parser: ParserInterface)
+  extends SparkSqlExtensionsParserBase(sparkSession, parser) with ParserInterface {
 
   /**
    * Parse a string to a [[TableIdentifier]].
@@ -60,18 +45,4 @@ private[fire] class SparkSqlExtensionsParser(parser: ParserInterface) extends Pa
    * Parse a string to a raw [[DataType]] without CHAR/VARCHAR replacement.
    */
   override def parseRawDataType(sqlText: String): DataType = parser.parseRawDataType(sqlText)
-}
-
-private[fire] object SparkSqlExtensionsParser extends SqlExtensionsParser {
-
-  /**
-   * 启用自定义Sql解析器扩展
-   */
-  def sqlExtension(sessionBuilder: SparkSession.Builder): SparkSession.Builder = {
-    type ParserBuilder = (SparkSession, ParserInterface) => ParserInterface
-    type ExtensionsBuilder = SparkSessionExtensions => Unit
-    val parserBuilder: ParserBuilder = (_, parser) => new SparkSqlExtensionsParser(parser)
-    val extBuilder: ExtensionsBuilder = { e => e.injectParser(parserBuilder) }
-    sessionBuilder.withExtensions(extBuilder)
-  }
 }

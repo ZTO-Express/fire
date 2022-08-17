@@ -54,7 +54,7 @@ this.fire.sql("""
 
 **with参数的使用：**
 
-​		rocketmq sql connector中的with参数复用了api中的配置参数，如果需要进行rocketmq-client相关参数设置，可以以rocket.conf.为前缀，后面跟上rocketmq调优参数即可。
+　　Rocketmq sql connector中的with参数复用了api中的配置参数，如果需要进行rocketmq-client相关参数设置，可以以rocket.conf.为前缀，后面跟上rocketmq调优参数即可。
 
 ### 二、RocketMQ配置
 
@@ -79,7 +79,7 @@ spark.rocket.conf.pull.max.speed.per.partition		=   	5000
 
 ### 三、多RocketMQ多topic消费
 
-​		实际生产场景下，会有同一个任务消费多个RocketMQ集群，多个topic的情况。面对这种需求，fire是如何应对的呢？fire框架约定，配置的key后缀区分不同的RocketMQ配置项，详见以下配置列表：
+　　实际生产场景下，会有同一个任务消费多个RocketMQ集群，多个topic的情况。面对这种需求，fire是如何应对的呢？fire框架约定，配置的key后缀区分不同的RocketMQ配置项，详见以下配置列表：
 
 ```properties
 # 以下配置中指定了两个RocketMQ集群信息
@@ -123,7 +123,7 @@ dstream.rocketCommitOffsets()
 
 #### 5.2 自动提交
 
-​		spark streaming在处理数据过程中，由于offset提交与数据处理可能不再一个算子中，就会出现stage失败，数据丢失，但offset却提交了。为了解决这个问题，fire框架提供了***foreachRDDAtLeastOnce***算子，来保证计算的数据不丢，失败重试（默认3次），成功自动提交等特性。
+　　Spark streaming在处理数据过程中，由于offset提交与数据处理可能不再一个算子中，就会出现stage失败，数据丢失，但offset却提交了。为了解决这个问题，fire框架提供了***foreachRDDAtLeastOnce***算子，来保证计算的数据不丢，失败重试（默认3次），成功自动提交等特性。
 
 ```scala
 @Streaming(20) // spark streaming的批次时间

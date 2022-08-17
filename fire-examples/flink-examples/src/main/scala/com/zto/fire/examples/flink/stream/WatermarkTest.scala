@@ -20,9 +20,9 @@ package com.zto.fire.examples.flink.stream
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.{DateFormatUtils, JSONUtils}
-import com.zto.fire.core.anno.{Hive, Kafka}
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import com.zto.fire.flink.ext.watermark.FirePeriodicWatermarks
 import org.apache.commons.lang3.StringUtils
 import org.apache.flink.api.scala._
@@ -54,7 +54,7 @@ import java.text.SimpleDateFormat
 @Hive("test")
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object WatermarkTest extends BaseFlinkStreaming {
+object WatermarkTest extends FlinkStreaming {
 
   override def process: Unit = {
     // source端接入消息并解析
@@ -89,8 +89,6 @@ object WatermarkTest extends BaseFlinkStreaming {
     windowDStream.print().setParallelism(1)
     // 获取由于延迟太久而被丢弃的数据
     windowDStream.getSideOutput[(Student, Long)](this.outputTag.asInstanceOf[OutputTag[(Student, Long)]]).map(t => ("丢弃", t)).print()
-
-    this.fire.start
   }
 
   /**

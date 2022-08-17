@@ -23,11 +23,15 @@ import com.zto.fire.common.conf.FireFrameworkConf.FIRE_LOG_SQL_LENGTH
 import com.zto.fire.common.conf.FireKafkaConf._
 import com.zto.fire.common.conf.FireRocketMQConf._
 import com.zto.fire.common.conf.{FireHiveConf, KeyNum}
-import com.zto.fire.common.util.{ReflectionUtils, StringsUtils}
-import com.zto.fire.core.anno.{Jdbc4, _}
+import com.zto.fire.common.util.{Logging, ReflectionUtils, StringsUtils}
+import com.zto.fire.core.BaseFire
+import com.zto.fire.core.anno.lifecycle.{Handle, Process, Step1, Step10, Step11, Step12, Step13, Step14, Step15, Step16, Step17, Step18, Step19, Step2, Step3, Step4, Step5, Step6, Step7, Step8, Step9}
+import com.zto.fire.core.anno._
+import com.zto.fire.core.anno.connector.{HBase, HBase2, HBase3, HBase4, HBase5, Hive, Jdbc, Jdbc2, Jdbc3, Jdbc4, Jdbc5, Kafka, Kafka2, Kafka3, Kafka4, Kafka5, RocketMQ, RocketMQ2, RocketMQ3, RocketMQ4, RocketMQ5}
 import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 
+import java.lang.annotation.Annotation
 import scala.collection.mutable.HashMap
 
 
@@ -41,15 +45,9 @@ import scala.collection.mutable.HashMap
  * @since 2.2.2
  */
 @Internal
-private[fire] trait AnnoManager {
+private[fire] trait AnnoManager extends Logging {
   protected[fire] lazy val props = new HashMap[String, String]()
-  // 用于存放注册了的主键，只解析这些主键中的信息
-  protected[fire] lazy val registerAnnoSet = Sets.newHashSet[Class[_]](
-    classOf[Hive], classOf[HBase], classOf[HBase2], classOf[HBase3], classOf[HBase4], classOf[HBase5],
-    classOf[Jdbc], classOf[Jdbc2], classOf[Jdbc3], classOf[Jdbc4], classOf[Jdbc5],
-    classOf[Kafka], classOf[Kafka2], classOf[Kafka3], classOf[Kafka4], classOf[Kafka5],
-    classOf[RocketMQ], classOf[RocketMQ2], classOf[RocketMQ3], classOf[RocketMQ4], classOf[RocketMQ5]
-  )
+
 
   this.register
 
@@ -120,7 +118,7 @@ private[fire] trait AnnoManager {
     val mapMethods = ReflectionUtils.getAllMethods(this.getClass)
 
     // 仅获取注册表中的注解配置信息
-    annotations.filter(anno => this.registerAnnoSet.contains(anno.annotationType())).foreach(anno => {
+    annotations.filter(anno => AnnoManager.registerAnnoSet.contains(anno.annotationType())).foreach(anno => {
       // 反射调用map+注解名称对应的方法：
       // 比如注解名称为Hive，则调用mapHive方法解析@Hive注解中的配置信息
       val methodName = s"map${anno.annotationType().getSimpleName}"
@@ -491,5 +489,39 @@ private[fire] trait AnnoManager {
     if (noEmpty(hive.catalog())) this.put(FireHiveConf.HIVE_CATALOG_NAME, hive.catalog())
     if (noEmpty(hive.version())) this.put(FireHiveConf.HIVE_VERSION, hive.version())
     if (noEmpty(hive.partition())) this.put(FireHiveConf.DEFAULT_TABLE_PARTITION_NAME, hive.partition())
+  }
+}
+
+object AnnoManager extends Logging {
+  // 用于存放注册了的主键，只解析这些主键中的信息
+  private[fire] lazy val registerAnnoSet = Sets.newHashSet[Class[_]](
+    classOf[Hive], classOf[HBase], classOf[HBase2], classOf[HBase3], classOf[HBase4], classOf[HBase5],
+    classOf[Jdbc], classOf[Jdbc2], classOf[Jdbc3], classOf[Jdbc4], classOf[Jdbc5], classOf[Kafka],
+    classOf[Kafka2], classOf[Kafka3], classOf[Kafka4], classOf[Kafka5], classOf[RocketMQ], classOf[RocketMQ2],
+    classOf[RocketMQ3], classOf[RocketMQ4], classOf[RocketMQ5]
+  )
+
+  // 用于注册所有的生命周期注解
+  private[fire] lazy val registerAnnoMethod = List[Class[_ <: Annotation]](classOf[Process], classOf[Handle],
+    classOf[Step1], classOf[Step2], classOf[Step3], classOf[Step4], classOf[Step5], classOf[Step6], classOf[Step7],
+    classOf[Step8], classOf[Step9], classOf[Step10], classOf[Step11], classOf[Step12], classOf[Step13], classOf[Step14],
+    classOf[Step15], classOf[Step16], classOf[Step17], classOf[Step18], classOf[Step19])
+
+  /**
+   * 用于调起生命周期注解所标记的方法
+   */
+  protected[fire] def processAnno(baseFire: BaseFire): Unit = {
+    tryWithLog {
+      ReflectionUtils.invokeStepAnnoMethod(baseFire, this.registerAnnoMethod: _*)
+    } (this.logger, "业务逻辑代码执行完成", "业务逻辑代码执行失败", isThrow = true)
+  }
+
+  /**
+   * 用于调用指定的被注解标记的声明周期方法
+   */
+  protected[fire] def lifeCycleAnno(baseFire: BaseFire, annoClass: Class[_ <: Annotation]): Unit = {
+    tryWithLog {
+      ReflectionUtils.invokeAnnoMethod(baseFire, annoClass)
+    } (this.logger, "生命周期方法调用成功", "声明周期方法调用失败", isThrow = true)
   }
 }

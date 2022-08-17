@@ -19,7 +19,7 @@ under the License.
 
 # 定时任务
 
-fire框架内部进一步封装了quart进行定时任务的声明与调度，使用方法和spring的@Scheduled注解类似。参考：[示例程序](../fire-examples/spark-examples/src/main/scala/com/zto/fire/examples/spark/schedule/ScheduleTest.scala)。基于该功能，可以很容易实现诸如定时加载与更新维表等功能，十分方便。
+　　Fire框架内部进一步封装了quart进行定时任务的声明与调度，使用方法和spring的@Scheduled注解类似。参考：[示例程序](../fire-examples/spark-examples/src/main/scala/com/zto/fire/examples/spark/schedule/ScheduleTest.scala)。基于该功能，可以很容易实现诸如定时加载与更新维表等功能，十分方便。
 
 ```scala
   /**

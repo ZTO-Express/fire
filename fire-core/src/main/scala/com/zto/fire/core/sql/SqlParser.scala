@@ -82,7 +82,7 @@ trait SqlParser extends Logging {
    * 将待解析的SQL添加到buffer中
    */
   def sqlParse(sql: String): Unit = {
-    if (buriedPointDatasourceEnable && noEmpty(sql)) {
+    if (buriedPointDatasourceEnable && noEmpty(sql) && sqlLegal(sql)) {
       this.buffer += sql
     }
   }
@@ -91,6 +91,15 @@ trait SqlParser extends Logging {
    * 用于解析给定的SQL语句
    */
   def sqlParser(sql: String): Unit
+
+  /**
+   * SQL语法校验
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  def sqlLegal(sql: String): Boolean
 
   /**
    * 用于判断给定的表是否为临时表

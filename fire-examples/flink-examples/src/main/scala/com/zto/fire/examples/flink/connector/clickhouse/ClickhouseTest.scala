@@ -20,10 +20,10 @@ package com.zto.fire.examples.flink.connector.clickhouse
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.JSONUtils
-import com.zto.fire.core.anno.Kafka
+import com.zto.fire.core.anno.connector.Kafka
 import com.zto.fire.examples.bean.Student
 import org.apache.flink.api.scala._
-import com.zto.fire.flink.BaseFlinkStreaming
+import com.zto.fire.flink.FlinkStreaming
 import com.zto.fire.flink.anno.Checkpoint
 
 
@@ -35,16 +35,16 @@ import com.zto.fire.flink.anno.Checkpoint
 @Checkpoint(60)
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire", autoCommit = true)
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object ClickhouseTest extends BaseFlinkStreaming {
+object ClickhouseTest extends FlinkStreaming {
 
   /**
    * 业务逻辑代码，会被fire自动调用
    */
   override def process: Unit = {
-    // this.fire.sql(DDL.createStudent("t_kafka", 10))
+    // sql(DDL.createStudent("t_kafka", 10))
     val dstream = this.fire.createKafkaDirectStream().filter(JSONUtils.isJson(_)).map(JSONUtils.parseObject[Student](_))
     dstream.createOrReplaceTempView("t_kafka")
-    this.fire.sql(
+    sql(
       """
         |CREATE TABLE t_user (
         |    `id` BIGINT,
@@ -67,7 +67,7 @@ object ClickhouseTest extends BaseFlinkStreaming {
         |)
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |insert into t_user
         |select
@@ -78,7 +78,7 @@ object ClickhouseTest extends BaseFlinkStreaming {
         |from t_kafka
         |""".stripMargin)
 
-    this.fire.sql(
+    sql(
       """
         |select
         |   id, name, age,

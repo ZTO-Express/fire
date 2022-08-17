@@ -18,10 +18,9 @@
 package com.zto.fire.examples.spark.thread
 
 import com.zto.fire._
-import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.{DateFormatUtils, ThreadUtils}
-import com.zto.fire.core.anno.Kafka
-import com.zto.fire.spark.BaseSparkStreaming
+import com.zto.fire.core.anno.connector.Kafka
+import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.Streaming
 
 /**
@@ -34,7 +33,7 @@ import com.zto.fire.spark.anno.Streaming
 @Streaming(interval = 10, checkpoint = false, concurrent = 2)
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
 // 以上注解支持别名或url两种方式如：@Hive(thrift://hive:9083)，别名映射需配置到cluster.properties中
-object ThreadTest extends BaseSparkStreaming {
+object ThreadTest extends SparkStreaming {
 
   override def main(args: Array[String]): Unit = {
     // 第二个参数为true表示开启checkPoint机制
@@ -57,8 +56,6 @@ object ThreadTest extends BaseSparkStreaming {
     dstream.foreachRDD(rdd => {
       println("count--> " + rdd.count())
     })
-
-    this.fire.start
   }
 
   /**
@@ -73,7 +70,7 @@ object ThreadTest extends BaseSparkStreaming {
     */
   def showSchema: Unit = {
     println(s"${DateFormatUtils.formatCurrentDateTime()}--------------> atFixRate <----------------")
-    this.fire.sql("use tmp")
-    this.fire.sql("show tables").show(false)
+    sql("use tmp")
+    sql("show tables").show(false)
   }
 }

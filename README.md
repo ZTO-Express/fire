@@ -19,51 +19,49 @@ under the License.
 
 # Fire框架
 
-​		Fire框架是由**中通大数据**自主研发并开源的、专门用于进行**Spark**和**Flink**任务开发的大数据框架。该框架屏蔽技术细节，提供大量简易API帮助开发者更快的构建实时计算任务。同时Fire框架也内置了平台化的功能，用于与实时平台集成。基于Fire框架的任务在中通每天处理的数据量高达**几千亿以上**，覆盖了**Spark计算**（离线&实时）、**Flink计算**等众多计算场景。
+　　Fire框架是由**中通大数据**自主研发并开源的、专门用于进行**Spark**和**Flink**任务开发的大数据框架。该框架屏蔽技术细节，提供大量简易API帮助开发者更快的构建实时计算任务。同时Fire框架也内置了平台化的功能，用于与实时平台集成。基于Fire框架的任务在中通每天处理的数据量高达**几千亿以上**，覆盖了**Spark计算**（离线&实时）、**Flink计算**等众多计算场景。
 
 ## 一、就这么简单！
 
-### 1.1 flink开发示例
+### 1.1 Flink开发示例
 
 ```scala
 @Config(
   """
-    |# 支持Flink调优参数、Fire框架参数、用户自定义参数等
-    |state.checkpoints.num-retained=30
+    |state.checkpoints.num-retained=30 	# 支持任意Flink调优参数、Fire框架参数、用户自定义参数等
     |state.checkpoints.dir=hdfs:///user/flink/checkpoint
     |""")
 @Hive("thrift://localhost:9083") // 配置连接到指定的hive
-@Checkpoint(interval = 100, unaligned = true) // 100s做一次checkpoint，开启非对齐checkpoint
+@Streaming(interval = 100, unaligned = true) // 100s做一次checkpoint，开启非对齐checkpoint
 @Kafka(brokers = "localhost:9092", topics = "fire", groupId = "fire")
-object Demo extends BaseFlinkStreaming {
+object FlinkDemo extends FlinkStreaming {
 
-  override def process: Unit = {
-    val dstream = this.fire.createKafkaDirectStream()	// 使用api的方式消费kafka
-    this.fire.sql("""create table statement ...""")
-    this.fire.sql("""insert into statement ...""")
-    this.fire.start
+  @Process
+  def kafkaSource: Unit = {
+    val dstream = this.fire.createKafkaDirectStream() 	// 使用api的方式消费kafka
+    sql("""create table statement ...""")
+    sql("""insert into statement ...""")
   }
 }
 ```
 
-### 1.2 spark开发示例
+### 1.2 Spark开发示例
 
 ```scala
 @Config(
   """
-    |# 支持Spark调优参数、Fire框架参数、用户自定义参数等
-    |spark.shuffle.compress=true
+    |spark.shuffle.compress=true		# 支持任意Spark调优参数、Fire框架参数、用户自定义参数等
     |spark.ui.enabled=true
     |""")
 @Hive("thrift://localhost:9083") // 配置连接到指定的hive
 @Streaming(interval = 100, maxRatePerPartition = 100) // 100s一个Streaming batch，并限制消费速率
 @Kafka(brokers = "localhost:9092", topics = "fire", groupId = "fire")
-object Demo extends BaseSparkStreaming {
+object SparkDemo extends SparkStreaming {
 
-  override def process: Unit = {
-    val dstream = this.fire.createKafkaDirectStream()	// 使用api的方式消费kafka
-    this.fire.sql("""select * from xxx""").show()
-    this.fire.start
+  @Process
+  def kafkaSource: Unit = {
+    val dstream = this.fire.createKafkaDirectStream() 	// 使用api的方式消费kafka
+    sql("""select * from xxx""").show()
   }
 }
 ```
@@ -76,7 +74,7 @@ object Demo extends BaseSparkStreaming {
 
 ### 3.1 兼容主流版本
 
-​		fire框架适配了不同的spark与flink版本，支持spark2.x及以上所有版本，flink1.10及以上所有版本，支持基于scala2.11或scala2.12进行编译。
+　　fire框架适配了不同的spark与flink版本，支持spark2.x及以上所有版本，flink1.10及以上所有版本，支持基于scala2.11或scala2.12进行编译。
 
 ```shell
 # 可根据实际需要选择不同的引擎版本进行fire框架的构建
@@ -94,7 +92,7 @@ mvn clean install -DskipTests -Pspark-3.0.2 -Pflink-1.14.3 -Pscala-2.12
 
 ### **3.2 简单好用**
 
-​		fire框架高度封装，屏蔽大量技术细节，许多connector仅需一行代码即可完成主要功能。同时Fire框架统一了spark与flink两大引擎常用的api，使用统一的代码风格即可实现spark与flink的代码开发。
+　　Fire框架高度封装，屏蔽大量技术细节，许多connector仅需一行代码即可完成主要功能。同时Fire框架统一了spark与flink两大引擎常用的api，使用统一的代码风格即可实现spark与flink的代码开发。
 
 - **HBase API**
 
@@ -116,7 +114,7 @@ val df: DataFrame = this.fire.jdbcQueryDF(querySql, Seq(1, 2, 3), classOf[Studen
 
 ### **3.3 灵活的配置方式**
 
-​		支持基于接口、apollo、配置文件以及注解等多种方式配置，支持将spark&flink等**引擎参数**、**fire框架参数**以及**用户自定义参数**混合配置，支持运行时动态修改配置。几种常用配置方式如下（[配置手册](./docs/config.md)）：
+　　支持基于接口、apollo、配置文件以及注解等多种方式配置，支持将spark&flink等**引擎参数**、**fire框架参数**以及**用户自定义参数**混合配置，支持运行时动态修改配置。几种常用配置方式如下（[配置手册](./docs/config.md)）：
 
 1. **基于配置文件：** 创建类名同名的properties文件进行参数配置
 2. **基于接口配置：** fire框架提供了配置接口调用，通过接口获取所需的配置，可用于平台化的配置管理
@@ -139,7 +137,7 @@ val df: DataFrame = this.fire.jdbcQueryDF(querySql, Seq(1, 2, 3), classOf[Studen
 
 **配置获取：**
 
-​		fire框架封装了统一的配置获取api，基于该api，无论是spark还是flink，无论是在Driver | JobManager端还是在Executor | TaskManager端，都可以一行代码获取所需配置。这套配置获取api，无需再在flink的map等算子中复写open方法了，用起来十分方便。
+　　Fire框架封装了统一的配置获取api，基于该api，无论是spark还是flink，无论是在Driver | JobManager端还是在Executor | TaskManager端，都可以一行代码获取所需配置。这套配置获取api，无需再在flink的map等算子中复写open方法了，用起来十分方便。
 
 ```scala
 this.conf.getString("my.conf")
@@ -149,7 +147,7 @@ this.conf.getInt("state.checkpoints.num-retained")
 
 ### **3.4 多集群支持**
 
-​		Fire框架的配置支持N多集群，比如同一个任务中可以同时配置多个HBase、Kafka数据源，使用不同的数值后缀即可区分（**keyNum**）：
+　　Fire框架的配置支持N多集群，比如同一个任务中可以同时配置多个HBase、Kafka数据源，使用不同的数值后缀即可区分（**keyNum**）：
 
 ```scala
 // 假设基于注解配置HBase多集群如下：
@@ -163,37 +161,37 @@ this.fire.hbasePutDF(hTableName2, studentDF, classOf[Student], keyNum=2)	// keyN
 
 ### **3.5 常用connector支持**
 
-​		支持kafka、rocketmq、redis、HBase、Jdbc、clickhouse、Hive、hudi、tidb、adb等常见的connector。
+　　支持kafka、rocketmq、redis、HBase、Jdbc、clickhouse、Hive、hudi、tidb、adb等常见的connector。
 
-### **3.6 checkpoint热修改**
+### **3.6 [checkpoint热修改](./docs/highlight/checkpoint.md)**
 
-​		支持运行时动态调整checkpoint周期、超时时间、并行checkpoint等参数，避免任务重启时由于反压带来的checkpoint压力。
+　　支持运行时动态调整checkpoint周期、超时时间、并行checkpoint等参数，避免任务重启时由于反压带来的checkpoint压力。
 
-### **3.7 streaming热重启**
+### **3.7 [streaming热重启](./docs/highlight/spark-duration.md)**
 
-​		该功能是主要用于Spark Streaming任务，通过热重启技术，可以在不重启Spark Streaming的前提下，实现批次时间的热修改。比如在web端将某个任务的批次时间调整为10s，会立即生效。
+　　该功能是主要用于Spark Streaming任务，通过热重启技术，可以在不重启Spark Streaming的前提下，实现批次时间的热修改。比如在web端将某个任务的批次时间调整为10s，会立即生效。
 
 ### **3.8 配置热更新**
 
-​		用户仅需在web页面中更新指定的配置信息，就可以让实时任务接收到最新的配置并且立即生效。最典型的应用场景是进行Spark任务的某个算子partition数调整，比如当任务处理的数据量较大时，可以通过该功能将repartition的具体分区数调大，会立即生效。
+　　用户仅需在web页面中更新指定的配置信息，就可以让实时任务接收到最新的配置并且立即生效。最典型的应用场景是进行Spark任务的某个算子partition数调整，比如当任务处理的数据量较大时，可以通过该功能将repartition的具体分区数调大，会立即生效。
 
 ### **3.9 在线性能诊断**
 
-​		深度集成Arthas，可对运行中的任务动态进行性能诊断。fire为arthas诊断提供rest接口，可通过接口调用的方式选择为driver、jobmanager或executor、taskmanager动态开启与关闭arthas诊断线程，然后向统一的arthas tunnel服务注册，即可在网页端输入arthas命令进行性能诊断。
+　　深度集成Arthas，可对运行中的任务动态进行性能诊断。fire为arthas诊断提供rest接口，可通过接口调用的方式选择为driver、jobmanager或executor、taskmanager动态开启与关闭arthas诊断线程，然后向统一的arthas tunnel服务注册，即可在网页端输入arthas命令进行性能诊断。
 
 ![arthas-shell](docs/img/arthas-shell.png)
 
 ### **3.10 sql在线调试**
 
-​		fire框架对外暴露了restful接口，平台等系统可通过接口调用的方式将待执行的sql语句动态传递给fire，由fire将sql提交到对应的引擎，并将sql执行结果通过接口调用的方式返回，实现实时任务sql开发的在线调试，避免重复修改代码发布执行带来的时间成本。
+　　Fire框架对外暴露了restful接口，平台等系统可通过接口调用的方式将待执行的sql语句动态传递给fire，由fire将sql提交到对应的引擎，并将sql执行结果通过接口调用的方式返回，实现实时任务sql开发的在线调试，避免重复修改代码发布执行带来的时间成本。
 
 ### **3.11 实时血缘**
 
-​		fire框架支持运行时统计分析每个任务所使用到的数据源信息、库表信息、操作类型等，并将这些血缘信息通过接口的方式对外暴露。实时平台等web系统通过接口调用的方式即可获取到实时血缘信息。
+　　Fire框架支持运行时统计分析每个任务所使用到的数据源信息、库表信息、操作类型等，并将这些血缘信息通过接口的方式对外暴露。实时平台等web系统通过接口调用的方式即可获取到实时血缘信息。
 
 ### **3.12 定时调度**
 
-​		fire框架内部封装了quartz框架，实现通过Scheduled注解即可完成定时任务的注册。
+　　Fire框架内部封装了quartz框架，实现通过Scheduled注解即可完成定时任务的注册。
 
 ```scala
   /**
@@ -210,11 +208,11 @@ this.fire.hbasePutDF(hTableName2, studentDF, classOf[Student], keyNum=2)	// keyN
 
 ### **3.13 平台无缝集成**
 
-​		fire框架内置restful服务，并将许多功能通过接口的方式对外暴露，实时平台可以通过fire框架暴露的接口实现与每个实时任务的信息连接。
+　　Fire框架内置restful服务，并将许多功能通过接口的方式对外暴露，实时平台可以通过fire框架暴露的接口实现与每个实时任务的信息连接。
 
 ### **3.14 fire-shell**
 
-​		fire框架整合spark shell与flink shell，支持通过REPL方式去动态调试spark和flink任务，并且支持fire框架的所有API。fire框架将shell能力通过接口方式暴露给实时平台，如此一来就可以通过web页面去调试spark和flink任务了。
+　　Fire框架整合spark shell与flink shell，支持通过REPL方式去动态调试spark和flink任务，并且支持fire框架的所有API。fire框架将shell能力通过接口方式暴露给实时平台，如此一来就可以通过web页面去调试spark和flink任务了。
 
 ## *[四、升级日志](./docs/feature.md)*
 

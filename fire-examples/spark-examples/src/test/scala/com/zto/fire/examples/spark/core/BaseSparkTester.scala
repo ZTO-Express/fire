@@ -28,7 +28,7 @@ import org.junit.{After, Before}
  * @date 2022-05-11 10:47:57
  * @since 2.2.2
  */
-trait BaseSparkTester extends BaseSpark {
+trait SparkTester extends BaseSpark {
 
   /**
    * 初始化fire框架与spark相关的运行时上下文

@@ -26,7 +26,7 @@ import com.zto.fire.spark.listener.FireStreamingQueryListener
   * Structured Streaming通用父类
   * Created by ChengLong on 2019-03-11.
   */
-class BaseStructuredStreaming extends BaseSpark {
+trait BaseStructuredStreaming extends BaseSpark {
   override val jobType = JobType.SPARK_STRUCTURED_STREAMING
 
   /**

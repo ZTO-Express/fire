@@ -21,9 +21,7 @@ import com.zto.fire._
 import com.zto.fire.common.anno.Config
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.hbase.HBaseConnector
-import com.zto.fire.spark.BaseSparkCore
-import org.apache.hadoop.hbase.client.Scan
-import org.apache.hadoop.hbase.filter.{CompareFilter, RegexStringComparator, RowFilter}
+import com.zto.fire.spark.SparkCore
 import org.apache.spark.sql.{Encoders, Row}
 
 /**
@@ -42,7 +40,7 @@ import org.apache.spark.sql.{Encoders, Row}
     |spark.fire.hbase.scan.partitions   =       3
     |spark.fire.hbase.storage.level     =       DISK_ONLY
     |""")
-object HBaseHadoopTest extends BaseSparkCore {
+object HBaseHadoopTest extends SparkCore {
   private val tableName6 = "fire_test_6"
   private val tableName7 = "fire_test_7"
 
@@ -95,7 +93,7 @@ object HBaseHadoopTest extends BaseSparkCore {
     val studentRDD = this.fire.createRDD(Student.newStudentList(), 2)
     this.fire.createDataFrame(studentRDD, classOf[Student]).createOrReplaceTempView("student")
     // 指定rowKey构建的函数
-    this.fire.sql("select age,createTime,id,length,name,sex from student").hbaseHadoopPutDFRow(this.tableName7, buildRowKey)
+    sql("select age,createTime,id,length,name,sex from student").hbaseHadoopPutDFRow(this.tableName7, buildRowKey)
   }
 
   /**

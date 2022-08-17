@@ -125,4 +125,11 @@ private[fire] object FireKafkaConf {
     val brokerName = PropUtils.getString(this.KAFKA_BROKERS_NAME, "", keyNum)
     this.kafkaMap.getOrElse(brokerName, brokerName)
   }
+
+  /**
+   * 根据url或别名返回真实的url地址
+   */
+  def kafkaBrokers(url: String): String = {
+    this.kafkaMap.getOrElse(url, url)
+  }
 }

@@ -48,7 +48,7 @@ class FireILoop(in0: Option[BufferedReader], out: JPrintWriter)
   val initializationCommands: Seq[String] = Seq(
     "import org.apache.spark.SparkContext._",
     "import org.apache.spark.sql.functions._",
-    "import com.zto.fire.spark.BaseSparkCore",
+    "import com.zto.fire.spark.SparkCore",
     "import com.zto.fire._",
     "import com.zto.fire.spark.util.SparkSingletonFactory",
     "import com.zto.fire.shell.spark.Test",

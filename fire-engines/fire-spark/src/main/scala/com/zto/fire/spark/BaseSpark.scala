@@ -36,6 +36,8 @@ import org.apache.spark.sql.{SQLContext, SparkSession}
 import org.apache.spark.streaming.{StreamingContext, StreamingContextState}
 import org.apache.spark.{SparkConf, SparkContext}
 
+import scala.util.Try
+
 /**
  * Spark通用父类
  * Created by ChengLong on 2018-03-06.
@@ -167,7 +169,7 @@ trait BaseSpark extends SparkListener with BaseFire with Serializable {
     // this.initLogging(this.className)
     this.hiveContext = this._spark.sqlContext
     this.sqlContext = this.hiveContext
-    this.applicationId = SparkUtils.getApplicationId(this._spark)
+    this.applicationId = SparkUtils.getApplicationId
     this.webUI = SparkUtils.getWebUI(this._spark)
     this._conf = tmpConf
     this.deployConf
@@ -220,4 +222,23 @@ trait BaseSpark extends SparkListener with BaseFire with Serializable {
     val resourceId = SparkUtils.getExecutorId
     if (StringUtils.isBlank(resourceId) || "driver".equals(resourceId)) "driver" else s"container_${resourceId}"
   }
+
+  /**
+   * SQL语法校验
+   *
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  override def sqlValidate(sql: JString): Try[Unit] = SparkUtils.sqlValidate(sql)
+
+  /**
+   * SQL语法校验
+   * @param sql
+   * sql statement
+   * @return
+   * true：校验成功 false：校验失败
+   */
+  override def sqlLegal(sql: JString): Boolean = SparkUtils.sqlLegal(sql)
 }

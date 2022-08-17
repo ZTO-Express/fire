@@ -18,8 +18,8 @@
 package com.zto.fire.examples.spark.hive
 
 import com.zto.fire.common.anno.Config
-import com.zto.fire.core.anno.{Hive, Kafka}
-import com.zto.fire.spark.BaseSparkCore
+import com.zto.fire.core.anno.connector.{Hive, Kafka}
+import com.zto.fire.spark.SparkCore
 
 /**
  * 基于Fire进行Spark Streaming开发
@@ -33,7 +33,7 @@ import com.zto.fire.spark.BaseSparkCore
 @Hive("test")
 // 配置消费的kafka信息
 @Kafka(brokers = "bigdata_test", topics = "fire", groupId = "fire")
-object HiveMetadataTest extends BaseSparkCore {
+object HiveMetadataTest extends SparkCore {
   val sourceTable = "ods.mdb_md_dbs"
   val partitionTable = "dw.mdb_md_dbs_fire_orc"
   val multiPartitionTable = "tmp.mdb_md_dbs_fire_multi_partition_orc"
@@ -44,7 +44,7 @@ object HiveMetadataTest extends BaseSparkCore {
     // this.testMultiPartitionTable
     // this.testNoPartitionTable
 
-    this.fire.sql(
+    sql(
       s"""
         |INSERT INTO ${bucketTable}
         |SELECT * FROM VALUES(1,1,1)
@@ -55,19 +55,19 @@ object HiveMetadataTest extends BaseSparkCore {
    * 测试分区表更新hive元数据用例
    */
   def testMultiPartitionTable: Unit = {
-    this.fire.sql(
+    sql(
       s"""
          |insert into table ${multiPartitionTable} partition(ds, city) select *,'sh' as city from dw.mdb_md_dbs where ds='20211001' limit 100
          |""".stripMargin)
     (1 to 3).foreach(x => {
-      this.fire.sql(
+      sql(
         s"""
            |insert into table ${multiPartitionTable} partition(ds, city) select *,'sh' as city from dw.mdb_md_dbs where ds='20211001' limit 100
            |""".stripMargin)
     })
 
     (1 to 3).foreach(x => {
-      this.fire.sql(
+      sql(
         s"""
            |insert overwrite table ${multiPartitionTable} partition(ds, city) select *,'bj' as city from dw.mdb_md_dbs where ds='20211001' limit 100
            |""".stripMargin)
@@ -80,17 +80,17 @@ object HiveMetadataTest extends BaseSparkCore {
   def testNoPartitionTable: Unit = {
     (1 to 3).foreach(x => {
       // orc非分区表
-      this.fire.sql(
+      sql(
         s"""
           |insert into table dw.mdb_md_dbs_fire_orc_nopart select * from ${sourceTable} where ds='20190619' limit 10
           |""".stripMargin)
-      this.fire.sql(
+      sql(
         """
           |select count(1) from dw.mdb_md_dbs_fire_orc_nopart
           |""".stripMargin).show()
 
       // text非分区表
-      this.fire.sql(
+      sql(
         """
           |insert into table tmp.mdb_md_dbs_fire_txt partition(ds) select * from tmp.mdb_md_dbs_fire where ds='20190620' limit 10
           |""".stripMargin)
@@ -102,34 +102,34 @@ object HiveMetadataTest extends BaseSparkCore {
    */
   def testSinglePartitionTable: Unit = {
     (1 to 3).foreach(_ => {
-      this.fire.sql(
+      sql(
         """
           |insert into table tmp.mdb_md_dbs_fire_txt partition(ds) select * from tmp.mdb_md_dbs_fire where ds='20190619' limit 10
           |""".stripMargin)
     })
 
     // orc分区表
-    this.fire.sql(s"""drop table if exists ${partitionTable}2""")
-    this.fire.sql(
+    sql(s"""drop table if exists ${partitionTable}2""")
+    sql(
       s"""
          |create table if not exists ${partitionTable}2 like ${partitionTable}
          |""".stripMargin)
-    this.fire.sql(
+    sql(
       s"""
          |insert into table ${partitionTable}2 partition(ds) select * from dw.mdb_md_dbs where ds='20211001' limit 100
          |""".stripMargin)
     var partition = 20211002
     (1 to 3).foreach(x => {
-      this.fire.sql(s"""alter table ${partitionTable}2 PARTITION (ds='20211001') RENAME TO PARTITION (ds='${partition}')""")
+      sql(s"""alter table ${partitionTable}2 PARTITION (ds='20211001') RENAME TO PARTITION (ds='${partition}')""")
       partition = partition + 1
-      this.fire.sql(
+      sql(
         s"""
            |insert into table ${partitionTable}2 partition(ds) select * from dw.mdb_md_dbs where ds='20211001' limit 100
            |""".stripMargin)
     })
 
     (1 to 3).foreach(x => {
-      this.fire.sql(
+      sql(
         s"""
            |insert into table ${partitionTable}2 partition(ds) select * from ${partitionTable}2
            |""".stripMargin)

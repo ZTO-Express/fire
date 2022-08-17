@@ -1,7 +1,7 @@
 package com.zto.fire.shell.spark
 
 import com.zto.fire.common.anno.Config
-import com.zto.fire.spark.{BaseSparkCore, BaseSparkStreaming}
+import com.zto.fire.spark.SparkStreaming
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SparkSession
 
@@ -13,7 +13,7 @@ import org.apache.spark.sql.SparkSession
         |kafka.group.id=fire
         |spark.streaming.stopGracefullyOnShutdown=false
         |""")
-object Test extends BaseSparkStreaming {
+object Test extends SparkStreaming {
 
       def getFire: SparkSession = this.fire
 

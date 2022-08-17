@@ -54,7 +54,7 @@ import static org.apache.rocketmq.flink.RocketMQUtils.getLong;
  * checkpoints are enabled. Otherwise, the source doesn't provide any reliability guarantees.
  */
 public class RocketMQSourceWithTag<OUT> extends RichParallelSourceFunction<OUT>
-    implements CheckpointedFunction, CheckpointListener, ResultTypeQueryable<OUT> {
+        implements CheckpointedFunction, CheckpointListener, ResultTypeQueryable<OUT> {
 
     private static final long serialVersionUID = 1L;
 
@@ -152,7 +152,7 @@ public class RocketMQSourceWithTag<OUT> extends RichParallelSourceFunction<OUT>
                 switch (pullResult.getPullStatus()) {
                     case FOUND:
                         List<MessageExt> messages = pullResult.getMsgFoundList();
-                        if (pullBatchSize != messages.size()) LOG.warn("Pull from rocketmq records is: {}", messages.size());
+                        if (pullBatchSize != messages.size()) LOG.debug("Pull from rocketmq records is: {}", messages.size());
                         for (MessageExt msg : messages) {
                             byte[] tag1 = msg.getTags() != null ? msg.getTags().getBytes(StandardCharsets.UTF_8) : null;
                             byte[] key = msg.getKeys() != null ? msg.getKeys().getBytes(StandardCharsets.UTF_8) : null;
@@ -215,7 +215,7 @@ public class RocketMQSourceWithTag<OUT> extends RichParallelSourceFunction<OUT>
             offset = restoredOffsets.get(mq);
         }
         if (offset == null) {
-            LOG.warn("从状态中获取Offset列表为空，将从server端获取offset列表");
+            LOG.debug("从状态中获取Offset列表为空，将从server端获取offset列表");
             offset = consumer.fetchConsumeOffset(mq, true);
             if (offset < 0) {
                 String initialOffset = props.getProperty(RocketMQConfig.CONSUMER_OFFSET_RESET_TO, CONSUMER_OFFSET_LATEST);
