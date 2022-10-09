@@ -17,6 +17,7 @@
 
 package com.zto.fire.common.bean.analysis;
 
+import com.zto.fire.common.bean.FireTask;
 import com.zto.fire.common.util.*;
 
 /**
@@ -25,12 +26,7 @@ import com.zto.fire.common.util.*;
  * @author ChengLong 2022-08-01 09:28:04
  * @since 2.3.2
  */
-public class ExceptionMsg {
-
-    /**
-     * 触发异常的执行引擎：spark/flink
-     */
-    private String engine;
+public class ExceptionMsg extends FireTask {
 
     /**
      * 异常堆栈类名
@@ -52,32 +48,12 @@ public class ExceptionMsg {
      */
     private String sql;
 
-    /**
-     * 异常所在jvm进程发送的主机ip
-     */
-    private String ip;
-
-    /**
-     * 异常所属jvm进程所在的主机名称
-     */
-    private String hostname;
-
-    /**
-     * 进程的pid
-     */
-    private String pid;
-
-    /**
-     * 任务的主类名：package+类名
-     */
-    private String mainClass;
-
-    /**
-     * 异常发生的时间戳
-     */
-    private String timestamp;
+    public ExceptionMsg() {
+        super();
+    }
 
     public ExceptionMsg(String stackTitle, String stackTrace, String exceptionClass, String sql) {
+        super();
         this.stackTitle = stackTitle;
         this.stackTrace = stackTrace;
         this.exceptionClass = exceptionClass;

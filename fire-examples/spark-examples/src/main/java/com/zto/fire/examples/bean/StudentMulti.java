@@ -167,8 +167,12 @@ public class StudentMulti extends HBaseBaseBean<StudentMulti> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof StudentMulti)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof StudentMulti)) {
+            return false;
+        }
         StudentMulti StudentMulti = (StudentMulti) o;
         return Objects.equals(id, StudentMulti.id) &&
                 Objects.equals(name, StudentMulti.name) &&

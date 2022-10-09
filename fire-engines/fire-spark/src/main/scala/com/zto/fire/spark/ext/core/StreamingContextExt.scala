@@ -18,8 +18,9 @@
 package com.zto.fire.spark.ext.core
 
 import com.zto.fire._
+import com.zto.fire.common.enu.{Operation => FOperation}
 import com.zto.fire.common.conf.{FireKafkaConf, FireRocketMQConf}
-import com.zto.fire.common.util.{DatasourceManager, Logging}
+import com.zto.fire.common.util.{LineageManager, Logging}
 import com.zto.fire.spark.util.{RocketMQUtils, SparkUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.kafka.clients.consumer.ConsumerRecord
@@ -66,7 +67,7 @@ class StreamingContextExt(ssc: StreamingContext) extends Logging {
     require(confKafkaParams.contains("group.id"), s"kafka group.id不能为空，请在配置文件中指定：spark.kafka.group.id$keyNum")
 
     // kafka消费信息埋点
-    DatasourceManager.addMQDatasource("kafka", confKafkaParams("bootstrap.servers").toString, finalKafkaTopic.mkString("", ", ", ""), confKafkaParams("group.id").toString)
+    LineageManager.addMQDatasource("kafka", confKafkaParams("bootstrap.servers").toString, finalKafkaTopic.mkString("", ", ", ""), confKafkaParams("group.id").toString, FOperation.SOURCE)
 
     KafkaUtils.createDirectStream[String, String](
       ssc, PreferConsistent, Subscribe[String, String](finalKafkaTopic, confKafkaParams))
@@ -123,7 +124,7 @@ class StreamingContextExt(ssc: StreamingContext) extends Logging {
     if (StringUtils.isNotBlank(finalInstanceId)) finalRocketParam.put("consumer.instance", finalInstanceId)
 
     // 消费rocketmq埋点信息
-    DatasourceManager.addMQDatasource("rocketmq", finalRocketParam(RocketMQConfig.NAME_SERVER_ADDR), finalTopics, finalGroupId)
+    LineageManager.addMQDatasource("rocketmq", finalRocketParam(RocketMQConfig.NAME_SERVER_ADDR), finalTopics, finalGroupId, FOperation.SOURCE)
 
     val inputDStream = RocketMqUtils.createMQPullStream(this.ssc,
       finalGroupId,

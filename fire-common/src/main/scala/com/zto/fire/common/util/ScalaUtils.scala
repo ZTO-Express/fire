@@ -42,4 +42,11 @@ trait ScalaUtils {
     if (paramType == classOf[Nothing$]) throw new IllegalArgumentException("不合法的方法调用，请在方法调用时指定泛型！")
     paramType
   }
+
+  /**
+   * 用于判断给定的类是否为object
+   * @return
+   * true：对象或半生对象 false：class
+   */
+  def isObject(clazz: Class[_]): Boolean = clazz.getName.endsWith("$")
 }

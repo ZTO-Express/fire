@@ -24,7 +24,7 @@ import com.zto.fire.common.util.{ExceptionBus, Logging}
 import com.zto.fire.spark.BaseSpark
 import com.zto.fire.spark.acc.AccumulatorManager
 import com.zto.fire.spark.conf.FireSparkConf
-import com.zto.fire.spark.sync.SyncSparkEngineConf
+import com.zto.fire.spark.sync.SyncSparkEngine
 import org.apache.spark.SparkException
 import org.apache.spark.scheduler._
 
@@ -188,7 +188,7 @@ private[fire] class FireSparkListener(baseSpark: BaseSpark) extends SparkListene
   private[fire] def registerAcc: Unit = {
     if (this.needRegister.compareAndSet(true, false)) {
       AccumulatorManager.registerAccumulators(this.baseSpark.sc)
-      SyncSparkEngineConf.syncDynamicConf(this.baseSpark.sc, this.baseSpark._conf)
+      SyncSparkEngine.syncDynamicConf(this.baseSpark.sc, this.baseSpark._conf)
       this.logger.info(s"完成系统累加器注册.", this.module)
     }
   }

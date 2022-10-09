@@ -27,6 +27,7 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.spark.SparkEnv
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.CatalystTypeConverters
+import org.apache.spark.sql.catalyst.analysis.SimpleAnalyzer
 import org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils
 import org.apache.spark.sql.jdbc.JdbcDialects
 import org.apache.spark.sql.types._
@@ -52,7 +53,8 @@ object SparkUtils extends Logging {
    */
   def sqlValidate(sql: String): Try[Unit] = {
     val retVal = Try {
-      val t = this.spark.sessionState.sqlParser.parseExpression(sql)
+      val logicalPlan = this.spark.sessionState.sqlParser.parsePlan(sql)
+      SimpleAnalyzer.checkAnalysis(logicalPlan)
     }
 
     if (retVal.isFailure) {
@@ -476,6 +478,7 @@ object SparkUtils extends Logging {
    * 获取spark任务运行模式
    */
   def deployMode: String = {
+    if (this.isLocal) return "local"
     SparkSingletonFactory.getSparkSession.conf.get("spark.submit.deployMode")
   }
 

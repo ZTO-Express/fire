@@ -44,11 +44,15 @@ public class ReflectionUtils {
     }
 
     public static void setAccessible(Field field) {
-        if (field != null) field.setAccessible(true);
+        if (field != null) {
+            field.setAccessible(true);
+        }
     }
 
     public static void setAccessible(Method method) {
-        if (method != null) method.setAccessible(true);
+        if (method != null) {
+            method.setAccessible(true);
+        }
     }
 
     /**
@@ -203,7 +207,9 @@ public class ReflectionUtils {
      * 获取指定field的类型
      */
     public static Class<?> getFieldType(Class<?> clazz, String fieldName) {
-        if (clazz == null || StringUtils.isBlank(fieldName)) return null;
+        if (clazz == null || StringUtils.isBlank(fieldName)) {
+            return null;
+        }
 
         try {
             Map<String, Field> fieldMap = getAllFields(clazz);
@@ -322,7 +328,9 @@ public class ReflectionUtils {
      * 方法反射调用传参
      */
     public static void invokeAnnoMethod(Object target, Class<? extends Annotation> annotationClass, Object ...args) throws Exception {
-        if (target == null || annotationClass == null) return;
+        if (target == null || annotationClass == null) {
+            return;
+        }
 
         try {
             for (Method method : getAllMethods(target.getClass()).values()) {
@@ -344,7 +352,9 @@ public class ReflectionUtils {
      * 注解类型列表
      */
     public static void invokeStepAnnoMethod(Object target, Class<? extends Annotation> ... annotations) throws Exception {
-        if (target == null || annotations == null || annotations.length == 0) return;
+        if (target == null || annotations == null || annotations.length == 0) {
+            return;
+        }
         long successCount = 0, failedCount = 0, begin = System.currentTimeMillis();
 
         try {
@@ -356,7 +366,9 @@ public class ReflectionUtils {
                         Annotation anno = method.getAnnotation(annotationClass);
                         Object retVal = getAnnoFieldValue(anno, "value");
                         String desc = retVal == null ? "" : retVal.toString();
-                        if (StringUtils.isBlank(desc)) desc = "开始执行";
+                        if (StringUtils.isBlank(desc)) {
+                            desc = "开始执行";
+                        }
                         String step = annotationClass.getSimpleName();
                         logger.warn(FirePS1Conf.GREEN() + " " + step + ". " + desc + " " + FirePS1Conf.DEFAULT());
 
@@ -370,7 +382,9 @@ public class ReflectionUtils {
                             logger.error(FirePS1Conf.RED() + " " + step + ". 执行报错！耗时："+ (readable(end - start, UnitFormatUtils.TimeUnitEnum.MS))  + " " + FirePS1Conf.DEFAULT() + "\n", e);
                             boolean isSkip = Boolean.parseBoolean(skipError.toString());
                             failedCount += 1;
-                            if (!isSkip) throw e;
+                            if (!isSkip) {
+                                throw e;
+                            }
                         }
                         long end = System.currentTimeMillis();
                         logger.warn(FirePS1Conf.GREEN() + " " + step + ". 执行耗时：" + (readable(end - start, UnitFormatUtils.TimeUnitEnum.MS)) + " " + FirePS1Conf.DEFAULT() + "\n");
@@ -404,5 +418,12 @@ public class ReflectionUtils {
             }
         }
         return retVal;
+    }
+
+    /**
+     * 获取指定类所在的jar包
+     */
+    public static String getClassInJar(Class clazz) {
+        return clazz.getProtectionDomain().getCodeSource().getLocation().getFile();
     }
 }

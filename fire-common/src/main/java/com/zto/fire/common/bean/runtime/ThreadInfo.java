@@ -28,17 +28,35 @@ import java.lang.management.ManagementFactory;
  */
 public class ThreadInfo implements Serializable {
     private static final long serialVersionUID = 7950498675819426939L;
-    // 当前线程的总 CPU 时间（以毫微秒为单位）
+
+    /**
+     * 当前线程的总 CPU 时间（以毫微秒为单位）
+     */
     private long cpuTime;
-    // 当前线程的总用户cpu时间（以毫微秒为单位）
+
+    /**
+     * 当前线程的总用户cpu时间（以毫微秒为单位）
+     */
     private long userTime;
-    // 当前守护线程的总数
+
+    /**
+     * 当前守护线程的总数
+     */
     private int deamonCount;
-    // 返回自从 Java 虚拟机启动或峰值重置以来峰值活动线程计数
+
+    /**
+     * 返回自从 Java 虚拟机启动或峰值重置以来峰值活动线程计数
+     */
     private int peakCount;
-    // 返回当前线程的总数，包括守护线程和非守护线程
+
+    /**
+     * 返回当前线程的总数，包括守护线程和非守护线程
+     */
     private int totalCount;
-    // 返回自从 Java 虚拟机启动以来创建和启动的线程总数目
+
+    /**
+     * 返回自从 Java 虚拟机启动以来创建和启动的线程总数目
+     */
     private long totalStartedCount;
 
     private ThreadInfo() {}

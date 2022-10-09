@@ -25,7 +25,9 @@ package com.zto.fire.common.enu;
 public enum JobType {
     SPARK_CORE("spark_core"), SPARK_STREAMING("spark_streaming"), SPARK_STRUCTURED_STREAMING("spark_structured_streaming"), SPARK_SQL("spark_sql"), FLINK_STREAMING("flink_streaming"), FLINK_BATCH("flink_batch"), UNDEFINED("undefined");
 
-    // 任务类型
+    /**
+     * 任务类型
+     */
     private String jobTypeDesc;
 
     JobType(String jobType) {

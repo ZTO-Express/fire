@@ -76,7 +76,7 @@ private[fire] object ConfigurationCenterManager extends Serializable with Loggin
       this.logger.error("配置中心注册接口不可用导致任务发布失败。如仍需紧急发布，请确保任务配置与配置中心保存一直，并在common.properties中添加以下参数：fire.config_center.enable=false")
       System.exit(-1)
     } else {
-      this.logger.info(s"成功获取配置中心配置信息：$json")
+      if (FireFrameworkConf.fireConfShow) this.logger.info(s"成功获取配置中心配置信息：$json")
       val param = JSONUtils.parseObject[ConfigurationParam](json)
       if (noEmpty(param, param.getCode, param.getContent) && param.getCode == 200) {
         this.configCenterProperties.putAll(param.getContent)

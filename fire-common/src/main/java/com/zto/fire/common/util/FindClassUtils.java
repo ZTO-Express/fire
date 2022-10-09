@@ -147,7 +147,9 @@ public class FindClassUtils {
             logger.error("未在jar包中找到相关文件", e);
         } finally {
             try {
-                if (jarFile != null) jarFile.close();
+                if (jarFile != null) {
+                    jarFile.close();
+                }
             } catch (Exception e) {
                 logger.error("关闭jarFile对象失败");
             }

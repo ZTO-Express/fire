@@ -28,15 +28,30 @@ import java.util.List;
  * @author ChengLong 2019年9月30日 13:33:35
  */
 public class UsbInfo {
-    // usb 设备名称
+
+    /**
+     * usb 设备名称
+     */
     private String name;
-    // usb设备id
+
+    /**
+     * usb设备id
+     */
     private String productId;
-    // usb设备制造商
+
+    /**
+     * usb设备制造商
+     */
     private String vendor;
-    // usb设备制造商id
+
+    /**
+     * usb设备制造商id
+     */
     private String vendorId;
-    // usb设备序列号
+
+    /**
+     * usb设备序列号
+     */
     private String serialNumber;
 
     public String getName() {

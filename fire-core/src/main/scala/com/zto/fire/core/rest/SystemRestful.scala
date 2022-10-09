@@ -26,6 +26,7 @@ import com.zto.fire.common.util._
 import com.zto.fire.core.BaseFire
 import com.zto.fire.core.bean.ArthasParam
 import com.zto.fire.core.plugin.ArthasDynamicLauncher
+import com.zto.fire.core.sync.SyncEngineConfHelper
 import com.zto.fire.predef.noEmpty
 import org.apache.commons.httpclient.Header
 import org.slf4j.{Logger, LoggerFactory}
@@ -55,15 +56,23 @@ protected[fire] abstract class SystemRestful(engine: BaseFire) {
    */
   @Rest("/system/datasource")
   protected def datasource(request: Request, response: Response): AnyRef = {
+    this.lineage(request, response)
+  }
+
+  /**
+   * 获取当前任务所使用到的实时血缘信息
+   */
+  @Rest("/system/lineage")
+  protected def lineage(request: Request, response: Response): AnyRef = {
     try {
-      this.logger.info(s"Ip address ${request.ip()} request /system/datasource")
-      val dataSource = JSONUtils.toJSONString(DatasourceManager.manager.datasourceMap)
-      this.logger.info(s"[DataSource] 获取数据源列表成功：counter=$dataSource")
-      ResultMsg.buildSuccess(dataSource, "获取数据源列表成功")
+      this.logger.info(s"Ip address ${request.ip()} request /system/lineage")
+      val lineage = JSONUtils.toJSONString(SyncEngineConfHelper.syncLineage)
+      this.logger.info(s"[lineage] 获取数据源列表成功：lineage=$lineage")
+      ResultMsg.buildSuccess(lineage, "获取数据源列表成功")
     } catch {
       case e: Exception => {
-        this.logger.error(s"[log] 获取数据源列表失败", e)
-        ResultMsg.buildError("获取数据源列表失败", ErrorCode.ERROR)
+        this.logger.error(s"[lineage] 获取实时血缘信息失败", e)
+        ResultMsg.buildError("获取实时血缘信息失败", ErrorCode.ERROR)
       }
     }
   }

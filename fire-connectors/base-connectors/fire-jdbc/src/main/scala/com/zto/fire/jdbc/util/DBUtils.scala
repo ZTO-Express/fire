@@ -187,7 +187,7 @@ object DBUtils extends Logging {
 
     // 尝试从url中的端口号解析，对结果进行校正，因为有些数据库使用的是mysql驱动，可以通过url中的端口号区分
     if (StringUtils.isNotBlank(url)) {
-      FireFrameworkConf.buriedPointDatasourceMap.foreach(kv => {
+      FireFrameworkConf.lineageDatasourceMap.foreach(kv => {
         if (url.contains(kv._2)) dbType = kv._1.toUpperCase
       })
     }

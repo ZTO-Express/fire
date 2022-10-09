@@ -19,18 +19,18 @@ package com.zto.fire.hbase
 
 import com.google.common.collect.Maps
 import com.zto.fire.common.anno.{FieldName, Internal}
-import com.zto.fire.common.enu.ThreadPoolType
-import com.zto.fire.common.util.{DatasourceManager, _}
+import com.zto.fire.common.enu.{Operation => FOperation}
+import com.zto.fire.common.util._
 import com.zto.fire.core.connector.{ConnectorFactory, FireConnector}
 import com.zto.fire.hbase.anno.HConfig
 import com.zto.fire.hbase.bean.{HBaseBaseBean, MultiVersionsBean}
 import com.zto.fire.hbase.conf.FireHBaseConf
-import com.zto.fire.hbase.conf.FireHBaseConf.{familyName, _}
+import com.zto.fire.hbase.conf.FireHBaseConf._
 import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase._
-import org.apache.hadoop.hbase.client.{Durability, _}
+import org.apache.hadoop.hbase.client._
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
 import org.apache.hadoop.hbase.io.compress.Compression
 import org.apache.hadoop.hbase.util.Bytes
@@ -90,7 +90,7 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
       this.insert(tableName, putList: _*)
     } {
       this.closeTable(table)
-    }(this.logger, catchLog = s"HBase insert ${hbaseCluster(keyNum)}.${tableName}执行失败, 总计${beans.size}条", finallyCatchLog = "close HBase table失败")
+    }(this.logger, catchLog = s"HBase insert ${hbaseClusterUrl(keyNum)}.${tableName}执行失败, 总计${beans.size}条", finallyCatchLog = "close HBase table失败")
   }
 
   /**
@@ -106,12 +106,12 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
     tryFinallyWithReturn {
       table = this.getTable(tableName)
       table.put(puts)
-      DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
-      this.logger.info(s"HBase insert ${hbaseCluster(keyNum)}.${tableName}执行成功, 总计${puts.size}条")
+      LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.INSERT)
+      this.logger.info(s"HBase insert ${hbaseClusterUrl(keyNum)}.${tableName}执行成功, 总计${puts.size}条")
     } {
       this.closeTable(table)
     }(this.logger, "HBase insert",
-      s"HBase insert ${hbaseCluster(keyNum)}.${tableName}执行失败, 总计${puts.size}条",
+      s"HBase insert ${hbaseClusterUrl(keyNum)}.${tableName}执行失败, 总计${puts.size}条",
       "close HBase table失败")
   }
 
@@ -142,7 +142,7 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
       this.getMaxVersions[T](gets: _*)
       val resultList = this.getResult(tableName, gets: _*)
       if (this.getMultiVersion[T]) this.hbaseMultiRow2Bean[T](resultList, clazz) else this.hbaseRow2Bean(resultList, clazz)
-    }(this.logger, catchLog = s"批量 get ${hbaseCluster(keyNum)}.${tableName}执行失败")
+    }(this.logger, catchLog = s"批量 get ${hbaseClusterUrl(keyNum)}.${tableName}执行失败")
   }
 
   /**
@@ -159,15 +159,15 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
     var table: Table = null
     val list = ListBuffer[Result]()
     tryFinallyWithReturn {
-      DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName, sink = false)
+      LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.GET)
       table = this.getTable(tableName)
       list ++= table.get(getList)
-      this.logger.info(s"HBase 批量get ${hbaseCluster(keyNum)}.${tableName}执行成功, 总计${list.size}条")
+      this.logger.info(s"HBase 批量get ${hbaseClusterUrl(keyNum)}.${tableName}执行成功, 总计${list.size}条")
       list
     } {
       this.closeTable(table)
     }(this.logger, "HBase get",
-      s"get ${hbaseCluster(keyNum)}.${tableName}执行失败", "close HBase table对象失败.")
+      s"get ${hbaseClusterUrl(keyNum)}.${tableName}执行失败", "close HBase table对象失败.")
   }
 
   /**
@@ -182,7 +182,7 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
     val getList = for (rowKey <- rowKeyList) yield HBaseConnector.buildGet(rowKey)
     val starTime = currentTime
     val resultList = this.getResult(tableName, getList: _*)
-    logger.info(s"HBase 批量get ${hbaseCluster(keyNum)}.${tableName}执行成功, 总计${resultList.size}条, 耗时：${elapsed(starTime)}")
+    logger.info(s"HBase 批量get ${hbaseClusterUrl(keyNum)}.${tableName}执行成功, 总计${resultList.size}条, 耗时：${elapsed(starTime)}")
     resultList
   }
 
@@ -195,19 +195,19 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
    * @return 指定类型的List
    */
   def scanResultScanner(tableName: String, scan: Scan): ResultScanner = {
-    requireNonEmpty(tableName, scan)(s"参数不合法，scan ${hbaseCluster(keyNum)}.${tableName}失败.")
+    requireNonEmpty(tableName, scan)(s"参数不合法，scan ${hbaseClusterUrl(keyNum)}.${tableName}失败.")
 
     var table: Table = null
     var rsScanner: ResultScanner = null
     try {
       table = this.getTable(tableName)
-      DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName, sink = false)
+      LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.SCAN)
       rsScanner = table.getScanner(scan)
     } catch {
       case e: Exception => {
         // 当执行scan失败时，向上抛异常之前，避免ResultScanner对象因异常无法得到有效的关闭
         // 因此在发生异常时会尝试关闭ResultScanner对象
-        logger.error(s"执行scan ${hbaseCluster(keyNum)}.${tableName}失败", e)
+        logger.error(s"执行scan ${hbaseClusterUrl(keyNum)}.${tableName}失败", e)
         try {
           this.closeResultScanner(rsScanner)
         } finally {
@@ -260,7 +260,7 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
    * @return 指定类型的List
    */
   def scan[T <: HBaseBaseBean[T] : ClassTag](tableName: String, clazz: Class[T], scan: Scan): ListBuffer[T] = {
-    requireNonEmpty(tableName, clazz, scan)(s"参数不合法，scan ${hbaseCluster(keyNum)}.${tableName}失败.")
+    requireNonEmpty(tableName, clazz, scan)(s"参数不合法，scan ${hbaseClusterUrl(keyNum)}.${tableName}失败.")
 
     val list = ListBuffer[T]()
     var rsScanner: ResultScanner = null
@@ -278,12 +278,12 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
           }
         })
       }
-      this.logger.info(s"HBase scan ${hbaseCluster(keyNum)}.${tableName}执行成功, 总计${list.size}条")
+      this.logger.info(s"HBase scan ${hbaseClusterUrl(keyNum)}.${tableName}执行成功, 总计${list.size}条")
       list
     } {
       this.closeResultScanner(rsScanner)
     }(this.logger, "HBase scan",
-      s"scan ${hbaseCluster(keyNum)}.${tableName}执行失败",
+      s"scan ${hbaseClusterUrl(keyNum)}.${tableName}执行失败",
       "关闭HBase table对象或ResultScanner失败")
   }
 
@@ -301,7 +301,7 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
   def initConnection: Connection = {
     tryWithReturn {
       ConnectionFactory.createConnection(this.getConfiguration)
-    }(logger, s"成功创建HBase ${hbaseCluster(keyNum)}集群connection.", s"获取HBase ${hbaseCluster(keyNum)}集群connection失败.")
+    }(logger, s"成功创建HBase ${hbaseClusterUrl(keyNum)}集群connection.", s"获取HBase ${hbaseClusterUrl(keyNum)}集群connection失败.")
   }
 
   /**
@@ -723,14 +723,14 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
           tableDesc.addFamily(desc)
         }
         admin.createTable(tableDesc)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.CREATE_TABLE)
         // 如果开启表缓存，则更新缓存信息
         if (this.tableExistsCacheEnable && this.tableExists(tableName)) this.cacheTableExistsMap.update(tableName, true)
       }
     } {
       this.closeAdmin(admin)
-    }(logger, s"HBase createTable ${hbaseCluster(keyNum)}.${tableName}执行成功",
-      s"创建HBase表${hbaseCluster(keyNum)}.${tableName}失败.", closeAdminError)
+    }(logger, s"HBase createTable ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
+      s"创建HBase表${hbaseClusterUrl(keyNum)}.${tableName}失败.", closeAdminError)
   }
 
   /**
@@ -749,12 +749,12 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
         admin.deleteTable(tbName)
         // 如果开启表缓存，则更新缓存信息
         if (this.tableExistsCacheEnable && !this.tableExists(tableName)) this.cacheTableExistsMap.update(tableName, false)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.DROP_TABLE)
       }
     } {
       this.closeAdmin(admin)
-    }(this.logger, s"HBase createTable ${hbaseCluster(keyNum)}.${tableName}执行成功",
-      s"drop ${hbaseCluster(keyNum)}.${tableName}表操作失败", closeAdminError)
+    }(this.logger, s"HBase createTable ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
+      s"drop ${hbaseClusterUrl(keyNum)}.${tableName}表操作失败", closeAdminError)
   }
 
   /**
@@ -770,12 +770,12 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
       val tbName = TableName.valueOf(tableName)
       if (admin.tableExists(tbName) && !admin.isTableEnabled(tbName)) {
         admin.enableTable(tbName)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.ENABLE_TABLE)
       }
     } {
       this.closeAdmin(admin)
-    }(this.logger, s"HBase enableTable ${hbaseCluster(keyNum)}.${tableName}执行成功",
-      s"enable ${hbaseCluster(keyNum)}.${tableName}表失败", closeAdminError)
+    }(this.logger, s"HBase enableTable ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
+      s"enable ${hbaseClusterUrl(keyNum)}.${tableName}表失败", closeAdminError)
   }
 
   /**
@@ -791,12 +791,12 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
       val tbName = TableName.valueOf(tableName)
       if (admin.tableExists(tbName) && admin.isTableEnabled(tbName)) {
         admin.disableTable(tbName)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.DISABLE_TABLE)
       }
     } {
       this.closeAdmin(admin)
-    }(this.logger, s"HBase disableTable ${hbaseCluster(keyNum)}.${tableName}执行成功",
-      s"disable ${hbaseCluster(keyNum)}.${tableName}表失败", closeAdminError)
+    }(this.logger, s"HBase disableTable ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
+      s"disable ${hbaseClusterUrl(keyNum)}.${tableName}表失败", closeAdminError)
   }
 
   /**
@@ -814,12 +814,12 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
       if (admin.tableExists(tbName)) {
         this.disableTable(tableName)
         admin.truncateTable(tbName, preserveSplits)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.TRUNCATE)
       }
     } {
       this.closeAdmin(admin)
-    }(this.logger, s"HBase truncateTable ${hbaseCluster(keyNum)}.${tableName}执行成功",
-      s"truncate ${hbaseCluster(keyNum)}.${tableName}表失败", closeAdminError)
+    }(this.logger, s"HBase truncateTable ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
+      s"truncate ${hbaseClusterUrl(keyNum)}.${tableName}表失败", closeAdminError)
   }
 
   /**
@@ -862,7 +862,7 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
     tryWithReturn {
       require(this.isExists(tableName), s"表${tableName}不存在，请检查")
       this.getConnection.getTable(TableName.valueOf(tableName))
-    }(logger, catchLog = s"HBase getTable操作失败. ${hbaseCluster(keyNum)}.${tableName}")
+    }(logger, catchLog = s"HBase getTable操作失败. ${hbaseClusterUrl(keyNum)}.${tableName}")
   }
 
   /**
@@ -897,11 +897,11 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
     tryFinallyWithReturn {
       admin = this.getConnection.getAdmin
       val isExists = admin.tableExists(TableName.valueOf(tableName))
-      this.logger.debug(s"HBase tableExists ${hbaseCluster(keyNum)}.${tableName}获取成功")
+      this.logger.debug(s"HBase tableExists ${hbaseClusterUrl(keyNum)}.${tableName}获取成功")
       isExists
     } {
       closeAdmin(admin)
-    }(logger, catchLog = s"判断HBase表${hbaseCluster(keyNum)}.${tableName}是否存在失败")
+    }(logger, catchLog = s"判断HBase表${hbaseClusterUrl(keyNum)}.${tableName}是否存在失败")
   }
 
   /**
@@ -922,10 +922,10 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
         })
 
         table.delete(deletes)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.DELETE)
       } {
         this.closeTable(table)
-      }(this.logger, s"HBase deleteRows ${hbaseCluster(keyNum)}.${tableName}执行成功",
+      }(this.logger, s"HBase deleteRows ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
         s"执行${tableName}表rowKey删除失败", "close HBase table对象失败")
     }
   }
@@ -947,11 +947,11 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
       tryFinallyWithReturn {
         table = this.getTable(tableName)
         table.delete(delete)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.DELETE_FAMILY)
       } {
         this.closeTable(table)
-      }(this.logger, s"HBase deleteFamilies ${hbaseCluster(keyNum)}.${tableName}执行成功",
-        s"delete ${hbaseCluster(keyNum)}.${tableName} families failed. RowKey is ${rowKey}, families is ${families}",
+      }(this.logger, s"HBase deleteFamilies ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
+        s"delete ${hbaseClusterUrl(keyNum)}.${tableName} families failed. RowKey is ${rowKey}, families is ${families}",
         "close HBase table对象出现异常.")
     }
   }
@@ -974,11 +974,11 @@ class HBaseConnector(val conf: Configuration = null, val keyNum: Int = 1) extend
       tryFinallyWithReturn {
         table = this.getTable(tableName)
         table.delete(delete)
-        DatasourceManager.addDBDatasource("HBase", hbaseCluster(keyNum), tableName)
+        LineageManager.addDBDatasource("HBase", hbaseClusterUrl(keyNum), tableName, operation = FOperation.DELETE_QUALIFIER)
       } {
         this.closeTable(table)
-      }(this.logger, s"HBase deleteQualifiers ${hbaseCluster(keyNum)}.${tableName}执行成功",
-        s"delete ${hbaseCluster(keyNum)}.${tableName} qualifiers failed. RowKey is ${rowKey}, qualifiers is ${qualifiers}", "close HBase table对象出现异常.")
+      }(this.logger, s"HBase deleteQualifiers ${hbaseClusterUrl(keyNum)}.${tableName}执行成功",
+        s"delete ${hbaseClusterUrl(keyNum)}.${tableName} qualifiers failed. RowKey is ${rowKey}, qualifiers is ${qualifiers}", "close HBase table对象出现异常.")
     }
   }
 

@@ -81,6 +81,13 @@ private[fire] object FireRocketMQConf {
   // 获取rocketMQ name server 地址
   def rocketNameServer(keyNum: Int = 1): String = {
     val brokerName = PropUtils.getString(this.ROCKET_BROKERS_NAME, "", keyNum)
-    this.rocketClusterMap.getOrElse(brokerName, brokerName)
+    this.rocketNameServer(brokerName)
+  }
+
+  /**
+   * 根据url或别名返回真实的url地址
+   */
+  def rocketNameServer(url: String): String = {
+    this.rocketClusterMap.getOrElse(url, url)
   }
 }

@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @create 2020-11-20 14:06
  * @since 1.1.2
  */
-private[fire] class ShutdownHookManager  extends Logging  {
+private[fire] class ShutdownHookManager extends Logging  {
   // 具有优先级的队列，存放各处注册的hook信息，在jvm退出前根据优先级依次调用
   private[this] val hooks = new PriorityQueue[HookEntry]()
   private[this] val shuttingDown = new AtomicBoolean(false)
@@ -47,7 +47,7 @@ private[fire] class ShutdownHookManager  extends Logging  {
         nextHook != null
       }) {
         // 调用每一个hook的run方法
-        tryWithLog(nextHook.run())(this.logger, catchLog = "执行hook过程中发生例外.")
+        tryWithLog(nextHook.run())(this.logger, tryLog = "Fire shutdown hook executed.", catchLog = "执行hook过程中发生例外.")
       }
     }
   }
@@ -109,9 +109,9 @@ private[fire] class HookEntry(private val priority: Int, hook: () => Unit) exten
  */
 object ShutdownHookManager {
   // 优先级定义
-  private val DEFAULT_PRIORITY = 10
-  private val HIGHT_PRIORITY = 100
-  private val LOW_PRIORITY = 5
+  lazy val DEFAULT_PRIORITY = 10
+  private[fire] lazy val HEIGHT_PRIORITY = 100
+  val LOW_PRIORITY = 5
   private[this] lazy val hookManager = new ShutdownHookManager()
 
   this.hookManager.install

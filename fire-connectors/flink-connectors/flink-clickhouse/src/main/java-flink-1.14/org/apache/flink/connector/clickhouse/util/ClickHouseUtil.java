@@ -19,12 +19,9 @@ package org.apache.flink.connector.clickhouse.util;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.connector.clickhouse.internal.common.DistributedEngineFullSchema;
-
-import org.apache.http.client.utils.URIBuilder;
 import ru.yandex.clickhouse.ClickHouseConnection;
 
 import javax.annotation.Nullable;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -114,7 +111,9 @@ public class ClickHouseUtil {
                     }
                 }
             }
-            if (StringUtils.isBlank(cluster)) throw new IllegalStateException("没有获取到宏替换真正的集群名称");
+            if (StringUtils.isBlank(cluster)) {
+                throw new IllegalStateException("没有获取到宏替换真正的集群名称");
+            }
             String database = matcherMacro.group("database");
             String table = matcherMacro.group("table");
             return DistributedEngineFullSchema.of(cluster, database, table);

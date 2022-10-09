@@ -17,10 +17,13 @@
 
 package com.zto.fire.core.sync
 
+import com.zto.fire.common.bean.lineage.Lineage
 import com.zto.fire.common.conf.FireFrameworkConf
-import com.zto.fire.common.util.ReflectionUtils
-import org.slf4j.LoggerFactory
+import com.zto.fire.common.enu.Datasource
+import com.zto.fire.common.util.{DatasourceDesc, ReflectionUtils}
+import com.zto.fire.predef._
 
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.immutable
 
 /**
@@ -31,34 +34,64 @@ import scala.collection.immutable
  * @create 2021-03-02 10:48
  */
 private[fire] trait SyncEngineConf extends SyncManager {
+  protected val isCollect = new AtomicBoolean(false)
+  this.collect
 
   /**
-   * 获取引擎的所有配置信息
+   * 获取引擎的所有配置信息（send）
    */
   def syncEngineConf: Map[String, String]
+
+  /**
+   * 在master端获取系统累加器中的数据
+   */
+  def syncLineage: Lineage
+
+  /**
+   * 同步引擎各个container的信息到累加器中
+   */
+  def collect: Unit
 }
 
 /**
  * 用于获取不同引擎的配置信息
  */
 private[fire] object SyncEngineConfHelper extends SyncEngineConf {
+  private lazy val syncEngineClass: Class[_] = try {
+    Class.forName(FireFrameworkConf.confDeployEngine)
+  } catch {
+    case e: Exception =>
+      logger.error(s"未找到引擎配置获取实现类${FireFrameworkConf.confDeployEngine}，无法进行配置同步", e)
+      throw e
+  }
+  private lazy val instance = syncEngineClass.newInstance()
 
   /**
    * 通过反射获取不同引擎的配置信息
    */
   override def syncEngineConf: Map[String, String] = {
-    var clazz: Class[_] = null
-    try {
-      clazz = Class.forName(FireFrameworkConf.confDeployEngine)
-    } catch {
-      case e: Exception => logger.error(s"未找到引擎配置获取实现类${FireFrameworkConf.confDeployEngine}，无法进行配置同步", e)
-    }
-
-    if (clazz != null) {
-      val method = clazz.getDeclaredMethod("syncEngineConf")
+    if (syncEngineClass != null) {
+      val method = syncEngineClass.getDeclaredMethod("syncEngineConf")
       ReflectionUtils.setAccessible(method)
-      method.invoke(clazz.newInstance()).asInstanceOf[immutable.Map[String, String]]
+      method.invoke(instance).asInstanceOf[immutable.Map[String, String]]
     } else Map.empty
   }
 
+  /**
+   * 同步引擎各个container的信息到master端（collect）
+   */
+  override def syncLineage: Lineage = {
+    val method = syncEngineClass.getDeclaredMethod("syncLineage")
+    ReflectionUtils.setAccessible(method)
+    method.invoke(instance).asInstanceOf[Lineage]
+  }
+
+  /**
+   * 同步引擎各个container的信息到master端（collect）
+   */
+  override def collect: Unit = {
+    val method = syncEngineClass.getDeclaredMethod("collect")
+    ReflectionUtils.setAccessible(method)
+    method.invoke(instance)
+  }
 }

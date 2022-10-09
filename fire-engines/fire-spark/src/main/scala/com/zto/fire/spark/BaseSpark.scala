@@ -19,7 +19,7 @@ package com.zto.fire.spark
 
 import com.zto.fire._
 import com.zto.fire.common.conf.{FireFrameworkConf, FireHDFSConf, FireHiveConf}
-import com.zto.fire.common.util.{OSUtils, PropUtils}
+import com.zto.fire.common.util.{OSUtils, PropUtils, SQLUtils}
 import com.zto.fire.core.BaseFire
 import com.zto.fire.core.rest.RestServerManager
 import com.zto.fire.spark.acc.AccumulatorManager
@@ -32,7 +32,7 @@ import com.zto.fire.spark.util.{SparkSingletonFactory, SparkUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.scheduler.SparkListener
 import org.apache.spark.sql.catalog.Catalog
-import org.apache.spark.sql.{SQLContext, SparkSession}
+import org.apache.spark.sql.{DataFrame, SQLContext, SparkSession}
 import org.apache.spark.streaming.{StreamingContext, StreamingContextState}
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -46,7 +46,7 @@ trait BaseSpark extends SparkListener with BaseFire with Serializable {
   private[fire] var _conf: SparkConf = _
   protected[fire] var _spark: SparkSession = _
   protected lazy val spark, fire: SparkSession = _spark
-  protected lazy val sql = _spark.sql _
+  protected lazy val sql = this.executeSql _
   protected[fire] var sc: SparkContext = _
   protected[fire] var catalog: Catalog = _
   protected[fire] var ssc: StreamingContext = _
@@ -54,6 +54,7 @@ trait BaseSpark extends SparkListener with BaseFire with Serializable {
   protected[fire] val acc = AccumulatorManager
   protected[fire] var batchDuration: Long = _
   protected[fire] var listener: SparkListener = _
+  protected[fire] var taskSchedule: SparkInternalTask = _
 
   /**
    * 生命周期方法：初始化fire框架必要的信息
@@ -183,11 +184,12 @@ trait BaseSpark extends SparkListener with BaseFire with Serializable {
   override protected def deployConf: Unit = {
     if (!FireFrameworkConf.deployConf) return
     // 向driver和executor注册定时任务
-    val taskSchedule = new SparkInternalTask(this)
+    this.taskSchedule = new SparkInternalTask(this)
     // driver端注册定时任务
-    SparkSchedulerManager.getInstance().registerTasks(this, taskSchedule, this.listener)
+    SparkSchedulerManager.getInstance().registerTasks(this, this.taskSchedule, this.listener)
     // executor端与自定义累加器一同完成定时任务注册
-    AccumulatorManager.registerTasks(this, taskSchedule)
+    AccumulatorManager.registerTasks(this.taskSchedule)
+    if (isObject(this.getClass)) AccumulatorManager.registerTasks(this)
     // 向executor端注册自定义累加器
     if (FireFrameworkConf.accEnable) this.acc.registerAccumulators(this.sc)
   }
@@ -241,4 +243,11 @@ trait BaseSpark extends SparkListener with BaseFire with Serializable {
    * true：校验成功 false：校验失败
    */
   override def sqlLegal(sql: JString): Boolean = SparkUtils.sqlLegal(sql)
+
+  /**
+   * 执行多条sql语句，以分号分割
+   */
+  private[this] def executeSql(sql: String): DataFrame = {
+    SQLUtils.executeSql(sql) (statement => _spark.sql(statement)).get
+  }
 }

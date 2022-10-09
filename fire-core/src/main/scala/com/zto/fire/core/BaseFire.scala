@@ -40,7 +40,7 @@ import scala.util.Try
  */
 trait BaseFire extends Logging {
   // 任务启动时间戳
-  protected[fire] val startTime: Long = currentTime
+  protected[fire] val launchTime = FireUtils.launchTime
   // web ui地址
   protected[fire] var webUI, applicationId: String = _
   // main方法参数
@@ -62,7 +62,7 @@ trait BaseFire extends Logging {
   // 默认的任务名称为类名
   protected[fire] var appName: JString = this.driverClass
   // 配置信息
-  protected lazy val conf = PropUtils
+  protected lazy val conf, $ = PropUtils
   this.boot()
 
   /**
@@ -133,6 +133,7 @@ trait BaseFire extends Logging {
    */
   def init(conf: Any = null, args: Array[String] = null): Unit = {
     this.before(args)
+    FireUtils._jobType = this.jobType
     this.logger.info(s" ${FirePS1Conf.YELLOW}---> 完成用户资源初始化，任务类型：${this.jobType.getJobTypeDesc} <--- ${FirePS1Conf.DEFAULT}")
     this.args = args
     this.createContext(conf)
@@ -157,8 +158,10 @@ trait BaseFire extends Logging {
    * 注：此方法会被自动调用，不需要在main中手动调用
    */
   protected[fire] def processAll: Unit = {
-    this.process()
-    AnnoManager.processAnno(this)
+    tryWithLog({
+      this.process()
+      AnnoManager.processAnno(this)
+    }) (this.logger, "业务逻辑代码执行完成", "业务逻辑代码执行失败", isThrow = true)
   }
 
   /**
@@ -183,7 +186,7 @@ trait BaseFire extends Logging {
       Spark.stop()
       SchedulerManager.shutdown(stopGracefully)
       this.logger.info(s" ${FirePS1Conf.YELLOW}---> 完成fire资源回收 <---${FirePS1Conf.DEFAULT}")
-      this.logger.info(s"总耗时：${FirePS1Conf.RED}${elapsed(startTime)}${FirePS1Conf.DEFAULT} The end...${FirePS1Conf.DEFAULT}")
+      this.logger.info(s"总耗时：${FirePS1Conf.RED}${elapsed(launchTime)}${FirePS1Conf.DEFAULT} The end...${FirePS1Conf.DEFAULT}")
       if (FireFrameworkConf.shutdownExit) System.exit(0)
     }
   }

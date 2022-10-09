@@ -36,45 +36,105 @@ import java.lang.management.ManagementFactory;
  */
 public class CpuInfo implements Serializable {
     private static final long serialVersionUID = 7712733535989008368L;
-    // 系统cpu的负载
+
+    /**
+     * 系统cpu的负载
+     */
     private double cpuLoad;
-    // 当前jvm可用的处理器数量
+
+    /**
+     * 当前jvm可用的处理器数量
+     */
     private int availableProcessors;
-    // 当前jvm占用的cpu时长
+
+    /**
+     * 当前jvm占用的cpu时长
+     */
     private long processCpuTime;
-    // 当前jvm占用的cpu负载
+
+    /**
+     * 当前jvm占用的cpu负载
+     */
     private double processCpuLoad;
-    // cpu温度
+
+    /**
+     * cpu温度
+     */
     private double temperature;
-    // cpu电压
+
+    /**
+     * cpu电压
+     */
     private double voltage;
-    // 风扇转速
+
+    /**
+     * 风扇转速
+     */
     private int[] fanSpeeds;
-    // 物理cpu数
+
+    /**
+     * 物理cpu数
+     */
     private int physicalCpu;
-    // 逻辑cpu数
+
+    /**
+     * 逻辑cpu数
+     */
     private int logicalCpu;
-    // 运行时间
+
+    /**
+     * 运行时间
+     */
     private long uptime;
-    // io等待
+
+    /**
+     * io等待
+     */
     private long ioWait;
-    // 用户时长
+
+    /**
+     * 用户时长
+     */
     private long userTick;
-    // nice时长
+
+    /**
+     * nice时长
+     */
     private long niceTick;
-    // 系统时长
+
+    /**
+     * 系统时长
+     */
     private long sysTick;
-    // 空闲时长
+
+    /**
+     * 空闲时长
+     */
     private long idleTick;
-    // 中断时长
+
+    /**
+     * 中断时长
+     */
     private long irqTick;
-    // 软中断时长
+
+    /**
+     * 软中断时长
+     */
     private long softIrqTick;
-    // cpu steal 时长
+
+    /**
+     * cpu steal 时长
+     */
     private long stealTick;
-    // cpu平均负载
+
+    /**
+     * cpu平均负载
+     */
     private double[] loadAverage;
-    // 最近一次平均负载
+
+    /**
+     * 最近一次平均负载
+     */
     private double lastLoadAverage;
 
     public double[] getLoadAverage() {

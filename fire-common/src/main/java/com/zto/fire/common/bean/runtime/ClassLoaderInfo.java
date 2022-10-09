@@ -27,11 +27,20 @@ import java.lang.management.ManagementFactory;
  */
 public class ClassLoaderInfo implements Serializable {
     private static final long serialVersionUID = 4958598582046079565L;
-    // 获取已加载的类数量
+
+    /**
+     * 获取已加载的类数量
+     */
     private long loadedClassCount;
-    // 获取总的类加载数
+
+    /**
+     * 获取总的类加载数
+     */
     private long totalLoadedClassCount;
-    // 获取未被加载的类总数
+
+    /**
+     * 获取未被加载的类总数
+     */
     private long unloadedClassCount;
 
     private ClassLoaderInfo() {}

@@ -74,6 +74,16 @@ private[fire] object FireFlinkConf {
   // udf自动注册
   lazy val FLINK_SQL_UDF_CONF_PREFIX = "flink.sql.udf.conf."
   lazy val FLINK_SQL_UDF_ENABLE = "flink.sql.udf.fireUdf.enable"
+
+  /**
+   * 获取所有flink.sql.with.为前缀的配置信息如：
+   * flink.sql.with.bill_db.connector	=	mysql
+   * flink.sql.with.bill_db.url			  =	jdbc:mysql://localhost:3306/fire
+   * 上述配置标识定义名为bill_db的数据源，配置了两个options选项分别为：
+   * connector	=	mysql
+   * url			  =	jdbc:mysql://localhost:3306/fire
+   * sql中即可通过 'datasource'='bill_db' 引用到上述两项option
+   */
   lazy val FLINK_SQL_WITH_PREFIX = "flink.sql.with."
   lazy val FLINK_SQL_AUTO_ADD_STATEMENT_SET = "flink.sql.auto.add.statementSet"
 
@@ -126,6 +136,8 @@ private[fire] object FireFlinkConf {
   lazy val operatorChainingEnable = PropUtils.getBoolean(this.OPERATOR_CHAINING_ENABLE, true)
   // 是否自动将insert语句加入到StatementSet中
   lazy val autoAddStatementSet = PropUtils.getBoolean(this.FLINK_SQL_AUTO_ADD_STATEMENT_SET, true)
+  // 将配置的with options映射为map
+  lazy val flinkSqlWithOptions = PropUtils.sliceKeys(FireFlinkConf.FLINK_SQL_WITH_PREFIX)
 
   // flink状态清理的hdfs路径前缀
   lazy val stateHdfsUrl = PropUtils.getString(this.FLINK_STATE_CLEAN_HDFS_URL)

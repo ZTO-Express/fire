@@ -22,7 +22,7 @@ import com.zto.fire.common.anno.Rest
 import com.zto.fire.common.bean.rest.ResultMsg
 import com.zto.fire.common.conf.FireFrameworkConf
 import com.zto.fire.common.enu.{ErrorCode, RequestMethod}
-import com.zto.fire.common.util.{ExceptionBus, _}
+import com.zto.fire.common.util._
 import com.zto.fire.core.rest.{RestCase, SystemRestful}
 import com.zto.fire.spark.{BaseSpark, bean}
 import org.apache.commons.lang3.StringUtils
@@ -31,7 +31,7 @@ import com.zto.fire._
 import com.zto.fire.core.bean.ArthasParam
 import com.zto.fire.spark.bean.{ColumnMeta, FunctionMeta, SparkInfo}
 import com.zto.fire.spark.plugin.SparkArthasLauncher
-import com.zto.fire.spark.sync.SyncSparkEngineConf
+import com.zto.fire.spark.sync.SyncSparkEngine
 
 import java.util
 
@@ -65,6 +65,7 @@ private[fire] class SparkSystemRestful(val baseSpark: BaseSpark) extends SystemR
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/listFunctions", listFunctions))
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/setConf", setConf))
       .addRest(RestCase(RequestMethod.GET.toString, s"/system/datasource", datasource))
+      .addRest(RestCase(RequestMethod.GET.toString, s"/system/lineage", lineage))
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/arthas", arthas))
       .addRest(RestCase(RequestMethod.GET.toString, s"/system/exception", exception))
   }
@@ -82,7 +83,7 @@ private[fire] class SparkSystemRestful(val baseSpark: BaseSpark) extends SystemR
       if (ValueUtils.noEmpty(confMap)) {
         PropUtils.setProperties(confMap)
         this.baseSpark._conf.setAll(PropUtils.settings)
-        SyncSparkEngineConf.syncDynamicConf(this.baseSpark.sc, this.baseSpark._conf)
+        SyncSparkEngine.syncDynamicConf(this.baseSpark.sc, this.baseSpark._conf)
       }
       ResultMsg.buildSuccess("配置信息已更新", ErrorCode.SUCCESS.toString)
     } catch {
@@ -489,7 +490,7 @@ private[fire] class SparkSystemRestful(val baseSpark: BaseSpark) extends SystemR
         this.sparkInfoBean.setApplicationAttemptId(this.baseSpark.sc.applicationAttemptId.getOrElse(""))
         this.sparkInfoBean.setUi(this.baseSpark.webUI)
         this.sparkInfoBean.setPid(OSUtils.getPid)
-        this.sparkInfoBean.setStartTime(DateFormatUtils.formatUnixDateTime(this.baseSpark.startTime * 1000))
+        this.sparkInfoBean.setLaunchTime(DateFormatUtils.formatUnixDateTime(FireUtils.launchTime * 1000))
         this.sparkInfoBean.setExecutorMemory(this.baseSpark.sc.getConf.get("spark.executor.memory", "1"))
         this.sparkInfoBean.setExecutorInstances(this.baseSpark.sc.getConf.get("spark.executor.instances", "1"))
         this.sparkInfoBean.setExecutorCores(this.baseSpark.sc.getConf.get("spark.executor.cores", "1"))
@@ -503,7 +504,7 @@ private[fire] class SparkSystemRestful(val baseSpark: BaseSpark) extends SystemR
         this.sparkInfoBean.setProperties(PropUtils.cover)
         this.sparkInfoBean.computeCpuMemory()
       }
-      this.sparkInfoBean.setUptime(DateFormatUtils.runTime(this.baseSpark.startTime))
+      this.sparkInfoBean.setUptime(DateFormatUtils.runTime(FireUtils.launchTime))
       this.sparkInfoBean.setBatchDuration(this.baseSpark.batchDuration + "")
       this.sparkInfoBean.setTimestamp(DateFormatUtils.formatCurrentDateTime())
       this.logger.info(s"[sparkInfo] 获取spark信息成功：json=$json")

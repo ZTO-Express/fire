@@ -34,8 +34,9 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @since 1.0.0
  * @create 2020-07-14 11:02
  */
-private[fire] class FireInternalTask(baseFire: BaseFire) extends Serializable with Logging {
+private[fire] abstract class FireInternalTask(baseFire: BaseFire) extends Serializable with Logging {
   private[this] lazy val doJvmMonitor = new AtomicBoolean(true)
+  protected lazy val registerLineageHook = new AtomicBoolean(false)
 
   /**
    * 定时采集运行时的jvm、gc、thread、cpu、memory、disk等信息
@@ -61,6 +62,20 @@ private[fire] class FireInternalTask(baseFire: BaseFire) extends Serializable wi
       } catch {
         case _: Throwable => this.doJvmMonitor.set(false)
       }
+    }
+  }
+
+  /**
+   * 实时血缘发送定时任务，定时将血缘信息发送到kafka中
+   */
+  def lineage: Unit
+
+  /**
+   * 注册血缘shutdown hook，确保退出jvm前发送血缘信息到消息队列
+   */
+  def registerLineageHook(block: => Unit): Unit = {
+    if (this.registerLineageHook.compareAndSet(false, true)) {
+      ShutdownHookManager.addShutdownHook(ShutdownHookManager.HEIGHT_PRIORITY)(() => block)
     }
   }
 }

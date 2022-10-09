@@ -17,8 +17,9 @@
 
 package com.zto.fire.common.util
 
-import com.zto.fire.predef._
 import com.zto.fire.common.conf.{FireFrameworkConf, FirePS1Conf}
+import com.zto.fire.common.enu.JobType
+import com.zto.fire.predef._
 
 /**
  * fire框架通用的工具方法
@@ -30,6 +31,20 @@ import com.zto.fire.common.conf.{FireFrameworkConf, FirePS1Conf}
  */
 private[fire] object FireUtils extends Serializable with Logging {
   private[fire] var isSplash = false
+  private[fire] var _jobType: JobType = JobType.UNDEFINED
+  private[fire] val _launchTime = System.currentTimeMillis()
+  private[this] lazy val sparkUtils = "com.zto.fire.spark.util.SparkUtils"
+  private[this] lazy val flinkUtils = "com.zto.fire.flink.util.FlinkUtils"
+
+  /**
+   * 获取任务启动时间
+   */
+  def launchTime: Long = this._launchTime
+
+  /**
+   * 任务运行时间
+   */
+  def uptime: Long = System.currentTimeMillis() - this.launchTime
 
   /**
    * 判断是否为spark引擎
@@ -49,6 +64,11 @@ private[fire] object FireUtils extends Serializable with Logging {
   def engine: String = PropUtils.engine
 
   /**
+   * 当前任务的引擎类型
+   */
+  def jobType: JobType = this._jobType
+
+  /**
    * 获取fire版本号
    */
   def fireVersion: String = FireFrameworkConf.fireVersion
@@ -58,17 +78,34 @@ private[fire] object FireUtils extends Serializable with Logging {
    * @return
    * spark-version / flink-version
    */
-  def engineVersion: String = {
+  def engineVersion: String = invokeEngineUtils("getVersion")
+
+  /**
+   * 获取当前执行引擎运行时的appId
+   */
+  def applicationId: String = invokeEngineUtils("getApplicationId")
+
+  /**
+   * 任务发布类型：yarn-client/yarn-cluster/run-application
+   */
+  def deployMode: String = invokeEngineUtils("deployMode")
+
+  /**
+   * 反射调用不同引擎上层的工具方法
+   * @param methodName
+   * spark或flink工具类的方法名
+   * @return
+   */
+  private[this] def invokeEngineUtils(methodName: JString): String = {
     tryWithReturn {
-      val methodName = "getVersion"
       if (this.isSparkEngine) {
-        val getVersionMethod = ReflectionUtils.getMethodByName("com.zto.fire.spark.util.SparkUtils", methodName)
-        "spark version:" + getVersionMethod.invoke(null)
+        val getVersionMethod = ReflectionUtils.getMethodByName(sparkUtils, methodName)
+        getVersionMethod.invoke(null).toString
       } else {
-        val getVersionMethod = ReflectionUtils.getMethodByName("com.zto.fire.flink.util.FlinkUtils", methodName)
-        "flink version:" + getVersionMethod.invoke(null)
+        val getVersionMethod = ReflectionUtils.getMethodByName(flinkUtils, methodName)
+        getVersionMethod.invoke(null).toString
       }
-    } (this.logger, catchLog = "未获取到引擎版本信息")
+    } (this.logger, catchLog = s"反射调用工具类方法[$methodName]失败")
   }
 
   /**
@@ -81,6 +118,7 @@ private[fire] object FireUtils extends Serializable with Logging {
    */
   private[fire] def splash: Unit = {
     if (!isSplash) {
+      val engineVersion = if (this.isSparkEngine) s"spark version:${this.engineVersion}" else s"flink version:${this.engineVersion}"
       val info =
         """
           |       ___                       ___           ___

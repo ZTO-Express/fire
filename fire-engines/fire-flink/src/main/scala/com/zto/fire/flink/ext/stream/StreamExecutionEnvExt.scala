@@ -18,12 +18,13 @@
 package com.zto.fire.flink.ext.stream
 
 import com.zto.fire._
+import com.zto.fire.common.enu.{Operation => FOperation}
 import com.zto.fire.common.conf.{FireKafkaConf, FireRocketMQConf}
-import com.zto.fire.common.util.{DatasourceManager, KafkaUtils, RegularUtils}
+import com.zto.fire.common.util.{KafkaUtils, LineageManager, RegularUtils, SQLUtils}
 import com.zto.fire.core.Api
 import com.zto.fire.flink.ext.provider.{HBaseConnectorProvider, JdbcFlinkProvider}
-import com.zto.fire.flink.sql.{FlinkSqlExtensionsParser, FlinkSqlParser}
-import com.zto.fire.flink.util.{FlinkSingletonFactory, RocketMQUtils}
+import com.zto.fire.flink.sql.FlinkSqlExtensionsParser
+import com.zto.fire.flink.util.{FlinkSingletonFactory, FlinkUtils, RocketMQUtils}
 import com.zto.fire.jdbc.JdbcConnectorBridge
 import org.apache.commons.lang3.StringUtils
 import org.apache.flink.api.common.functions.RuntimeContext
@@ -36,7 +37,6 @@ import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
 import org.apache.flink.streaming.connectors.kafka.internals.KafkaTopicPartition
 import org.apache.flink.streaming.util.serialization.JSONKeyValueDeserializationSchema
 import org.apache.flink.table.api.{StatementSet, Table, TableResult}
-import org.apache.flink.table.api.internal.TableResultImpl
 import org.apache.rocketmq.flink.common.serialization.SimpleTagKeyValueDeserializationSchema
 import org.apache.rocketmq.flink.{RocketMQConfig, RocketMQSourceWithTag}
 
@@ -97,7 +97,7 @@ class StreamExecutionEnvExt(env: StreamExecutionEnvironment) extends Api with Ta
     properties.setProperty(FireKafkaConf.KAFKA_FORCE_AUTO_COMMIT_INTERVAL, FireKafkaConf.kafkaForceCommitInterval.toString)
 
     // 消费kafka埋点信息
-    DatasourceManager.addMQDatasource("kafka", confKafkaParams("bootstrap.servers").toString, topicsStr, confKafkaParams("group.id").toString)
+    LineageManager.addMQDatasource("kafka", confKafkaParams("bootstrap.servers").toString, topicsStr, confKafkaParams("group.id").toString, FOperation.SOURCE)
 
     deserializer match {
       case schema: JSONKeyValueDeserializationSchema =>
@@ -241,7 +241,7 @@ class StreamExecutionEnvExt(env: StreamExecutionEnvironment) extends Api with Ta
     require(finalRocketParam.containsKey(RocketMQConfig.NAME_SERVER_ADDR), s"RocketMQ nameserver.address不能为空，请在配置文件中指定：rocket.brokers.name$keyNum")
 
     // 消费rocketmq埋点信息
-    DatasourceManager.addMQDatasource("rocketmq", finalRocketParam(RocketMQConfig.NAME_SERVER_ADDR), finalTopics, finalGroupId)
+    LineageManager.addMQDatasource("rocketmq", finalRocketParam(RocketMQConfig.NAME_SERVER_ADDR), finalTopics, finalGroupId, FOperation.SOURCE)
 
     val props = new Properties()
     props.putAll(finalRocketParam)
@@ -294,45 +294,34 @@ class StreamExecutionEnvExt(env: StreamExecutionEnvironment) extends Api with Ta
    *
    * @param sql
    * sql语句
-   * @param keyNum
-   * 指定sql的with列表对应的配置文件中key的值，如果为<0则表示不从配置文件中读取with表达式
    * @return
    * table对象
    */
-  def sqlQuery(sql: String, keyNum: Int = 1): Table = {
-    require(StringUtils.isNotBlank(sql), "待执行的sql语句不能为空")
-    FlinkSqlExtensionsParser.sqlParse(sql)
-    this.tableEnv.sqlQuery(sql.with$(keyNum))
+  def sqlQuery(sql: String): Table = {
+    SQLUtils.executeSql(sql) ( statement => this.tableEnv.sqlQuery(FlinkUtils.sqlWithReplace(statement))).get
   }
 
   /**
    * 执行sql语句
    * 支持DDL、DML
-   *
-   * @param keyNum
-   * 指定sql的with列表对应的配置文件中key的值，如果为<0则表示不从配置文件中读取with表达式
    */
-  def sql(sql: String, keyNum: Int = 1): TableResult = {
-    require(StringUtils.isNotBlank(sql), "待执行的sql语句不能为空")
-    FlinkSqlParser.sqlParse(sql)
-    if (this.isInsertStatement(sql)) {
-      this.addInsertSql(sql)
-      // 为兼容flink1.12，使用反射调用返回TABLE_RESULT_OK
-      val tableResultClass = Class.forName("org.apache.flink.table.api.internal.TableResultImpl")
-      val field = tableResultClass.getDeclaredField("TABLE_RESULT_OK")
-      field.setAccessible(true)
-      field.get(null).asInstanceOf[TableResult]
-    } else this.tableEnv.executeSql(sql.with$(keyNum))
+  def sql(sql: String): TableResult = {
+    SQLUtils.executeSql(sql) { statement =>
+      if (this.isInsertStatement(statement)) {
+        FlinkSqlExtensionsParser.sqlParse(statement)
+        this.addInsertSql(statement)
+        // 为兼容flink1.12，使用反射调用返回TABLE_RESULT_OK
+        val tableResultClass = Class.forName("org.apache.flink.table.api.internal.TableResultImpl")
+        val field = tableResultClass.getDeclaredField("TABLE_RESULT_OK")
+        field.setAccessible(true)
+        field.get(null).asInstanceOf[TableResult]
+      } else {
+        val finalSql = FlinkUtils.sqlWithReplace(statement)
+        FlinkSqlExtensionsParser.sqlParse(finalSql)
+        this.tableEnv.executeSql(finalSql)
+      }
+    }.get
   }
-
-  /**
-   * 执行sql语句
-   * 支持DDL、DML
-   *
-   * @param keyNum
-   * 指定sql的with列表对应的配置文件中key的值，如果为<0则表示不从配置文件中读取with表达式
-   */
-  private[fire] def _sql(sql: String): TableResult = this.sql(sql)
 
   /**
    * 创建并返回StatementSet对象实例
@@ -355,11 +344,10 @@ class StreamExecutionEnvExt(env: StreamExecutionEnvironment) extends Api with Ta
    * StatementSet
    */
   def addInsertSql(sql: String): StatementSet = {
-    require(StringUtils.isNotBlank(sql), "待执行的sql语句不能为空")
-    FlinkSqlParser.sqlParse(sql)
     StreamExecutionEnvExt.useStatementSet.compareAndSet(false, true)
-    StreamExecutionEnvExt.statementSet.addInsertSql(sql)
+    SQLUtils.executeSql(sql) (sql => StreamExecutionEnvExt.statementSet.addInsertSql(sql)).get
   }
+
 
   /**
    * addInsertSql方法的别名，将待执行的sql sink语句加入到StatementSet中
@@ -369,7 +357,9 @@ class StreamExecutionEnvExt(env: StreamExecutionEnvironment) extends Api with Ta
    * @return
    * StatementSet
    */
-  def sqlSink(sql: String): StatementSet = this.addInsertSql(sql)
+  def sqlSink(sql: String): StatementSet = {
+    this.addInsertSql(sql)
+  }
 
   /**
    * addInsertSql方法的别名，将待执行的sql sink语句加入到StatementSet中

@@ -52,7 +52,9 @@ object SparkSQLDemo extends SparkCore {
   def count: Unit = {
     sql(
       """
-        |select count(1) from student
+        |select count(1) from student;
+        |
+        |select count(1) from student;
         |""".stripMargin).show()
   }
 }

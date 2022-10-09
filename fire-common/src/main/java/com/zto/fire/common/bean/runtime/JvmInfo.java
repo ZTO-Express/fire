@@ -27,49 +27,109 @@ import java.util.List;
  */
 public class JvmInfo implements Serializable {
     private static final long serialVersionUID = 3857878519712626828L;
-    // Java版本
+
+    /**
+     * Java版本
+     */
     private String javaVersion;
-    // JavaHome
+
     private String javaHome;
-    // 类版本
+
     private String classVersion;
-    // jvm可从操作系统申请的最大内存
+
+    /**
+     * jvm可从操作系统申请的最大内存
+     */
     private long memoryMax;
-    // jvm已使用操作系统的总内存空间
+
+    /**
+     * jvm已使用操作系统的总内存空间
+     */
     private long memoryTotal;
-    // jvm剩余内存空间
+
+    /**
+     * jvm剩余内存空间
+     */
     private long memoryFree;
-    // jvm已使用内存空间
+
+    /**
+     * jvm已使用内存空间
+     */
     private long memoryUsed;
-    // jvm启动时间，unix时间戳
+
+    /**
+     * jvm启动时间，unix时间戳
+     */
     private long startTime;
-    // jvm运行时间
+
+    /**
+     * jvm运行时间
+     */
     private long uptime;
-    // jvm heap 初始内存大小
+
+    /**
+     * jvm heap 初始内存大小
+     */
     private long heapInitSize;
-    // jvm heap 最大内存空间
+
+    /**
+     * jvm heap 最大内存空间
+     */
     private long heapMaxSize;
-    // jvm heap 已使用空间大小
+
+    /**
+     * jvm heap 已使用空间大小
+     */
     private long heapUseSize;
-    // jvm heap 已提交的空间大小
+
+    /**
+     * jvm heap 已提交的空间大小
+     */
     private long heapCommitedSize;
-    // jvm Non-Heap初始空间
+
+    /**
+     * jvm Non-Heap初始空间
+     */
     private long nonHeapInitSize;
-    // jvm Non-Heap最大空间
+
+    /**
+     * jvm Non-Heap最大空间
+     */
     private long nonHeapMaxSize;
-    // jvm Non-Heap已使用空间
+
+    /**
+     * jvm Non-Heap已使用空间
+     */
     private long nonHeapUseSize;
-    // jvm Non-Heap已提交空间
+
+    /**
+     * jvm Non-Heap已提交空间
+     */
     private long nonHeapCommittedSize;
-    // minor gc 次数
+
+    /**
+     * minor gc 次数
+     */
     private long minorGCCount;
-    // minor gc 总耗时
+
+    /**
+     * minor gc 总耗时
+     */
     private long minorGCTime;
-    // full gc 次数
+
+    /**
+     * full gc 次数
+     */
     private long fullGCCount;
-    // full gc 总耗时
+
+    /**
+     * full gc 总耗时
+     */
     private long fullGCTime;
-    // 虚拟机参数
+
+    /**
+     * 虚拟机参数
+     */
     private List<String> jvmOptions;
 
     private JvmInfo() {}

@@ -18,8 +18,9 @@
 package com.zto.fire.spark.conf
 
 import com.zto.fire.common.conf.FireFrameworkConf.FIRE_JOB_AUTO_START
+import com.zto.fire.common.util.PropUtils
 import com.zto.fire.core.conf.AnnoManager
-import com.zto.fire.spark.anno.{Streaming, StreamingDuration}
+import com.zto.fire.spark.anno.{SparkConf, Streaming, StreamingDuration}
 
 /**
  * 注解管理器，用于将主键中的配置信息映射为键值对信息
@@ -59,9 +60,24 @@ private[fire] class SparkAnnoManager extends AnnoManager {
   }
 
   /**
+   * 将@SparkConf中配置的信息映射为键值对形式
+   */
+  def mapSparkConf(sparkConf: SparkConf): Unit = {
+    val valueConf = PropUtils.parseTextConfig(sparkConf.value())
+    valueConf.foreach(kv => PropUtils.setNormalProperty(kv._1, kv._2))
+    sparkConf.props().foreach(prop => {
+      val conf = prop.split("=", 2)
+      if (conf != null && conf.length == 2) {
+        PropUtils.setNormalProperty(conf(0), conf(1))
+      }
+    })
+  }
+
+  /**
    * 用于注册需要映射配置信息的自定义主键
    */
   override protected[fire] def register: Unit = {
+    AnnoManager.registerAnnoSet.add(classOf[SparkConf])
     AnnoManager.registerAnnoSet.add(classOf[StreamingDuration])
     AnnoManager.registerAnnoSet.add(classOf[Streaming])
   }

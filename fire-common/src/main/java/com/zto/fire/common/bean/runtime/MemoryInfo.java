@@ -28,19 +28,40 @@ import java.lang.management.ManagementFactory;
  */
 public class MemoryInfo implements Serializable {
     private static final long serialVersionUID = 7803435486311085016L;
-    // 操作系统总内存空间
+
+    /**
+     * 操作系统总内存空间
+     */
     private long total;
-    // 操作系统内存剩余空间
+
+    /**
+     * 操作系统内存剩余空间
+     */
     private long free;
-    // 操作系统内存使用空间
+
+    /**
+     * 操作系统内存使用空间
+     */
     private long used;
-    // 操作系统提交的虚拟内存大小
+
+    /**
+     * 操作系统提交的虚拟内存大小
+     */
     private long commitVirtual;
-    // 操作系统交换内存总空间
+
+    /**
+     * 操作系统交换内存总空间
+     */
     private long swapTotal;
-    // 操作系统交换内存剩余空间
+
+    /**
+     * 操作系统交换内存剩余空间
+     */
     private long swapFree;
-    // 操作系统交换内存已使用空间
+
+    /**
+     * 操作系统交换内存已使用空间
+     */
     private long swapUsed;
 
     private MemoryInfo() {}

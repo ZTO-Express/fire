@@ -17,9 +17,13 @@
 
 package com.zto.fire.spark.sync
 
+import com.zto.fire._
+import com.zto.fire.common.bean.lineage.Lineage
 import com.zto.fire.common.conf.FireFrameworkConf
-import com.zto.fire.common.util.{Logging, PropUtils}
+import com.zto.fire.common.enu.Datasource
+import com.zto.fire.common.util.{DatasourceDesc, Logging, PropUtils}
 import com.zto.fire.core.sync.SyncEngineConf
+import com.zto.fire.spark.acc.AccumulatorManager
 import com.zto.fire.spark.util.SparkUtils
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
@@ -31,7 +35,7 @@ import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
  * @since 2.0.0
  * @create 2021-03-02 10:57
  */
-private[fire] class SyncSparkEngineConf extends SyncEngineConf {
+private[fire] class SyncSparkEngine extends SyncEngineConf {
 
   /**
    * 获取引擎的所有配置信息
@@ -43,9 +47,23 @@ private[fire] class SyncSparkEngineConf extends SyncEngineConf {
       Map.empty[String, String]
     }
   }
+
+  /**
+   * 在master端获取系统累加器中的数据
+   */
+  override def syncLineage: Lineage = {
+    SparkLineageAccumulatorManager.getValue
+  }
+
+  /**
+   * 同步引擎各个container的信息到累加器中
+   */
+  override def collect: Unit = {
+    if (SparkUtils.isDriver && isCollect.compareAndSet(false, true)) AccumulatorManager.collectLineage
+  }
 }
 
-object SyncSparkEngineConf extends Logging {
+object SyncSparkEngine extends Logging {
   // 用于广播spark配置信息
   private[fire] var broadcastConf: Broadcast[SparkConf] = _
 

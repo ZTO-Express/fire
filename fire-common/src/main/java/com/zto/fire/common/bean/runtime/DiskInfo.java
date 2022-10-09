@@ -35,17 +35,34 @@ import java.util.Map;
  * @author ChengLong 2019年9月29日 09:36:57
  */
 public class DiskInfo {
-    // 磁盘名称
+    /**
+     * 磁盘名称
+     */
     private String name;
-    // 磁盘制造商
+
+    /**
+     * 磁盘制造商
+     */
     private String model;
-    // 磁盘总空间
+
+    /**
+     * 磁盘总空间
+     */
     private long total;
-    // 磁盘读取总量
+
+    /**
+     * 磁盘读取总量
+     */
     private long reads;
-    // 磁盘写入总量
+
+    /**
+     * 磁盘写入总量
+     */
     private long writes;
-    // 磁盘读/写花费的毫秒数
+
+    /**
+     * 磁盘读/写花费的毫秒数
+     */
     private long transferTime;
 
     /**

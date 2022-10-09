@@ -197,7 +197,7 @@ object JdbcTest extends SparkCore {
 
   override def process: Unit = {
     // 测试环境测试
-    // this.testJdbcUpdate
+    this.testJdbcUpdate
     this.testJdbcQuery
     // this.testJdbcUpdate
     /*this.testJdbcUpdate
@@ -206,7 +206,7 @@ object JdbcTest extends SparkCore {
     this.testTableSave
     this.testDataFrameSave*/
     // 测试配置分发
-    // this.testExecutor
+    this.testExecutor
     Thread.sleep(100000)
   }
 }

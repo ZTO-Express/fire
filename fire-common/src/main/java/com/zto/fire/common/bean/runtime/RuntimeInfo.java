@@ -30,23 +30,50 @@ import java.io.Serializable;
 public class RuntimeInfo implements Serializable {
     private static final long serialVersionUID = 1960438466835847330L;
     private static RuntimeInfo runtimeInfo = new RuntimeInfo();
-    // jvm运行时信息
+
+    /**
+     * jvm运行时信息
+     */
     private JvmInfo jvmInfo;
-    // 线程运行时信息
+
+    /**
+     * 线程运行时信息
+     */
     private ThreadInfo threadInfo;
-    // cpu运行时信息
+
+    /**
+     * cpu运行时信息
+     */
     private CpuInfo cpuInfo;
-    // 内存运行时信息
+
+    /**
+     * 内存运行时信息
+     */
     private MemoryInfo memoryInfo;
-    // 类加载器运行时信息
+
+    /**
+     * 类加载器运行时信息
+     */
     private ClassLoaderInfo classLoaderInfo;
-    // executor所在ip
+
+    /**
+     * executor所在ip
+     */
     private static String ip;
-    // executor所在主机名
+
+    /**
+     * executor所在主机名
+     */
     private static String hostname;
-    // 当前pid的进程号
+
+    /**
+     * 当前pid的进程号
+     */
     private static String pid;
-    // executor启动时间（UNIX时间戳）
+
+    /**
+     * executor启动时间（UNIX时间戳）
+     */
     private long startTime = System.currentTimeMillis();
 
     private RuntimeInfo() {

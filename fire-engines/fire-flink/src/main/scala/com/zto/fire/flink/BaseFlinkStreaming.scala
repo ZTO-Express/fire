@@ -41,7 +41,8 @@ import org.apache.flink.table.functions.ScalarFunction
 trait BaseFlinkStreaming extends BaseFlink {
   protected var env, senv, flink, fire: StreamExecutionEnvironment = _
   protected var tableEnv: TableEnvironment = _
-  protected lazy val sql = fire._sql(_)
+  protected lazy val sql = fire.sql(_)
+  protected lazy val sqlQuery = fire.sqlQuery(_)
   protected lazy val steamTableEnv: StreamTableEnvironment = this.tableEnv.asInstanceOf[StreamTableEnvironment]
   override val jobType: JobType = JobType.FLINK_STREAMING
   // 用于存放延期的数据

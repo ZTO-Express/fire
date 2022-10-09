@@ -49,7 +49,9 @@ public class HttpClientUtils {
     private static void setHeaders(HttpMethodBase method, Header... headers) {
         if (method != null && headers != null && headers.length > 0) {
             for (Header header : headers) {
-                if (header != null) method.setRequestHeader(header);
+                if (header != null) {
+                    method.setRequestHeader(header);
+                }
             }
         }
     }
@@ -58,7 +60,9 @@ public class HttpClientUtils {
      * 以流的方式获取返回的消息体
      */
     private static String responseBody(HttpMethodBase method) throws IOException {
-        if (method == null) return "";
+        if (method == null) {
+            return "";
+        }
 
         StringBuilder stringBuffer = new StringBuilder();
         BufferedReader reader = new BufferedReader(new InputStreamReader(method.getResponseBodyAsStream()));

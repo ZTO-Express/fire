@@ -29,27 +29,60 @@ import oshi.util.FormatUtil;
  */
 public class OSInfo {
     private static OSInfo osInfo = new OSInfo();
-    // 制造商
+
+    /**
+     * 制造商
+     */
     private String manufacturer;
-    // 操作系统名称
+
+    /**
+     * 操作系统名称
+     */
     private String name;
-    // 操作系统架构
+
+    /**
+     * 操作系统架构
+     */
     private String arch;
-    // 操作系统版本
+
+    /**
+     * 操作系统版本
+     */
     private String version;
-    // 当前用户
+
+    /**
+     * 当前用户
+     */
     private String userName;
-    // 当前用户家目录
+
+    /**
+     * 当前用户家目录
+     */
     private String userHome;
-    // 当前用户工作目录
+
+    /**
+     * 当前用户工作目录
+     */
     private String userDir;
-    // 机器的ip
+
+    /**
+     * 机器的ip
+     */
     private String ip;
-    // 集群的主机名
+
+    /**
+     * 集群的主机名
+     */
     private String hostname;
-    // 运行时间
+
+    /**
+     * 运行时间
+     */
     private String uptime;
-    // 组织信息
+
+    /**
+     * 组织信息
+     */
     private String family;
 
     private OSInfo() {

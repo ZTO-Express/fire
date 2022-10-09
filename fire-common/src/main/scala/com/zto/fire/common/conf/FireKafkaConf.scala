@@ -123,7 +123,7 @@ private[fire] object FireKafkaConf {
    */
   def kafkaBrokers(keyNum: Int = 1): String = {
     val brokerName = PropUtils.getString(this.KAFKA_BROKERS_NAME, "", keyNum)
-    this.kafkaMap.getOrElse(brokerName, brokerName)
+    this.kafkaBrokers(brokerName)
   }
 
   /**

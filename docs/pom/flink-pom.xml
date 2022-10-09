@@ -24,9 +24,9 @@
   <name>${project.artifactId}</name>
 
   <properties>
-    <fire.version>2.3.1-SNAPSHOT</fire.version>
+    <fire.version>2.3.2-SNAPSHOT</fire.version>
     <hudi.version>0.9.0</hudi.version>
-    <maven.scope>provided</maven.scope>
+    <maven.scope>compile</maven.scope>
     <scala.binary.version>2.12</scala.binary.version>
     <scala.minor.version>13</scala.minor.version>
     <kafka.version>0.11.0.2</kafka.version>
@@ -114,6 +114,11 @@
           <version>${flink.version}</version>
           <scope>${maven.scope}</scope>
         </dependency>
+        <dependency>
+          <groupId>com.zto.fire</groupId>
+          <artifactId>fire-connector-flink-clickhouse_${flink.reference}</artifactId>
+          <version>${fire.version}</version>
+        </dependency>
       </dependencies>
     </profile>
   </profiles>
@@ -176,11 +181,6 @@
     <dependency>
       <groupId>com.zto.fire</groupId>
       <artifactId>fire-enhance-arthas_${scala.binary.version}</artifactId>
-      <version>${fire.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.zto.fire</groupId>
-      <artifactId>fire-connector-flink-clickhouse_${flink.reference}</artifactId>
       <version>${fire.version}</version>
     </dependency>
     <dependency>
@@ -420,6 +420,12 @@
       <artifactId>ojdbc6</artifactId>
       <version>11.2.0.3</version>
       <scope>${maven.scope}</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${guava.version}</version>
     </dependency>
   </dependencies>
 

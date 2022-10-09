@@ -1,28 +1,29 @@
-package com.zto.fire.examples.spark
+package com.zto.fire.examples.spark.sql
 
+import com.zto.fire.common.bean.TableIdentifier
+import com.zto.fire.common.util.{JSONUtils, ThreadUtils}
 import com.zto.fire.core.anno.connector.Hive
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.spark.SparkCore
 import com.zto.fire.spark.sql.SparkSqlParser
+import com.zto.fire.spark.sync.SparkLineageAccumulatorManager
+
+import java.util.concurrent.TimeUnit
 
 /**
  * Spark SQL血缘解析工具
+ *
  * @contact Fire框架技术交流群（钉钉）：35373471
  */
 @Hive("test")
 object SparkSqlParseTest extends SparkCore {
 
-
   override def process: Unit = {
     val ds = this.spark.createDataFrame(Student.newStudentList(), classOf[Student])
     ds.createOrReplaceTempView("t_student")
-    println("t_student -> " + SparkSqlParser.isHiveTable(null, "t_student"))
-    println("tmp.baseuser ->" + SparkSqlParser.isHiveTable("tmp", "baseuser"))
+    println("t_student -> " + SparkSqlParser.isHiveTable(TableIdentifier("t_student")))
+    println("tmp.baseuser ->" + SparkSqlParser.isHiveTable(TableIdentifier("tmp.baseuser")))
 
-    val select2 =
-      """
-        |select bill_event_id,count(*) from hudi.hudi_bill_item group by bill_event_id
-        |""".stripMargin
     val select1 =
       """
         |select count(*)
@@ -30,6 +31,12 @@ object SparkSqlParseTest extends SparkCore {
         |left join (select biz_no,bill_code from dw.dw_kf_center_to_center_dispatch_delay where ds>='20210101') b
         |on a.bill_code=b.bill_code
         |""".stripMargin
+
+    val select2 =
+      """
+        |select bill_event_id,count(*) from hudi.hudi_bill_item group by bill_event_id
+        |""".stripMargin
+
     val insertInto =
       """
         |insert into ods.base select a,v from tmp.t_user t1 left join ods.test t2 on t1.id=t2.id
@@ -63,10 +70,17 @@ object SparkSqlParseTest extends SparkCore {
         |partitioned by(ds string, city string)
         |ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
         |""".stripMargin
-    val dropDB = "drop database tmp"
+    val createTableAsSelect =
+      """
+        |create table if not exists tmp.zto_fire_test
+        |select a.*,'sh' as city
+        |from dw.mdb_md_dbs a left join student t on a.ds=t.name
+        |where ds='20211001' limit 100
+        |""".stripMargin
+    val dropDB = "drop database if exists tmp12"
     val insertOverwrite = "insert overwrite table dw.kwang_test partition(ds='202106', city='beijing') values(4,'zz')"
 
-    val sql =
+    val insertIntoAsSelect =
       """
         |insert into zto_cockpit_site_target_ds
         |SELECT site_id,scan_date,scan_day,
@@ -121,12 +135,10 @@ object SparkSqlParseTest extends SparkCore {
         |GROUP BY site_id,scan_date,scan_day
       """.stripMargin
 
-    SparkSqlParser.sqlParser(sql)
-    val rdd = this.fire.createDataFrame(Student.newStudentList(), classOf[Student])
-    println(rdd.count())
-    /*SparkSqlParser.sqlParser(dropTable)
-    SparkSqlParser.sqlParser(createTable)
-    SparkSqlParser.sqlParser(dropDB)
-    SparkSqlParser.sqlParser(renameTable)*/
+    SparkSqlParser.sqlParser(select1)
+    ThreadUtils.scheduleAtFixedRate({
+      println(s"累加器值：" + JSONUtils.toJSONString(SparkLineageAccumulatorManager.getValue) + "\n\n")
+    }, 0, 10, TimeUnit.SECONDS)
+    Thread.currentThread().join()
   }
 }

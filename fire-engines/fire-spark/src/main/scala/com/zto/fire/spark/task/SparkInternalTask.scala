@@ -18,8 +18,11 @@
 package com.zto.fire.spark.task
 
 import com.zto.fire.common.anno.Scheduled
+import com.zto.fire.common.conf.FireFrameworkConf
+import com.zto.fire.common.util.{JSONUtils, MQProducer}
 import com.zto.fire.core.task.FireInternalTask
 import com.zto.fire.spark.BaseSpark
+import com.zto.fire.spark.sync.SparkLineageAccumulatorManager
 
 /**
  * 定时任务调度器，用于定时执行Spark框架内部指定的任务
@@ -35,24 +38,18 @@ private[fire] class SparkInternalTask(baseSpark: BaseSpark) extends FireInternal
   @Scheduled(fixedInterval = 60000, scope = "all", initialDelay = 60000L, concurrent = false)
   override def jvmMonitor: Unit = super.jvmMonitor
 
-
-  /*@Scheduled(fixedInterval = 10000, scope = "driver", initialDelay = 30000L, concurrent = false)
-  def showException: Unit = {
-    val queue = this.baseSpark.acc.getLog
-    queue.foreach(log => println(log))
-  }*/
-
   /**
-   * 数据源收集任务，收集driver与executor用到的数据源信息3600000L
+   * 实时血缘发送定时任务，定时将血缘信息发送到kafka中
    */
-  /*@Scheduled(fixedInterval = 10000L, scope = "all", initialDelay = 60000L, concurrent = false, repeatCount = 100)
-  def datasource: Unit = {
-    if (FireFrameworkConf.restEnable) {
-      val datasourceMap = DatasourceManager.get
-      if (datasourceMap.nonEmpty) {
-        val json = JSONUtils.toJSONString(datasourceMap)
-        this.restInvoke("/system/collectDatasource", json)
+  @Scheduled(fixedInterval = 60000, initialDelay = 10000, repeatCount = 360)
+  override def lineage: Unit = {
+    sendLineage
+    this.registerLineageHook(sendLineage)
+
+    def sendLineage: Unit = {
+      if (FireFrameworkConf.lineageEnable && FireFrameworkConf.lineageSendMqEnable) {
+        MQProducer.sendKafka(FireFrameworkConf.lineageMQUrl, FireFrameworkConf.lineageTopic, JSONUtils.toJSONString(SparkLineageAccumulatorManager.getValue))
       }
     }
-  }*/
+  }
 }

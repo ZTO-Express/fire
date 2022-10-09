@@ -25,7 +25,10 @@ import oshi.hardware.Display;
  * @author ChengLong 2019年9月30日 13:36:16
  */
 public class DisplayInfo {
-    // 显示器描述信息
+
+    /**
+     * 显示器描述信息
+     */
     private String display;
 
     public String getDisplay() {

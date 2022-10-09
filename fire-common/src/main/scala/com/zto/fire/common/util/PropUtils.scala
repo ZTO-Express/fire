@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory
 import java.io.{FileInputStream, InputStream, StringReader}
 import java.util.Properties
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.collection.mutable.Map
+import scala.collection.mutable.{ArrayBuffer, Map}
 import scala.collection.{immutable, mutable}
 import scala.reflect.{ClassTag, classTag}
 
@@ -70,6 +70,11 @@ object PropUtils extends Logging {
       }
     }
   }
+
+  /**
+   * 获取配置信息
+   */
+  def apply(key: String, keyNum: Int = 1): String = this.getString(key, "", keyNum = keyNum)
 
   /**
    * 获取完整的配置文件名称
@@ -162,15 +167,9 @@ object PropUtils extends Logging {
     val option = this.getAnnoConfig(clazz)
     if (option.nonEmpty) {
       val (files, props, value) = option.get
-      if (noEmpty(value)) {
-        // 移除所有的注释信息
-        val normalValue = RegularUtils.propAnnotation.replaceAllIn(value, "").replaceAll("\\|", "").trim
-        val valueProps = new Properties()
-        val stringReader = new StringReader(normalValue)
-        valueProps.load(stringReader)
-        stringReader.close()
-        valueProps.map(kv => (StringUtils.trim(kv._1), StringUtils.trim(kv._2))).filter(kv => noEmpty(kv, kv._1, kv._2)).foreach(kv => this.setProperty(kv._1, kv._2))
-      }
+      // 解析通过注解配置的多个配置信息
+      this.parseTextConfig(value).foreach(kv => this.setProperty(kv._1, kv._2))
+      // 解析通过注解配置的单项配置信息
       props.foreach(kv => this.setProperty(kv._1, kv._2))
       if (noEmpty(files)) this.load(files: _*)
     }
@@ -188,6 +187,27 @@ object PropUtils extends Logging {
     } (this.logger, "成功加载注解中的配置信息！", "注解配置信息加载失败！")
 
     this
+  }
+
+  /**
+   * 将多行字符串文本解析成key value的形式
+   * @param value
+   * 配置信息，支持井号注释与多行配置
+   */
+  private[fire] def parseTextConfig(value: String): Map[String, String] = {
+    val mapConfig = new JHashMap[String, String]()
+    if (noEmpty(value)) {
+      // 移除所有的注释信息
+      val normalValue = RegularUtils.propAnnotation.replaceAllIn(value, "").replaceAll("\\|", "").trim
+      val valueProps = new Properties()
+      val stringReader = new StringReader(normalValue)
+      valueProps.load(stringReader)
+      stringReader.close()
+      val propMap = valueProps.map(kv => (StringUtils.trim(kv._1), StringUtils.trim(kv._2))).filter(kv => noEmpty(kv, kv._1, kv._2)).toMap
+      mapConfig.putAll(propMap)
+    }
+
+    mapConfig
   }
 
   /**
@@ -422,15 +442,20 @@ object PropUtils extends Logging {
    */
   def setProperty(key: String, value: String): Unit = this.synchronized {
     if (StringUtils.isNotBlank(key) && StringUtils.isNotBlank(value)) {
-      this.setOriginalProperty(this.adaptiveKey(key), value)
+      this.setAdaptiveProperty(this.adaptiveKey(key), value)
       this.originalSettingsMap.put(key, value)
     }
   }
 
   /**
-   * 添加原生的配置信息
+   * 添加自适应前缀的配置信息
    */
-  private[fire] def setOriginalProperty(key: String, value: String): Unit = this.synchronized(this.adaptiveSettingsMap.put(key, value))
+  private[fire] def setAdaptiveProperty(key: String, value: String): Unit = this.synchronized(this.adaptiveSettingsMap.put(key, value))
+
+  /**
+   * 添加纯粹的配置信息，不会被自动加上引擎前缀
+   */
+  private[fire] def setNormalProperty(key: String, value: String): Unit = this.synchronized(this.originalSettingsMap.put(key, value))
 
   /**
    * 隐蔽密码信息后返回
@@ -553,7 +578,7 @@ object PropUtils extends Logging {
   }
 
   /**
-   * 获取指定类的配置注解信息
+   * 获取指定类的配置注解信息（@FireConf优先级高于@Config注解）
    *
    * @param clazz
    * flink或spark任务的具体入口类
@@ -562,17 +587,37 @@ object PropUtils extends Logging {
    */
   @Internal
   private[this] def getAnnoConfig(clazz: Class[_]): Option[(Array[String], Array[(String, String)], String)] = {
-    val anno = ReflectionUtils.getClassAnnotation(clazz, classOf[Config])
-    if (anno == null) return None
-    val confAnno = anno.asInstanceOf[Config]
-    val files = confAnno.files().filter(StringUtils.isNotBlank).map(_.trim)
-    val props = confAnno.props().filter(StringUtils.isNotBlank)
+    import com.zto.fire.common.anno.FireConf
+    val annoConfig = ReflectionUtils.getClassAnnotation(clazz, classOf[Config])
+    val annoFireConfig = ReflectionUtils.getClassAnnotation(clazz, classOf[FireConf])
+    val fireArray, allProps = ArrayBuffer[String]()
+    val confText = new mutable.StringBuilder()
+
+    if (annoConfig != null) {
+      val confAnno = annoConfig.asInstanceOf[Config]
+      fireArray ++= confAnno.files()
+      allProps ++= confAnno.props()
+      confText.append(confAnno.value())
+    }
+
+    if (annoFireConfig != null) {
+      val fireConfAnno = annoFireConfig.asInstanceOf[FireConf]
+      fireArray ++= fireConfAnno.files()
+      allProps ++= fireConfAnno.props()
+      confText.append(fireConfAnno.value())
+    }
+
+    val files = fireArray.filter(StringUtils.isNotBlank).map(_.trim)
+
+    // 获取通过@Config与@FireConf配置的所有参数
+    val props = allProps.filter(StringUtils.isNotBlank)
       .map(_.split("=", 2))
       .filter(prop => noEmpty(prop) && prop.length == 2 && noEmpty(prop(0), prop(1)))
       .map(prop => {
         (prop(0).trim, prop(1).trim)
       })
-    Some(files, props, confAnno.value())
+
+    Some(files.toArray, props.toArray, confText.toString())
   }
 
   /**

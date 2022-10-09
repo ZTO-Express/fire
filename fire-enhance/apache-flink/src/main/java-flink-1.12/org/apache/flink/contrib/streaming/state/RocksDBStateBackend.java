@@ -225,7 +225,9 @@ public class RocksDBStateBackend extends AbstractManagedMemoryStateBackend
      */
     private void initZKClient() {
         synchronized (RocksDBStateBackend.class) {
-            if (isInitZKClient) return;
+            if (isInitZKClient) {
+                return;
+            }
             this.isInitZKClient = true;
             final String zkUrl = PropUtils.getString(STATE_ZOOKEEPER_URL, "");
             this.stateDiskPolicy = PropUtils.getString(STATE_CHOOSE_DISK_POLICY, FLINK_STATE_DISK_CHOOSE_POLICY_DEFAULT).toUpperCase();
@@ -256,7 +258,9 @@ public class RocksDBStateBackend extends AbstractManagedMemoryStateBackend
      * 判断是否为ROUND_ROBIN模式
      */
     private boolean isRoundRobin() {
-        if (!this.isInitZKClient) this.initZKClient();
+        if (!this.isInitZKClient) {
+            this.initZKClient();
+        }
         return FLINK_STATE_DISK_CHOOSE_POLICY_ROUND_ROBIN.equalsIgnoreCase(this.stateDiskPolicy);
     }
     // TODO: ------------ end：二次开发代码 --------------- //

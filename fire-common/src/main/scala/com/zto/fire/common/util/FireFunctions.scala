@@ -82,13 +82,15 @@ trait FireFunctions extends Serializable with Logging  {
    * 日志记录器
    * @param catchLog
    * 日志内容
+   * @param hook
+   * 是否将捕获到的异常信息发送到消息队列
    */
-  def tryWithLog(block: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, isThrow: Boolean = false): Unit = {
+  def tryWithLog(block: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, isThrow: Boolean = false, hook: Boolean = true): Unit = {
     try {
       elapsed(tryLog, logger)(block)
     } catch {
       case t: Throwable => {
-        ExceptionBus.offAndLogError(logger, catchLog, t)
+        if (hook) ExceptionBus.offAndLogError(logger, catchLog, t)
         if (isThrow) throw t
       }
     }
@@ -103,13 +105,15 @@ trait FireFunctions extends Serializable with Logging  {
    * 日志记录器
    * @param catchLog
    * 日志内容
+   * @param hook
+   * 是否将捕获到的异常信息发送到消息队列
    */
-  def tryWithReturn[T](block: => T)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog): T = {
+  def tryWithReturn[T](block: => T)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, hook: Boolean = true): T = {
     try {
       elapsed[T](tryLog, logger)(block)
     } catch {
       case t: Throwable => {
-        ExceptionBus.offAndLogError(logger, catchLog, t)
+        if (hook) ExceptionBus.offAndLogError(logger, catchLog, t)
         throw t
       }
     }
@@ -128,20 +132,22 @@ trait FireFunctions extends Serializable with Logging  {
    * 当执行try过程中发生异常时打印的日志内容
    * @param finallyCatchLog
    * 当执行finally代码块过程中发生异常时打印的日志内容
+   * @param hook
+   * 是否将捕获到的异常信息发送到消息队列
    */
-  def tryFinallyWithReturn[T](block: => T)(finallyBlock: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, finallyCatchLog: String = finallyCatchLog): T = {
+  def tryFinallyWithReturn[T](block: => T)(finallyBlock: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, finallyCatchLog: String = finallyCatchLog, hook: Boolean = true): T = {
     try {
       elapsed[T](tryLog, logger)(block)
     } catch {
       case t: Throwable =>
-        ExceptionBus.offAndLogError(logger, catchLog, t)
+        if (hook) ExceptionBus.offAndLogError(logger, catchLog, t)
         throw t
     } finally {
       try {
         finallyBlock
       } catch {
         case t: Throwable =>
-          ExceptionBus.offAndLogError(logger, catchLog, t)
+          if (hook) ExceptionBus.offAndLogError(logger, catchLog, t)
           throw t
       }
     }
@@ -160,17 +166,19 @@ trait FireFunctions extends Serializable with Logging  {
    * 当执行try过程中发生异常时打印的日志内容
    * @param finallyCatchLog
    * 当执行finally代码块过程中发生异常时打印的日志内容
+   * @param hook
+   * 是否将捕获到的异常信息发送到消息队列
    */
-  def tryFinally(block: => Unit)(finallyBlock: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, finallyCatchLog: String = finallyCatchLog): Unit = {
+  def tryFinally(block: => Unit)(finallyBlock: => Unit)(logger: Logger = this.logger, tryLog: String = tryLog, catchLog: String = catchLog, finallyCatchLog: String = finallyCatchLog, hook: Boolean = true): Unit = {
     try {
       elapsed[Unit](tryLog, logger)(block)
     } catch {
-      case t: Throwable => ExceptionBus.offAndLogError(logger, catchLog, t)
+      case t: Throwable => if (hook) ExceptionBus.offAndLogError(logger, catchLog, t)
     } finally {
       try {
         finallyBlock
       } catch {
-        case t: Throwable => ExceptionBus.offAndLogError(logger, catchLog, t)
+        case t: Throwable => if (hook) ExceptionBus.offAndLogError(logger, catchLog, t)
       }
     }
   }

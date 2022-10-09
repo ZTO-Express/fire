@@ -17,7 +17,8 @@
 
 package com.zto.fire.flink.sql
 
-import com.zto.fire.common.conf.FireFrameworkConf.buriedPointDatasourceEnable
+import com.zto.fire.common.conf.FireFrameworkConf.lineageEnable
+import com.zto.fire.common.util.SQLLineageManager
 import com.zto.fire.core.sql.SqlExtensionsParser
 import com.zto.fire.flink.util.FlinkUtils
 import com.zto.fire.predef.noEmpty
@@ -35,7 +36,7 @@ private[fire] object FlinkSqlExtensionsParser extends SqlExtensionsParser {
    * 将待解析的SQL添加到buffer中
    */
   def sqlParse(sql: String): Unit = {
-    if (buriedPointDatasourceEnable && noEmpty(sql)) {
+    if (lineageEnable && noEmpty(sql)) {
       FlinkUtils.sqlValidate(sql)
       FlinkSqlParser.sqlParse(sql)
     }

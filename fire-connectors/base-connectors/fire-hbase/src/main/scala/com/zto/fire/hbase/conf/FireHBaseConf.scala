@@ -83,6 +83,13 @@ private[fire] object FireHBaseConf {
     this.hbaseClusterMap.getOrElse(clusterName, clusterName)
   }
 
+  /**
+   * 根据给定的HBase集群别名获取对应的hbase.zookeeper.quorum地址
+   */
+  def hbaseClusterUrl(clusterName: String): String = {
+    this.hbaseClusterMap.getOrElse(clusterName, clusterName)
+  }
+
   def hbaseDurability(keyNum: Int = 1): String = PropUtils.getString(this.HBASE_DURABILITY, "", keyNum)
 
   // HBase结果集的缓存策略配置

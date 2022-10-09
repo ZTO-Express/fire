@@ -19,9 +19,10 @@ package com.zto.fire.jdbc
 
 import java.sql.{Connection, PreparedStatement, ResultSet, SQLException, Statement}
 import com.mchange.v2.c3p0.ComboPooledDataSource
+import com.zto.fire.common.enu.{Operation => FOperation}
 import com.zto.fire.common.anno.Internal
 import com.zto.fire.common.conf.FireFrameworkConf
-import com.zto.fire.common.util.{DatasourceManager, LogUtils, ReflectionUtils, StringsUtils}
+import com.zto.fire.common.util.{LineageManager, LogUtils, ReflectionUtils, StringsUtils}
 import com.zto.fire.core.connector.{ConnectorFactory, FireConnector}
 import com.zto.fire.jdbc.conf.FireJdbcConf
 import com.zto.fire.jdbc.util.DBUtils
@@ -61,19 +62,19 @@ class JdbcConnector(conf: JdbcConf = null, keyNum: Int = 1) extends FireConnecto
       // 支持url和别名两种配置方式
       this.url = if (isEmpty(FireJdbcConf.jdbcUrl(keyNum)) && noEmpty(this.conf, this.conf.url)) this.conf.url else FireJdbcConf.jdbcUrl(keyNum)
       require(noEmpty(this.url), s"数据库url不能为空，keyNum=${this.keyNum}")
-      val driverClass = if (isEmpty(FireJdbcConf.driverClass(keyNum)) && noEmpty(this.conf, this.conf.driverClass)) this.conf.driverClass else FireJdbcConf.driverClass(keyNum)
-      val autoDriver = if (isEmpty(driverClass)) DBUtils.parseDriverByUrl(this.url) else  driverClass
+      val driverClass = if (isEmpty(FireJdbcConf.driverClass(keyNum)) && noEmpty(this.conf) && noEmpty(this.conf.driverClass)) this.conf.driverClass else FireJdbcConf.driverClass(keyNum)
+      val autoDriver = if (isEmpty(driverClass)) DBUtils.parseDriverByUrl(this.url) else driverClass
       require(noEmpty(autoDriver), s"数据库driverClass不能为空，keyNum=${this.keyNum}")
       this.username = if (isEmpty(FireJdbcConf.user(keyNum)) && noEmpty(this.conf, this.conf.username)) this.conf.username else FireJdbcConf.user(keyNum)
       val password = if (isEmpty(FireJdbcConf.password(keyNum)) && noEmpty(this.conf, this.conf.password)) this.conf.password else FireJdbcConf.password(keyNum)
       // 识别数据源类型是oracle、mysql等
-      this.dbType = DBUtils.dbTypeParser(driverClass, this.url)
+      this.dbType = DBUtils.dbTypeParser(autoDriver, this.url)
       logger.info(s"Fire框架识别到当前jdbc数据源标识为：${this.dbType}，keyNum=${this.keyNum}")
 
       // 创建c3p0数据库连接池实例
       val pool = new ComboPooledDataSource(true)
       pool.setJdbcUrl(this.url)
-      pool.setDriverClass(driverClass)
+      pool.setDriverClass(autoDriver)
       if (noEmpty(this.username)) pool.setUser(this.username)
       if (noEmpty(password)) pool.setPassword(password)
       pool.setMaxPoolSize(FireJdbcConf.maxPoolSize(keyNum))
@@ -193,7 +194,7 @@ class JdbcConnector(conf: JdbcConf = null, keyNum: Int = 1) extends FireConnecto
       retVal
     } {
       this.release(sql, conn, stat, null, closeConnection)
-    }(this.logger, s"${this.sqlBuriedPoint(sql)}", s"executeUpdate failed. keyNum：${keyNum}\n${this.sqlBuriedPoint(sql)}", finallyCatchLog)
+    }(this.logger, s"${this.sqlBuriedPoint(sql, FOperation.UPDATE)}", s"executeUpdate failed. keyNum：${keyNum}\n${this.sqlBuriedPoint(sql, FOperation.UPDATE)}", finallyCatchLog)
   }
 
   /**
@@ -244,7 +245,7 @@ class JdbcConnector(conf: JdbcConf = null, keyNum: Int = 1) extends FireConnecto
       retVal
     } {
       this.release(sql, conn, stat, null, closeConnection)
-    }(this.logger, s"${this.sqlBuriedPoint(sql)}", s"executeBatch failed. keyNum：${keyNum}\n${this.sqlBuriedPoint(sql)}", finallyCatchLog)
+    }(this.logger, s"${this.sqlBuriedPoint(sql, FOperation.UPDATE)}", s"executeBatch failed. keyNum：${keyNum}\n${this.sqlBuriedPoint(sql, FOperation.UPDATE)}", finallyCatchLog)
   }
 
   /**
@@ -292,7 +293,7 @@ class JdbcConnector(conf: JdbcConf = null, keyNum: Int = 1) extends FireConnecto
       callback(rs)
     } {
       this.release(sql, conn, stat, rs)
-    }(this.logger, s"${this.sqlBuriedPoint(sql, false)}", s"executeQuery failed. keyNum：${keyNum}\n${this.sqlBuriedPoint(sql, false)}", finallyCatchLog)
+    }(this.logger, s"${this.sqlBuriedPoint(sql, FOperation.UPDATE)}", s"executeQuery failed. keyNum：${keyNum}\n${this.sqlBuriedPoint(sql, FOperation.SELECT)}", finallyCatchLog)
   }
 
   /**
@@ -340,9 +341,9 @@ class JdbcConnector(conf: JdbcConf = null, keyNum: Int = 1) extends FireConnecto
    * 工具方法，截取给定的SQL语句
    */
   @Internal
-  private[this] def sqlBuriedPoint(sql: String, sink: Boolean = true): String = {
+  private[this] def sqlBuriedPoint(sql: String, operation: FOperation): String = {
     try {
-      DatasourceManager.addDBSql(this.dbType, this.url, this.username, sql, sink)
+      LineageManager.addDBSql(this.dbType, this.url, this.username, sql, operation)
       StringsUtils.substring(sql, 0, this.logSqlLength)
     } catch {
       case _: Throwable => ""

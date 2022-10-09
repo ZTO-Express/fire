@@ -52,6 +52,7 @@ object DistributeSyncManager extends SyncManager {
    * 是否以异步的方式执行
    */
   def sync(fun: => Unit, isAsync: Boolean = true): Unit = {
+    if (isEmpty(SparkSingletonFactory.getSparkSession)) return
     val executorNum = this.getInitExecutors
     val rdd = this.sc.parallelize(1 to executorNum * 10, executorNum * 3)
     if (isAsync) {

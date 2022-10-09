@@ -20,7 +20,9 @@ package com.zto.fire.core.sync
 import com.zto.fire.common.util.Logging
 
 /**
- * 同步管理器，用于Diver或JobManager端向Executor或TaskManager端同步数据
+ * 同步管理器：
+ * 1. 用于Diver或JobManager端向Executor或TaskManager端同步数据
+ * 2. 用于将Executor或TaskManager端数据收集到driver或JobManager端
  *
  * @author ChengLong 2021-11-2 15:41:30
  * @since 2.2.0

@@ -19,12 +19,13 @@ package com.zto.fire.flink.rest
 
 import com.zto.fire.common.anno.Rest
 import com.zto.fire.common.bean.rest.ResultMsg
-import com.zto.fire.common.enu.{ErrorCode, RequestMethod}
+import com.zto.fire.common.enu.{Datasource, ErrorCode, RequestMethod}
 import com.zto.fire.common.util._
 import com.zto.fire.core.rest.{RestCase, RestServerManager, SystemRestful}
 import com.zto.fire.flink.BaseFlink
 import com.zto.fire.flink.bean.{CheckpointParams, DistributeBean}
 import com.zto.fire.flink.enu.DistributeModule
+import com.zto.fire.flink.sync.FlinkLineageAccumulatorManager
 import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 import org.apache.flink.runtime.checkpoint.CheckpointCoordinator
@@ -45,11 +46,13 @@ private[fire] class FlinkSystemRestful(var baseFlink: BaseFlink, val restfulRegi
     this.restfulRegister
       .addRest(RestCase(RequestMethod.GET.toString, s"/system/kill", kill))
       .addRest(RestCase(RequestMethod.GET.toString, s"/system/datasource", datasource))
+      .addRest(RestCase(RequestMethod.GET.toString, s"/system/lineage", lineage))
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/checkpoint", checkpoint))
       .addRest(RestCase(RequestMethod.GET.toString, s"/system/distributeSync", distributeSync))
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/setConf", setConf))
       .addRest(RestCase(RequestMethod.POST.toString, s"/system/arthas", arthas))
       .addRest(RestCase(RequestMethod.GET.toString, s"/system/exception", exception))
+      .addRest(RestCase(RequestMethod.POST.toString, s"/system/collectLineage", collectLineage))
   }
 
   /**
@@ -71,6 +74,29 @@ private[fire] class FlinkSystemRestful(var baseFlink: BaseFlink, val restfulRegi
       this.logger.info("开始分布式分发：" + this.distributeJson)
     }
     retVal
+  }
+
+  /**
+   * 用于引擎内部分布式采集血缘信息
+   */
+  @Rest("/system/collectLineage")
+  def collectLineage(request: Request, response: Response): AnyRef = {
+    val json = request.body
+
+    try {
+      this.logger.debug(s"内部请求分布式更新血缘信息，ip：${request.ip()}")
+      this.logger.debug(s"请求fire更新血缘信息：$json")
+      val lineageMap = JSONUtils.parseObject[JConcurrentHashMap[Datasource, JHashSet[DatasourceDesc]]](json)
+      if (ValueUtils.noEmpty(lineageMap)) {
+        FlinkLineageAccumulatorManager.add(lineageMap)
+      }
+      ResultMsg.buildSuccess("血缘信息已更新", ErrorCode.SUCCESS.toString)
+    } catch {
+      case e: Exception => {
+        this.logger.error(s"[collectLineage] 设置血缘信息失败：json=$json", e)
+        ResultMsg.buildError("设置血缘信息失败", ErrorCode.ERROR)
+      }
+    }
   }
 
   /**
@@ -164,7 +190,6 @@ private[fire] class FlinkSystemRestful(var baseFlink: BaseFlink, val restfulRegi
       }
     }
   }
-
 
   /**
    * 用于执行sql语句

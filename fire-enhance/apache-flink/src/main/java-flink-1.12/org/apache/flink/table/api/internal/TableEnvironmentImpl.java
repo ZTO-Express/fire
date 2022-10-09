@@ -587,7 +587,9 @@ public class TableEnvironmentImpl implements TableEnvironmentInternal {
                     sqlParseMethod = clazz.getMethod("sqlParse", String.class);
                     sqlParseMethod.setAccessible(true);
                 }
-                if (sqlParseMethod != null) sqlParseMethod.invoke(null, statement);
+                if (sqlParseMethod != null) {
+                    sqlParseMethod.invoke(null, statement);
+                }
             }
         } catch (Exception e) {
             try {

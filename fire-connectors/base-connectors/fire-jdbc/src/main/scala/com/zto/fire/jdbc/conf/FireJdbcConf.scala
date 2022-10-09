@@ -94,6 +94,13 @@ private[fire] object FireJdbcConf {
    */
   def jdbcUrl(keyNum: Int = 1): String = {
     val url = this.url(keyNum)
+    this.jdbcUrl(url)
+  }
+
+  /**
+   * 根据别名获取jdbc的url
+   */
+  def jdbcUrl(url: String): String = {
     this.jdbcUrlMap.getOrElse(url, url)
   }
 }

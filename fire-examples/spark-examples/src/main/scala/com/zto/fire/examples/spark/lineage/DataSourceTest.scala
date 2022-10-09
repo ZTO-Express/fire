@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.zto.fire.examples.spark.datasource
+package com.zto.fire.examples.spark.lineage
 
 import com.zto.fire._
 import com.zto.fire.common.anno.Config

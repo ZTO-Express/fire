@@ -17,8 +17,10 @@
 
 package com.zto.fire.core.sql
 
-import com.zto.fire.common.conf.FireFrameworkConf.{buriedPointDatasourceEnable, buriedPointDatasourceInitialDelay, buriedPointDatasourcePeriod}
-import com.zto.fire.common.util.{DatasourceManager, Logging, TableMeta, ThreadUtils}
+import com.zto.fire.common.anno.Internal
+import com.zto.fire.common.bean.TableIdentifier
+import com.zto.fire.common.conf.FireFrameworkConf._
+import com.zto.fire.common.util.{LineageManager, Logging, SQLLineageManager, TableMeta, ThreadUtils}
 import com.zto.fire.predef._
 
 import java.util.concurrent.{CopyOnWriteArraySet, TimeUnit}
@@ -29,9 +31,10 @@ import java.util.concurrent.{CopyOnWriteArraySet, TimeUnit}
  * @author ChengLong 2021-6-18 16:28:50
  * @since 2.0.0
  */
-trait SqlParser extends Logging {
+@Internal
+private[fire] trait SqlParser extends Logging {
   // 用于临时存放解析后的库表类
-  protected lazy val tmpTableMap = new JHashMap[String, TableMeta]()
+  protected[fire] lazy val tmpTableMap = new JHashMap[String, TableMeta]()
   // 用于存放按数据源归类后的所有血缘信息
   protected lazy val tableMetaSet = new CopyOnWriteArraySet[TableMeta]()
   protected[fire] lazy val hiveTableMap = new JConcurrentHashMap[String, Boolean]()
@@ -41,13 +44,14 @@ trait SqlParser extends Logging {
   /**
    * 周期性的解析SQL语句
    */
+  @Internal
   protected def sqlParse: Unit = {
-    if (buriedPointDatasourceEnable) {
+    if (lineageEnable) {
       ThreadUtils.scheduleWithFixedDelay({
         this.buffer.foreach(sql => this.sqlParser(sql))
-        DatasourceManager.addTableMeta(this.tableMetaSet)
+        LineageManager.addTableMeta(this.tableMetaSet)
         this.clear
-      }, buriedPointDatasourceInitialDelay, buriedPointDatasourcePeriod, TimeUnit.SECONDS)
+      }, lineageRunInitialDelay, lineageRunPeriod, TimeUnit.SECONDS)
     }
   }
 
@@ -57,6 +61,7 @@ trait SqlParser extends Logging {
    * @param tableIdentifier
    * 库表名
    */
+  @Internal
   protected def addTmpTableMeta(tableIdentifier: String, tmpTableMap: TableMeta): Unit = {
     this.tmpTableMap += (tableIdentifier -> tmpTableMap)
     this.collectTableMeta(tmpTableMap)
@@ -67,11 +72,13 @@ trait SqlParser extends Logging {
    *
    * @param tableMeta 数据源
    */
+  @Internal
   private def collectTableMeta(tableMeta: TableMeta): Unit = this.tableMetaSet += tableMeta
 
   /**
    * 清理解析后的SQL数据
    */
+  @Internal
   private[this] def clear: Unit = {
     this.buffer.clear()
     this.tmpTableMap.clear()
@@ -81,8 +88,10 @@ trait SqlParser extends Logging {
   /**
    * 将待解析的SQL添加到buffer中
    */
+  @Internal
   def sqlParse(sql: String): Unit = {
-    if (buriedPointDatasourceEnable && noEmpty(sql) && sqlLegal(sql)) {
+    if (lineageEnable && noEmpty(sql)) {
+      SQLLineageManager.addStatement(sql)
       this.buffer += sql
     }
   }
@@ -90,6 +99,7 @@ trait SqlParser extends Logging {
   /**
    * 用于解析给定的SQL语句
    */
+  @Internal
   def sqlParser(sql: String): Unit
 
   /**
@@ -99,20 +109,24 @@ trait SqlParser extends Logging {
    * @return
    * true：校验成功 false：校验失败
    */
+  @Internal
   def sqlLegal(sql: String): Boolean
 
   /**
    * 用于判断给定的表是否为临时表
    */
-  def isTempView(dbName: String = null, tableName: String): Boolean
+  @Internal
+  def isTempView(tableIdentifier: TableIdentifier): Boolean
 
   /**
    * 用于判断给定的表是否为hive表
    */
-  def isHiveTable(dbName: String = null, tableName: String): Boolean
+  @Internal
+  def isHiveTable(tableIdentifier: TableIdentifier): Boolean
 
   /**
    * 将库表名转为字符串
    */
+  @Internal
   def tableIdentifier(dbName: String, tableName: String): String = s"$dbName.$tableName"
 }

@@ -20,66 +20,145 @@ package com.zto.fire.spark.bean;
 import com.zto.fire.common.util.DateFormatUtils;
 
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * 用于封装spark运行时的信息
  * @author ChengLong 2019-5-13 10:27:33
  */
 public class SparkInfo {
-    // spark应用名称
+    /**
+     * spark应用名称
+     */
     private String appName;
-    // spark应用的类名
+
+    /**
+     * spark应用的类名
+     */
     private String className;
-    // common包的版本号
+
+    /**
+     * common包的版本号
+     */
     private String fireVersion;
-    // spark conf信息
+
+    /**
+     * spark conf信息
+     */
     private Map<String, String> conf;
-    // 当前spark版本
+
+    /**
+     * 当前spark版本
+     */
     private String version;
-    // spark 运行模式
+
+    /**
+     * spark 运行模式
+     */
     private String master;
-    // spark 的 applicationId
+
+    /**
+     * spark 的 applicationId
+     */
     private String applicationId;
-    // yarn 的 applicationAttemptId
+
+    /**
+     * yarn 的 applicationAttemptId
+     */
     private String applicationAttemptId;
-    // spark 的 webui地址
+
+    /**
+     * spark 的 webui地址
+     */
     private String ui;
-    // driver的进程id
+
+    /**
+     * driver的进程id
+     */
     private String pid;
-    // spark的运行时间
+
+    /**
+     * spark的运行时间
+     */
     private String uptime;
-    // 程序启动的起始时间
-    private String startTime;
-    // 申请的每个executor的内存大小
+
+    /**
+     * 程序启动的起始时间
+     */
+    private String launchTime;
+
+    /**
+     * 申请的每个executor的内存大小
+     */
     private String executorMemory;
-    // 申请的executor个数
+
+    /**
+     * 申请的executor个数
+     */
     private String executorInstances;
-    // 申请的每个executor的cpu数
+
+    /**
+     * 申请的每个executor的cpu数
+     */
     private String executorCores;
-    // 申请的driver cpu数量
+
+    /**
+     * 申请的driver cpu数量
+     */
     private String driverCores;
-    // 申请的driver内存大小
+
+    /**
+     * 申请的driver内存大小
+     */
     private String driverMemory;
-    // 申请的driver堆外内存大小
+
+    /**
+     * 申请的driver堆外内存大小
+     */
     private String driverMemoryOverhead;
-    // driver所在服务器ip
+
+    /**
+     * driver所在服务器ip
+     */
     private String driverHost;
-    // driver占用的端口号
+
+    /**
+     *  driver占用的端口号
+     */
     private String driverPort;
-    // restful接口的端口号
+
+    /**
+     * restful接口的端口号
+     */
     private String restPort;
-    // 申请的executor堆外内存大小
+
+    /**
+     * 申请的executor堆外内存大小
+     */
     private String executorMemoryOverhead;
-    // 当前spark应用申请的总内存大小（driver+executor+总的堆外内存）
+
+    /**
+     * 当前spark应用申请的总内存大小（driver+executor+总的堆外内存）
+     */
     private String memory;
-    // 当前spark应用申请的总的cpu数量（driver+executor）
+
+    /**
+     * 当前spark应用申请的总的cpu数量（driver+executor）
+     */
     private String cpu;
-    // streaming批次时间
+
+    /**
+     * streaming批次时间
+     */
     private String batchDuration;
-    // 当前driver系统时间
+
+    /**
+     * 当前driver系统时间
+     */
     private String timestamp = DateFormatUtils.formatCurrentDateTime();
-    // 配置信息
+
+    /**
+     * 配置信息
+     */
     private Map<String, String> properties;
 
     public String getAppName() {
@@ -170,12 +249,12 @@ public class SparkInfo {
         this.uptime = uptime;
     }
 
-    public String getStartTime() {
-        return startTime;
+    public String getLaunchTime() {
+        return launchTime;
     }
 
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
+    public void setLaunchTime(String launchTime) {
+        this.launchTime = launchTime;
     }
 
     public String getExecutorMemory() {

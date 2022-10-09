@@ -24,7 +24,7 @@ import com.zto.fire.core.BaseFire
 import com.zto.fire.core.rest.RestServerManager
 import com.zto.fire.flink.conf.FireFlinkConf
 import com.zto.fire.flink.rest.FlinkSystemRestful
-import com.zto.fire.flink.task.FlinkSchedulerManager
+import com.zto.fire.flink.task.{FlinkInternalTask, FlinkSchedulerManager}
 import com.zto.fire.flink.util.{FlinkSingletonFactory, FlinkUtils}
 import org.apache.commons.lang3.StringUtils
 import org.apache.flink.api.common.ExecutionConfig
@@ -77,7 +77,7 @@ trait BaseFlink extends BaseFire {
       this.systemRestful = new FlinkSystemRestful(this, this.restfulRegister)
     }
     PropUtils.show()
-    FlinkSchedulerManager.getInstance().registerTasks(this)
+    FlinkSchedulerManager.getInstance().registerTasks(this, new FlinkInternalTask(this))
     // 创建HiveCatalog
     val metastore = FireHiveConf.getMetastoreUrl
     if (StringUtils.isNotBlank(metastore)) {

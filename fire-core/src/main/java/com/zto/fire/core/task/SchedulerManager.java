@@ -125,13 +125,17 @@ public abstract class SchedulerManager implements Serializable {
      */
     public synchronized void registerTasks(Object... taskInstances) {
         try {
-            if (!FireFrameworkConf.scheduleEnable()) return;
+            if (!FireFrameworkConf.scheduleEnable()) {
+                return;
+            }
             SchedulerManager.init();
             addScanTask(taskInstances);
             if (!taskMap.isEmpty()) {
                 for (Map.Entry<String, Object> entry : taskMap.entrySet()) {
                     // 已经注册过的任务不再重复注册
-                    if (alreadyRegisteredTaskMap.containsKey(entry.getKey())) continue;
+                    if (alreadyRegisteredTaskMap.containsKey(entry.getKey())) {
+                        continue;
+                    }
 
                     Class<?> clazz = entry.getValue().getClass();
                     if (clazz != null) {
@@ -139,7 +143,9 @@ public abstract class SchedulerManager implements Serializable {
                         for (Method method : methods) {
                             if (method != null) {
                                 ReflectionUtils.setAccessible(method);
-                                if (blacklistMap.containsKey(method.getName())) continue;
+                                if (blacklistMap.containsKey(method.getName())) {
+                                    continue;
+                                }
                                 Scheduled anno = method.getAnnotation(Scheduled.class);
                                 String label = label();
                                 if (anno != null && StringUtils.isNotBlank(anno.scope()) && ("all".equalsIgnoreCase(anno.scope()) || anno.scope().equalsIgnoreCase(label))) {
@@ -169,12 +175,17 @@ public abstract class SchedulerManager implements Serializable {
                                         triggerBuilder.startAt(DateFormatUtils.formatDateTime(anno.startAt()));
                                     } else {
                                         // 首次延迟多久（毫秒）开始执行
-                                        if (anno.initialDelay() == 0) triggerBuilder.startNow();
-                                        if (anno.initialDelay() != 0 && anno.initialDelay() != -1)
+                                        if (anno.initialDelay() == 0) {
+                                            triggerBuilder.startNow();
+                                        }
+                                        if (anno.initialDelay() != 0 && anno.initialDelay() != -1) {
                                             triggerBuilder.startAt(DateUtils.addMilliseconds(new Date(), (int) anno.initialDelay()));
+                                        }
                                     }
                                     // 添加到调度任务中
-                                    if (scheduler == null) scheduler = StdSchedulerFactory.getDefaultScheduler();
+                                    if (scheduler == null) {
+                                        scheduler = StdSchedulerFactory.getDefaultScheduler();
+                                    }
                                     scheduler.scheduleJob(job, triggerBuilder.build());
                                     // 将已注册的task放到已注册标记列表中，防止重复注册同一个类的同一个定时方法
                                     alreadyRegisteredTaskMap.put(entry.getKey(), entry.getValue());
@@ -185,8 +196,9 @@ public abstract class SchedulerManager implements Serializable {
                         }
                     }
                 }
-                if (alreadyRegisteredTaskMap.size() > 0)
+                if (alreadyRegisteredTaskMap.size() > 0) {
                     scheduler.start();
+                }
             }
         } catch (Exception e) {
             logger.error("定时任务注册失败：作为定时任务的类必须可序列化，并且标记有@Scheduled的方法必须是无参的！", e);
@@ -200,7 +212,9 @@ public abstract class SchedulerManager implements Serializable {
      * @return 描述信息
      */
     protected String buildSchedulerInfo(Scheduled anno) {
-        if (anno == null) return "Scheduled为空";
+        if (anno == null) {
+            return "Scheduled为空";
+        }
         StringBuilder schedulerInfo = new StringBuilder("\u001B[31m调度信息\u001B[0m");
         if (StringUtils.isNotBlank(anno.scope())) {
             schedulerInfo.append("[ 范围=\u001B[32m").append(anno.scope()).append(DEFAULT_COLOR);
@@ -236,11 +250,13 @@ public abstract class SchedulerManager implements Serializable {
                     Class<?> clazz = Class.forName(classMethod[0]);
                     Method method = clazz.getMethod(classMethod[1]);
                     Object instance = taskMap.get(classMethod[0]);
-                    if (instance != null) method.invoke(instance);
+                    if (instance != null) {
+                        method.invoke(instance);
+                    }
                 }
             }
         } catch (Exception e) {
-            logger.error("执行execute发生异常", e);
+            logger.error("执行定时任务发生异常", e);
         }
     }
 

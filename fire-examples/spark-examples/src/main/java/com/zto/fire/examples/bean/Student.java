@@ -17,16 +17,15 @@
 
 package com.zto.fire.examples.bean;
 
-import com.zto.fire.common.anno.FieldName;
 import com.zto.fire.common.util.DateFormatUtils;
 import com.zto.fire.common.util.JSONUtils;
-import com.zto.fire.hbase.anno.HConfig;
 import com.zto.fire.hbase.bean.HBaseBaseBean;
 import com.zto.fire.spark.bean.GenerateBean;
-import com.zto.fire.spark.connector.DataGenReceiver;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 对应HBase表的JavaBean
@@ -168,8 +167,12 @@ public class Student extends HBaseBaseBean<Student> implements GenerateBean<Stud
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Student)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Student)) {
+            return false;
+        }
         Student student = (Student) o;
         return Objects.equals(id, student.id) &&
                 Objects.equals(name, student.name) &&

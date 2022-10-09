@@ -30,15 +30,30 @@ import oshi.hardware.PowerSource;
  */
 public class HardwareInfo {
     private static HardwareInfo hardwareInfo = new HardwareInfo();
-    // 制造商
+
+    /**
+     * 制造商
+     */
     private String manufacturer;
-    // 型号
+
+    /**
+     * 型号
+     */
     private String model;
-    // 序列号
+
+    /**
+     * 序列号
+     */
     private String serialNumber;
-    // 电源信息
+
+    /**
+     * 电源信息
+     */
     private String power;
-    // 电池容量
+
+    /**
+     * 电池容量
+     */
     private String batteryCapacity;
 
     public String getManufacturer() {

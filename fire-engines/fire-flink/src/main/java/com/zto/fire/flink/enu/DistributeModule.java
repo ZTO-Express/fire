@@ -18,7 +18,10 @@ public enum DistributeModule {
      * 将字符串解析成指定的枚举类型
      */
     public static DistributeModule parse(String type) {
-        if (StringUtils.isBlank(type)) return CONF;
+        if (StringUtils.isBlank(type)) {
+            return CONF;
+        }
+
         try {
             return Enum.valueOf(DistributeModule.class, type.trim().toUpperCase());
         } catch (Exception e) {

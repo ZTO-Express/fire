@@ -31,39 +31,90 @@ import java.util.List;
  * @author ChengLong 2019年9月30日 10:39:08
  */
 public class NetworkInfo {
-    // 网卡名称
+
+    /**
+     * 网卡名称
+     */
     private String name;
-    // 网卡display名称
+
+    /**
+     * 网卡display名称
+     */
     private String displayName;
-    // mac地址
+
+    /**
+     * mac地址
+     */
     private String macAddress;
-    // 最大传输单元
+
+    /**
+     * 最大传输单元
+     */
     private int mtu;
-    // 网卡带宽
+
+    /**
+     * 网卡带宽
+     */
     private long speed;
-    // ip v4 地址
+
+    /**
+     * ip v4 地址
+     */
     private String[] ipv4;
-    // ip v6 地址
+
+    /**
+     * ip v6 地址
+     */
     private String[] ipv6;
-    // ip 地址
+
+    /**
+     * ip 地址
+     */
     private String ip;
-    // 接收到的数据报个数
+
+    /**
+     * 接收到的数据报个数
+     */
     private long packetsRecv;
-    // 发送的数据报个数
+
+    /**
+     * 发送的数据报个数
+     */
     private long packetsSent;
-    // 接收到的数据大小
+
+    /**
+     * 接收到的数据大小
+     */
     private long bytesRecv;
-    // 发送的数据大小
+
+    /**
+     * 发送的数据大小
+     */
     private long bytesSent;
-    // 主机名
+
+    /**
+     * 主机名
+     */
     private String hostname;
-    // 域名称
+
+    /**
+     * 域名称
+     */
     private String domainName;
-    // dns
+
+    /**
+     * dns
+     */
     private String[] dns;
-    // ip v4 网关
+
+    /**
+     * ip v4 网关
+     */
     private String ipv4Gateway;
-    // ip v6 网关
+
+    /**
+     * ip v6 网关
+     */
     private String ipv6Gateway;
 
     public String getName() {

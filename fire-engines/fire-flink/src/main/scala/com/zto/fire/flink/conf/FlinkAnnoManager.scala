@@ -18,8 +18,9 @@
 package com.zto.fire.flink.conf
 
 import com.zto.fire.common.conf.FireFrameworkConf.FIRE_JOB_AUTO_START
+import com.zto.fire.common.util.PropUtils
 import com.zto.fire.core.conf.AnnoManager
-import com.zto.fire.flink.anno.{Checkpoint, Streaming}
+import com.zto.fire.flink.anno.{Checkpoint, FlinkConf, Streaming}
 import com.zto.fire.flink.conf.FireFlinkConf._
 
 /**
@@ -79,9 +80,24 @@ private[fire] class FlinkAnnoManager extends AnnoManager {
   }
 
   /**
+   * 将@FlinkConf中配置的信息映射为键值对形式
+   */
+  def mapFlinkConf(flinkConf: FlinkConf): Unit = {
+    val valueConf = PropUtils.parseTextConfig(flinkConf.value())
+    valueConf.foreach(kv => this.props.put(kv._1, kv._2))
+    flinkConf.props().foreach(prop => {
+      val conf = prop.split("=", 2)
+      if (conf != null && conf.length == 2) {
+        this.props.put(conf(0), conf(1))
+      }
+    })
+  }
+
+  /**
    * 用于注册需要映射配置信息的自定义主键
    */
   override protected[fire] def register: Unit = {
+    AnnoManager.registerAnnoSet.add(classOf[FlinkConf])
     AnnoManager.registerAnnoSet.add(classOf[Streaming])
     AnnoManager.registerAnnoSet.add(classOf[Checkpoint])
   }

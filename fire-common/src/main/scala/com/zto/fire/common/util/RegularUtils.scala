@@ -17,4 +17,12 @@ object RegularUtils {
   lazy val propAnnotation = "\\s+\\#.*".r
   // 用于匹配insert语句
   lazy val insertReg = "^\\s*INSERT.*".r
+  // 用于匹配sql中的with表达式的value
+  lazy val withValueReg = """=\s*'.+'""".r
+  // 用于匹配sql中with表达式value具体的值
+  lazy val valueReg = """'.+'""".r
+  // 用于匹配flink sql with表达式中数据源别名
+  lazy val withDatasourceReg = """'datasource'\s*=\s*'[A-Za-z0-9_]+'""".r
+  // 多条sql语句的截取
+  lazy val sqlSplit = """;\s"""
 }

@@ -17,6 +17,7 @@
 
 package com.zto.fire.common.util
 
+import com.zto.fire.predef._
 import org.apache.commons.lang3.StringUtils
 
 import scala.collection.mutable.ListBuffer
@@ -28,7 +29,7 @@ import scala.collection.mutable.ListBuffer
  * @since 1.1.2
  * @create 2020-11-26 15:09
  */
-object SQLUtils {
+object SQLUtils extends Logging {
   private[this] val beforeWorld = "(?i)(from|join|update|into table|table|into|exists|desc|like|if)"
   private[this] val reg = s"${beforeWorld}\\s+(\\w+\\.\\w+|\\w+)".r
 
@@ -48,5 +49,19 @@ object SQLUtils {
 
     tables
   }
-  
+
+  /**
+   * 执行多条sql语句，以分号分割
+   */
+  def executeSql[T](sql: String)(block: String => T): Option[T] = {
+    require(StringUtils.isNotBlank(sql), "待执行的sql语句不能为空")
+    var result: Option[T] = None
+    sql.split(RegularUtils.sqlSplit).filter(noEmpty(_)).foreach(statement => {
+      if (noEmpty(statement)) {
+        logger.debug("当前执行sql：\n" + statement)
+        result = Some(block(statement))
+      }
+    })
+    result
+  }
 }

@@ -18,7 +18,7 @@
 package com.zto.fire.examples.spark.hbase
 
 import com.zto.fire.common.anno.TestStep
-import com.zto.fire.common.util.DatasourceManager
+import com.zto.fire.common.util.LineageManager
 import com.zto.fire.core.anno.connector.{HBase, HBase2}
 import com.zto.fire.examples.bean.Student
 import com.zto.fire.hbase.HBaseConnector
@@ -115,7 +115,7 @@ class HBaseApiTest extends SparkCore with HBaseTester {
     val scanStudentList2 = HBaseConnector(2).scan(this.tableName2, classOf[Student], "1", "6")
     assertEquals(scanStudentList2.size, 5)
 
-    assertEquals(DatasourceManager.get.size(), 1)
+    assertEquals(LineageManager.getDatasourceLineage.size(), 1)
   }
 
   /**

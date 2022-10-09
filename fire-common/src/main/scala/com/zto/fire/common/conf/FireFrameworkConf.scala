@@ -117,12 +117,15 @@ private[fire] object FireFrameworkConf {
   lazy val FLINK_BATCH_CONF_FILE = "flink-batch"
   lazy val FIRE_DEPLOY_CONF_ENABLE = "fire.deploy_conf.enable"
   lazy val FIRE_EXCEPTION_BUS_SIZE = "fire.exception_bus.size"
-  lazy val FIRE_BURIED_POINT_DATASOURCE_ENABLE = "fire.buried_point.datasource.enable"
-  lazy val FIRE_BURIED_POINT_DATASOURCE_COUNT = "fire.buried_point.datasource.count"
-  lazy val FIRE_BURIED_POINT_DATASOURCE_MAX_SIZE = "fire.buried_point.datasource.max.size"
-  lazy val FIRE_BURIED_POINT_DATASOURCE_INITIAL_DELAY = "fire.buried_point.datasource.initialDelay"
-  lazy val FIRE_BURIED_POINT_DATASOURCE_PERIOD = "fire.buried_point.datasource.period"
-  lazy val FIRE_BURIED_POINT_DATASOURCE_MAP = "fire.buried_point.datasource.map."
+  lazy val FIRE_LINEAGE_ENABLE = "fire.lineage.enable"
+  lazy val FIRE_LINEAGE_RUN_COUNT = "fire.lineage.run.count"
+  lazy val FIRE_LINEAGE_MAX_SIZE = "fire.lineage.max.size"
+  lazy val FIRE_LINEAGE_RUN_INITIAL_DELAY = "fire.lineage.run.initialDelay"
+  lazy val FIRE_LINEAGE_RUN_PERIOD = "fire.lineage.run.period"
+  lazy val FIRE_LINEAGE_DATASOURCE_MAP = "fire.lineage.datasource.map."
+  lazy val FIRE_LINEAGE_SEND_MQ_ENABLE = "fire.lineage.send.mq.enable"
+  lazy val FIRE_LINEAGE_SEND_MQ_URL = "fire.lineage.send.mq.url"
+  lazy val FIRE_LINEAGE_SEND_MQ_TOPIC = "fire.lineage.send.mq.topic"
   lazy val FIRE_CONF_ADAPTIVE_PREFIX = "fire.conf.adaptive.prefix"
   lazy val FIRE_ANALYSIS_ARTHAS_ENABLE = "fire.analysis.arthas.enable"
   lazy val FIRE_ANALYSIS_ARTHAS_CONTAINER_ENABLE = "fire.analysis.arthas.container.enable"
@@ -137,12 +140,14 @@ private[fire] object FireFrameworkConf {
   lazy val FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MQ_URL = "fire.analysis.log.exception.send.mq.url"
   lazy val FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MQ_TOPIC = "fire.analysis.log.exception.send.mq.topic"
   lazy val FIRE_JOB_AUTO_START = "fire.job.autoStart"
+  lazy val FIRE_ACC_SYNC_MAX_SIZE = "fire.acc.sync.max.size"
+
 
   /**
    * 用于jdbc url的识别，当无法通过driver class识别数据源时，将从url中的端口号进行区分
-   * 不同数据配置使用统一的前缀：fire.buried_point.datasource.map.
+   * 不同数据配置使用统一的前缀：fire.lineage.datasource.map.
    */
-  def buriedPointDatasourceMap: Map[String, String] = PropUtils.sliceKeys(this.FIRE_BURIED_POINT_DATASOURCE_MAP)
+  def lineageDatasourceMap: Map[String, String] = PropUtils.sliceKeys(this.FIRE_LINEAGE_DATASOURCE_MAP)
   // 获取当前任务的rest server访问地址
   lazy val fireRestUrl = PropUtils.getString(this.FIRE_REST_URL, "")
   // 是否启用hostname作为fire rest url
@@ -150,15 +155,21 @@ private[fire] object FireFrameworkConf {
   // 不同引擎配置获取具体的实现
   lazy val confDeployEngine = PropUtils.getString(this.FIRE_CONF_DEPLOY_ENGINE, "")
   // 定时解析埋点SQL的执行频率（s）
-  lazy val buriedPointDatasourcePeriod = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_PERIOD, 300)
+  lazy val lineageRunPeriod = PropUtils.getInt(this.FIRE_LINEAGE_RUN_PERIOD, 60)
   // 定时解析埋点SQL的初始延迟（s）
-  lazy val buriedPointDatasourceInitialDelay = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_INITIAL_DELAY, 60)
+  lazy val lineageRunInitialDelay = PropUtils.getInt(this.FIRE_LINEAGE_RUN_INITIAL_DELAY, 60)
   // 用于存放埋点的队列最大大小，超过该大小将会被丢弃
-  lazy val buriedPointDatasourceMaxSize = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_MAX_SIZE, 200)
+  lazy val lineMaxSize = PropUtils.getInt(this.FIRE_LINEAGE_MAX_SIZE, 200)
   // 异步解析血缘线程执行的次数
-  lazy val buriedPointDatasourceCount = PropUtils.getInt(this.FIRE_BURIED_POINT_DATASOURCE_COUNT, 10)
-  // 是否开启数据源埋点
-  lazy val buriedPointDatasourceEnable = PropUtils.getBoolean(this.FIRE_BURIED_POINT_DATASOURCE_ENABLE, true)
+  lazy val lineageRunCount = PropUtils.getInt(this.FIRE_LINEAGE_RUN_COUNT, 10)
+  // 是否开启实时血缘埋点
+  lazy val lineageEnable = PropUtils.getBoolean(this.FIRE_LINEAGE_ENABLE, true)
+  lazy val lineageSendMqEnable = PropUtils.getBoolean(this.FIRE_LINEAGE_SEND_MQ_ENABLE, false)
+  lazy val lineageMQUrl = {
+    val url = PropUtils.getString(this.FIRE_LINEAGE_SEND_MQ_URL, "")
+    FireKafkaConf.kafkaBrokers(url)
+  }
+  lazy val lineageTopic = PropUtils.getString(this.FIRE_LINEAGE_SEND_MQ_TOPIC)
   // 每个jvm实例内部queue用于存放异常对象数最大大小，避免队列过大造成内存溢出
   lazy val exceptionBusSize = PropUtils.getInt(this.FIRE_EXCEPTION_BUS_SIZE, 1000)
   // 是否将配置同步到executor、taskmanager端
@@ -189,7 +200,7 @@ private[fire] object FireFrameworkConf {
   // 获取driver的class name
   lazy val driverClassName = PropUtils.getString(this.DRIVER_CLASS_NAME)
   // 是否打印配置信息
-  lazy val fireConfShow: Boolean = PropUtils.getBoolean(this.FIRE_CONF_SHOW_ENABLE, true)
+  lazy val fireConfShow: Boolean = PropUtils.getBoolean(this.FIRE_CONF_SHOW_ENABLE, false)
   // 是否将restful地址以日志方式打印
   lazy val fireRestUrlShow: Boolean = PropUtils.getBoolean(this.FIRE_REST_URL_SHOW_ENABLE, false)
   // 获取动态配置参数
@@ -286,4 +297,5 @@ private[fire] object FireFrameworkConf {
   def exceptionTraceMQTopic: String = PropUtils.getString(this.FIRE_ANALYSIS_LOG_EXCEPTION_SEND_MQ_TOPIC, "")
   // 是否自动提交job
   lazy val jobAutoStart = PropUtils.getBoolean(this.FIRE_JOB_AUTO_START, true)
+  lazy val accSyncMaxSize = PropUtils.getLong(this.FIRE_ACC_SYNC_MAX_SIZE, 100)
 }

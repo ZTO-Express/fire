@@ -53,7 +53,9 @@ public class FileUtils {
                 }
             }
         }
-        if (searchFile != null) fileList.add(searchFile);
+        if (searchFile != null) {
+            fileList.add(searchFile);
+        }
         return searchFile;
     }
 
