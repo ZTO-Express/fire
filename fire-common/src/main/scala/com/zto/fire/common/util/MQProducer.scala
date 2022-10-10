@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @author ChengLong 2022-07-29 10:02:48
  * @since 2.3.1
  */
-class MQProducer(url: String, mqType: MQType = MQType.kafka,
+private[fire] class MQProducer(url: String, mqType: MQType = MQType.kafka,
                  otherConf: Map[String, String] = Map.empty) extends Logging {
   private lazy val maxRetries = FireFrameworkConf.exceptionTraceSendMQMaxRetries
   private lazy val sendTimeout = FireFrameworkConf.exceptionSendTimeout

@@ -31,4 +31,14 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Process {
+
+    /**
+     * 业务代码逻辑描述
+     */
+    String value() default "";
+
+    /**
+     * 当发生异常时，是否跳过异常执行下一步
+     */
+    boolean skipError() default false;
 }

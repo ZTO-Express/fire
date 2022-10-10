@@ -20,10 +20,9 @@ package com.zto.fire.examples.spark.lineage
 import com.zto.fire._
 import com.zto.fire.common.anno.Config
 import com.zto.fire.common.util.{DateFormatUtils, JSONUtils, ThreadUtils}
-import com.zto.fire.core.anno.connector.{HBase, Hive, Jdbc, Kafka, RocketMQ}
+import com.zto.fire.core.anno.connector._
 import com.zto.fire.core.anno.lifecycle.{Process, Step1}
 import com.zto.fire.examples.bean.Student
-import com.zto.fire.examples.spark.hive.HiveMetadataTest.{multiPartitionTable, sql}
 import com.zto.fire.hbase.HBaseConnector
 import com.zto.fire.spark.SparkStreaming
 import com.zto.fire.spark.anno.Streaming
@@ -46,6 +45,7 @@ import java.util.concurrent.TimeUnit
 object LineageTest extends SparkStreaming {
   private val hbaseTable = "fire_test_1"
   private lazy val tableName = "spark_test"
+  val multiPartitionTable = "tmp.mdb_md_dbs_fire_multi_partition_orc"
 
   @Process
   def source: Unit = {
